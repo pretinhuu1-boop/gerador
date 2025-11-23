@@ -1,0 +1,49 @@
+{
+  "scan_profiles": [
+    {
+      "id": 1,
+      "name": "Photogrammetry (Fotogrametria 3D)",
+      "range": [90, 100],
+      "description": "Usa dezenas de câmeras dispostas em 360º. Reconstrói o rosto e o corpo com textura realista e precisão fotográfica.",
+      "used_for": "Campanhas oficiais, pôsteres e close-ups realistas",
+      "result": "Aparência hiper-realista com textura fiel da pele, cabelo e roupa",
+      "keywords": ["realistic", "texture fidelity", "360 capture", "high detail"]
+    },
+    {
+      "id": 2,
+      "name": "Structured Light Scanning (Luz Estruturada)",
+      "range": [75, 89],
+      "description": "Projetores emitem padrões de luz sobre o corpo, capturando deformações com precisão milimétrica.",
+      "used_for": "Material técnico, retratos precisos e identidade facial",
+      "result": "Modelo geométrico detalhado com texturas sutis e luz controlada",
+      "keywords": ["geometric", "high precision", "controlled lighting"]
+    },
+    {
+      "id": 3,
+      "name": "LiDAR (Light Detection and Ranging)",
+      "range": [60, 74],
+      "description": "Usa feixes de laser para medir distâncias e gerar mapas 3D com boa precisão estrutural.",
+      "used_for": "Clipes, AR/VR e reconstruções rápidas de palco",
+      "result": "Modelo 3D rápido, com texturas médias e geometria correta",
+      "keywords": ["depth map", "laser scan", "fast capture"]
+    },
+    {
+      "id": 4,
+      "name": "Volumetric Capture (Captura Volumétrica Realista)",
+      "range": [45, 59],
+      "description": "Usa dezenas de câmeras sincronizadas de vídeo para capturar corpo em movimento, criando avatar animado realista.",
+      "used_for": "Clipe musical, vídeos XR e hologramas",
+      "result": "Avatar 3D animável e expressivo",
+      "keywords": ["motion capture", "avatar", "3D animation"]
+    },
+    {
+      "id": 5,
+      "name": "Full Body Scan Booth (Cabine 3D)",
+      "range": [0, 44],
+      "description": "Combina fotogrametria e luz estruturada dentro de uma cabine. Captura o corpo completo em segundos.",
+      "used_for": "Moda, games e catálogos de imagem",
+      "result": "Modelo pronto em resolução 8K, ótimo para composições de palco",
+      "keywords": ["body scan", "hybrid light", "fashion capture"]
+    }
+  ]
+}

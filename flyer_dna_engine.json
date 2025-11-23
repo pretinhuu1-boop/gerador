@@ -1,0 +1,440 @@
+{
+  "flyer_dna_engine": {
+    "version": "3.0",
+    "description": "Sistema de raciocínio estético autônomo para criação de flyers. Versão 3.0 com 56 presets de design extraídos de análise de múltiplos catálogos de imagens, cobrindo varejo, serviços, datas comemorativas, agendas de artistas e eventos noturnos.",
+    "modules": {
+      "palette_generator": {
+        "logic": "baseado em análise de contraste, temperatura de cor e energia emocional do artista",
+        "modes": ["analogous", "complementary", "triadic", "monochrome"],
+        "behavior": "se o estilo for quente, gerar variantes frias; se for saturado, gerar versões soft; se for neutro, aplicar um gradiente de contraste controlado",
+        "outputs": ["primary_palette", "secondary_palette", "highlight_color"]
+      },
+      "style_mixer": {
+        "function": "cruza estilos de artistas distintos para gerar novos DNA visuais",
+        "examples": [
+          { "mix": ["Dynho Alves", "MC Pedrinho"], "result": "Urban Hard Neon" },
+          { "mix": ["Zé Felipe", "Caio Lacerda"], "result": "Pop Funk Clean" },
+          { "mix": ["Léo Foguete", "DJ Torricelli"], "result": "Graffiti Industrial" }
+        ],
+        "rules": "sempre preservar identidade física do artista base; nunca duplicar traços de textura sem coerência de luz"
+      },
+      "emotion_matrix": {
+        "levels": ["cool", "neutral", "warm", "vibrant", "electric", "aggressive", "sophisticated", "cozy_affectionate", "professional_trustworthy"],
+        "mapping": {
+          "cool": "azul, lilás, magenta suave",
+          "neutral": "cinza, branco, bege metálico",
+          "warm": "laranja, âmbar, vermelho",
+          "vibrant": "amarelo, pink, azul elétrico",
+          "electric": "verde ácido, roxo neon, magenta intensa",
+          "aggressive": "vermelho, preto, branco de alto contraste",
+          "sophisticated": "tons de cinza, preto, dourado sutil",
+          "cozy_affectionate": "tons pastel, dourado suave, branco quente",
+          "professional_trustworthy": "azul marinho, cinza, branco, toques de laranja ou verde"
+        }
+      },
+      "lighting_adaptive": {
+        "inputs": ["palette_temperature", "skin_tone", "environment"],
+        "rules": [
+          "se palette_temperature = warm → usar key light âmbar e rim light branca",
+          "se palette_temperature = cold → usar fill azul e backlight lilás",
+          "se skin_tone escura → aplicar rim light suave branca",
+          "se fundo muito escuro → boost no diffuse bounce 0.2"
+        ]
+      }
+    },
+    "presets": {
+      "Computador_Performance_Verde": {
+        "style": "Tecnologia / Performance, com tipografia geométrica sans-serif",
+        "palette": ["#0B3B2B", "#39FF14", "#FFFFFF"],
+        "texture": "foguete decolando, fumaça, brilho de tela, formas geométricas angulares",
+        "emotion": "Velocidade e Modernidade",
+        "lighting": "Luz de tela de laptop, brilho verde intenso"
+      },
+      "Politico_Eleicao_Vermelho": {
+        "style": "Político / Modern Corporate, com tipografia serifada clássica para seriedade",
+        "palette": ["#E1001A", "#FFFFFF", "#333333"],
+        "texture": "curvas suaves, fundo de cidade desfocado, tipografia limpa",
+        "emotion": "Confiança e Seriedade",
+        "lighting": "Luz de estúdio suave e profissional"
+      },
+      "Supermercado_Oferta_VermelhoAmarelo": {
+        "style": "Varejo / Gourmet / Foodie, com tipografia bold e arredondada",
+        "palette": ["#FF0000", "#FFD600", "#FFFFFF"],
+        "texture": "moedas 3D, frutas, selo de oferta, brilho de produto",
+        "emotion": "Economia e Oportunidade",
+        "lighting": "Brilhante e comercial, sem sombras duras"
+      },
+      "Academia_Planos_Neon": {
+        "style": "Fitness / Energia / Neon / Rave, com tipografia moderna e bold",
+        "palette": ["#ADFF2F", "#1A1A1A", "#FFFFFF"],
+        "texture": "raios de energia, fumaça, elementos gráficos modernos",
+        "emotion": "Força e Dinamismo",
+        "lighting": "Contraluz neon, iluminação dramática de baixo para cima"
+      },
+      "Acai_Energia_Roxo": {
+        "style": "Alimentício / Gourmet / Foodie, com tipografia playful/arredondada",
+        "palette": ["#6A0DAD", "#FFD700", "#FFFFFF"],
+        "texture": "frutas frescas, splash de açaí, folhas desfocadas, tipografia arredondada",
+        "emotion": "Sabor e Energia",
+        "lighting": "Luz natural suave, como um dia ensolarado"
+      },
+      "CasaDeCarnes_Qualidade_Vermelho": {
+        "style": "Açougue / Gourmet / Foodie, com tipografia estampada/desgastada",
+        "palette": ["#B22222", "#000000", "#FFFFFF"],
+        "texture": "textura de madeira, brilho na carne, faíscas sutis, tipografia robusta",
+        "emotion": "Qualidade e Tradição",
+        "lighting": "Luz quente e focada no produto, vinheta escura"
+      },
+      "Advocacia_Excelencia_Dourado": {
+        "style": "Jurídico / Modern Corporate, com tipografia serifada clássica",
+        "palette": ["#B8860B", "#1C1C1C", "#FFFFFF"],
+        "texture": "martelo da justiça desfocado, estátua da dama da justiça, brilho dourado, lens flare",
+        "emotion": "Seriedade e Excelência",
+        "lighting": "Iluminação cinematográfica com ponto de luz principal e sombras suaves"
+      },
+      "AgenciaViagens_Mundo_Azul": {
+        "style": "Turismo / Modern Corporate, com tipografia geométrica sans",
+        "palette": ["#0077BE", "#FFFFFF", "#FFA500"],
+        "texture": "pontos turísticos globais, nuvens, aviões, globo terrestre",
+        "emotion": "Aventura e Descoberta",
+        "lighting": "Luz do dia, clara e convidativa"
+      },
+      "ConcertoCelular_Roxo": {
+        "style": "Serviços / Varejo Jovem, com tipografia arredondada",
+        "palette": ["#8A2BE2", "#FFFFFF", "#F0E68C"],
+        "texture": "emojis flutuantes, tela de celular quebrada, brilho suave",
+        "emotion": "Solução e Urgência",
+        "lighting": "Luz de estúdio limpa e vibrante"
+      },
+      "AutoEscola_Jornada_Amarelo": {
+        "style": "Serviços / Conquista, com tipografia bold",
+        "palette": ["#FFC107", "#333333", "#FFFFFF"],
+        "texture": "carro e moto recortados, CNH, chave do carro, elementos gráficos de trânsito",
+        "emotion": "Liberdade e Realização",
+        "lighting": "Iluminação clara e positiva"
+      },
+      "FGTS_Antecipacao_RoxoAzul": {
+        "style": "Financeiro / Oportunidade, com tipografia moderna",
+        "palette": ["#673AB7", "#2196F3", "#FFFFFF"],
+        "texture": "notas de dinheiro, moeda de dólar 3D, brilho suave",
+        "emotion": "Facilidade e Dinheiro Rápido",
+        "lighting": "Luz suave e levemente azulada, como de tela de celular"
+      },
+      "Bebidas_Whiskey_Aconchegante": {
+        "style": "Bebidas / Vintage / Handcrafted, com tipografia serifada clássica",
+        "palette": ["#A0522D", "#000000", "#FFD700"],
+        "texture": "balcão de bar de madeira, copo com gelo, garrafas de Jack Daniels",
+        "emotion": "Celebração e Qualidade",
+        "lighting": "Iluminação quente de bar, com pontos de brilho nas garrafas"
+      },
+      "Barbearia_Agendamento_Preto": {
+        "style": "Serviços / Vintage / Handcrafted, com tipografia no estilo carimbo/desgastado",
+        "palette": ["#1C1C1C", "#FFFFFF", "#D2B48C"],
+        "texture": "barber pole, textura de papel rasgado, tipografia stencil",
+        "emotion": "Estilo e Profissionalismo",
+        "lighting": "Iluminação de estúdio com contraste, destacando o barbeiro"
+      },
+      "Estetica_AgendaAberta_Rosa": {
+        "style": "Beleza / Verão, com tipografia script de luxo",
+        "palette": ["#FF1493", "#FFFFFF", "#F0E68C"],
+        "texture": "ícone de calendário 3D, formas de coração, brilho de verão",
+        "emotion": "Cuidado e Sensualidade",
+        "lighting": "Luz de fim de tarde na praia, quente e suave"
+      },
+      "Festa_Carnaval_Roxo": {
+        "style": "Evento / Balada, com tipografia bold e arredondada",
+        "palette": ["#9400D3", "#FFFF00", "#FF69B4"],
+        "texture": "confetes, serpentinas, moedas flutuantes, brilho de festa",
+        "emotion": "Festa e Diversão",
+        "lighting": "Luzes de balada, neon e estroboscópicas"
+      },
+      "HarmonizacaoFacial_Clean_Rosa": {
+        "style": "Beleza / Saúde, com tipografia elegante e fina",
+        "palette": ["#F5DEB3", "#FFFFFF", "#E6C3C3"],
+        "texture": "formas de vidro foscas, brilho suave azulado, tipografia elegante",
+        "emotion": "Naturalidade e Sofisticação",
+        "lighting": "Luz suave de clínica, limpa e profissional"
+      },
+      "Games_PlacaDeVideo_Sombrio": {
+        "style": "Games / Tecnologia, com tipografia moderna e angular",
+        "palette": ["#A9A9A9", "#000000", "#3CB371"],
+        "texture": "personagens de Call of Duty, fumaça, textura de metal, brilho tecnológico",
+        "emotion": "Poder e Imersão",
+        "lighting": "Sombria e cinematográfica, com pontos de luz verde"
+      },
+      "Concessionaria_Carro_Vermelho": {
+        "style": "Automotivo / Varejo, com tipografia bold e moderna",
+        "palette": ["#CC0000", "#FFFFFF", "#000000"],
+        "texture": "formas geométricas, seta, brilho no carro",
+        "emotion": "Desejo e Oportunidade",
+        "lighting": "Luz de estúdio automotivo, destacando as curvas do carro"
+      },
+      "ConscienciaNegra_Roxo": {
+        "style": "Cultural / Comemorativo, com tipografia serifada e script",
+        "palette": ["#4B0082", "#FFFFFF", "#FFD700"],
+        "texture": "colagem de fotos de personalidades negras, brilho sutil",
+        "emotion": "Respeito e Orgulho",
+        "lighting": "Iluminação suave e respeitosa, com foco na figura central"
+      },
+      "ImpostoDeRenda_Rosa": {
+        "style": "Serviços / Modern Corporate, com tipografia geométrica sans",
+        "palette": ["#FF69B4", "#FFFFFF", "#F5F5F5"],
+        "texture": "laptop, tela de site, formas orgânicas suaves",
+        "emotion": "Informação e Facilidade",
+        "lighting": "Luz limpa e clara de escritório"
+      },
+      "CorpusChristi_Divino_Branco": {
+        "style": "Religioso / Solene, com tipografia serifada clássica",
+        "palette": ["#D4AF37", "#FFFFFF", "#F5F5DC"],
+        "texture": "ostensório dourado, imagem de Cristo ao fundo, brilho divino",
+        "emotion": "Fé e Espiritualidade",
+        "lighting": "Luz celestial, suave e etérea"
+      },
+      "Educacional_Cursos_Azul": {
+        "style": "Educação / Jovem, com tipografia arredondada",
+        "palette": ["#4169E1", "#FFFFFF", "#ADD8E6"],
+        "texture": "formas curvas, brilho sutil, material escolar",
+        "emotion": "Futuro e Oportunidade",
+        "lighting": "Luz natural e otimista"
+      },
+      "Hamburgueria_KingBurg_VermelhoAmarelo": {
+        "style": "Fast Food / Gourmet / Foodie, com tipografia bold e arredondada",
+        "palette": ["#FF0000", "#FFC72C", "#FFFFFF"],
+        "texture": "hambúrguer suculento, tomate desfocado, tipografia bold",
+        "emotion": "Fome e Desejo",
+        "lighting": "Quente e apetitosa, destacando o produto"
+      },
+      "Dentista_Confianca_Azul": {
+        "style": "Saúde / Serviços, com tipografia moderna e limpa",
+        "palette": ["#00BFFF", "#FFFFFF", "#F0F8FF"],
+        "texture": "ícone de calendário e relógio 3D, brilho dental",
+        "emotion": "Confiança e Cuidado",
+        "lighting": "Clara e limpa, como um consultório"
+      },
+      "Sobrancelha_Avaliacao_Verde": {
+        "style": "Beleza / Elegante, com tipografia elegante e serifada",
+        "palette": ["#BDB76B", "#F5F5DC", "#FFFFFF"],
+        "texture": "ícones de calendário 3D, formas orgânicas",
+        "emotion": "Beleza e Agendamento",
+        "lighting": "Luz de estúdio suave e focada"
+      },
+      "DiaConsumidor_Rosa": {
+        "style": "Varejo / Data Comemorativa, com tipografia script e arredondada",
+        "palette": ["#FF69B4", "#FFFFFF", "#FFC0CB"],
+        "texture": "etiqueta de preço 3D com porcentagem, cartão de crédito, celular",
+        "emotion": "Agradecimento e Compras",
+        "lighting": "Brilhante e festiva"
+      },
+      "DiaDasCriancas_Colorido": {
+        "style": "Data Comemorativa / Infantil, com tipografia playful/arredondada",
+        "palette": ["#1E90FF", "#FF69B4", "#32CD32"],
+        "texture": "balões, nuvens, brilho de lua, balões de ar quente",
+        "emotion": "Alegria e Inocência",
+        "lighting": "Mágica e noturna, com luz da lua"
+      },
+      "DiaDosProfessores_Verde": {
+        "style": "Data Comemorativa / Homenagem, com tipografia script e serifada",
+        "palette": ["#2E8B57", "#FFFFFF", "#FFD700"],
+        "texture": "quadro-negro desfocado, ícone de coração, brilho suave",
+        "emotion": "Gratidão e Sabedoria",
+        "lighting": "Quente e acolhedora"
+      },
+      "DiaDasMaes_RosaClaro": {
+        "style": "Data Comemorativa / Afetivo, com tipografia script de luxo",
+        "palette": ["#FFC0CB", "#FFFFFF", "#FF69B4"],
+        "texture": "flores de rosas desfocadas, brilho suave e etéreo",
+        "emotion": "Amor e Ternura",
+        "lighting": "Suave e angelical"
+      },
+      "DiaDasMulheres_Vermelho": {
+        "style": "Data Comemorativa / Força, com tipografia elegante e moderna",
+        "palette": ["#DC143C", "#FFFFFF", "#FFC0CB"],
+        "texture": "rosas vermelhas, efeito de movimento, ícone de coração",
+        "emotion": "Essência e Transformação",
+        "lighting": "Luz de estúdio com foco e contraste"
+      },
+      "DiaDosPais_Azul": {
+        "style": "Data Comemorativa / Família, com tipografia moderna e bold",
+        "palette": ["#1E90FF", "#FFFFFF", "#ADD8E6"],
+        "texture": "bolhas desfocadas, linhas de neon finas, brilho suave",
+        "emotion": "Carinho e Paternidade",
+        "lighting": "Suave e emocional"
+      },
+      "DiaDosNamorados_VermelhoRomantico": {
+        "style": "Data Comemorativa / Romântico, com tipografia script de luxo",
+        "palette": ["#B22222", "#FFE4E1", "#FFFFFF"],
+        "texture": "corações 3D, brilho suave, bokeh de luzes",
+        "emotion": "Amor e Paixão",
+        "lighting": "Quente e íntima"
+      },
+      "DiaDoTrabalhador_Branco": {
+        "style": "Data Comemorativa / Profissional, com tipografia bold e geométrica",
+        "palette": ["#FFA500", "#FFFFFF", "#808080"],
+        "texture": "prédios de cidade ao fundo, brilho de sol, várias profissões",
+        "emotion": "Reconhecimento e Progresso",
+        "lighting": "Luz do dia, clara e inspiradora"
+      },
+      "Agenda_Tropical_Clean": {
+        "style": "Pop Tropical / Clean, com tipografia script elegante",
+        "palette": ["#FFFFFF", "#8B4513", "#00FFFF"],
+        "texture": "fundo branco, sombras de folhas de palmeira, textura de meio-tom sutil",
+        "emotion": "Fresco e Veranil",
+        "lighting": "Luz de estúdio brilhante e limpa, com sombras suaves projetadas"
+      },
+      "Agenda_Pop_Vibrante": {
+        "style": "Pop / Gráfico Energético, com tipografia bold",
+        "palette": ["#FFA500", "#FFFFFF", "#A52A2A"],
+        "texture": "textura de spray, formas de estrelas, brilho de palco",
+        "emotion": "Vibrante e Alegre",
+        "lighting": "Luz de show frontal, alta energia e brilhante"
+      },
+      "Agenda_Sertanejo_Cinematico": {
+        "style": "Sertanejo / Cinematico, com tipografia elegante",
+        "palette": ["#1C1C1C", "#FFDAB9", "#00BFFF"],
+        "texture": "granulação de filme, poeira, lens flare quente, bokeh",
+        "emotion": "Sophisticated e Intimista",
+        "lighting": "Cinematográfica, com luz de recorte (rim light) quente e preenchimento frio"
+      },
+      "Agenda_Funk_Urbano_Agressivo": {
+        "style": "Funk / Urbano / Street Art / Graffiti, com tipografia street/tagging",
+        "palette": ["#FF0000", "#FFFFFF", "#000000"],
+        "texture": "padrão de zebra abstrato, fundo de cidade em motion blur, elementos gráficos agressivos",
+        "emotion": "Impacto e Energia",
+        "lighting": "Luz dura de estúdio com alto contraste e sombras fortes"
+      },
+      "Agenda_Balada_Eletronica_Neon": {
+        "style": "Eletrônico / Neon / Rave, com tipografia outline/wireframe",
+        "palette": ["#9B30FF", "#FF00FF", "#000000"],
+        "texture": "rastros de luz neon, fumaça, reflexos de lente, brilho atmosférico",
+        "emotion": "Elétrico e Hipnótico",
+        "lighting": "Luzes de neon e laser de balada, ambiente escuro"
+      },
+      "Agenda_Trap_Baralho_Grunge": {
+        "style": "Trap / Grunge / Street Art / Graffiti, com tipografia street/tagging",
+        "palette": ["#FFFFFF", "#000000", "#FF0000"],
+        "texture": "textura de papel de baralho, respingos de tinta, rabiscos, meio-tom",
+        "emotion": "Ousado e Urbano",
+        "lighting": "Alto contraste, como flash de câmera, com sombras profundas"
+      },
+      "Agenda_Pop_Moderno_Clean": {
+        "style": "Pop / Clean Gráfico / Minimalista, com tipografia geométrica sans",
+        "palette": ["#FFFFFF", "#007BFF", "#FFD700"],
+        "texture": "textura de papel sutil, elementos de rabisco à mão, formas geométricas limpas",
+        "emotion": "Confiante e Moderno",
+        "lighting": "Luz de estúdio limpa e brilhante, sem sombras fortes"
+      },
+      "Agenda_Funk_Graffiti": {
+        "style": "Funk / Street Art / Graffiti, com tipografia no estilo street/tagging",
+        "palette": ["#FF4500", "#008000", "#000000"],
+        "texture": "parede de concreto, tinta spray, estêncil, texturas de papel rasgado",
+        "emotion": "Rebelde e Energético",
+        "lighting": "Luz de rua noturna, com contraste e sombras dramáticas"
+      },
+      "Agenda_Balada_Urbana_Noturna": {
+        "style": "Eletrônico / Urbano / Cinematico, com tipografia moderna",
+        "palette": ["#1A1A1A", "#FF0000", "#0000FF"],
+        "texture": "bokeh de luzes da cidade, light leaks, granulação de filme, reflexos",
+        "emotion": "Noturno e Intenso",
+        "lighting": "Luzes de neon da cidade, iluminação de clube noturno"
+      },
+      "Agenda_Sertanejo_Rustico": {
+        "style": "Sertanejo / Vintage / Handcrafted, com tipografia no estilo carimbo/desgastado",
+        "palette": ["#8B4513", "#A0522D", "#FFFFFF"],
+        "texture": "madeira, quadro-negro, corda, textura de papel envelhecido",
+        "emotion": "Aconchegante e Tradicional",
+        "lighting": "Luz quente e suave, como a de uma lareira ou lâmpadas de filamento"
+      },
+      "Agenda_Piseiro_Colorido": {
+        "style": "Forró / Piseiro Pop, com tipografia bold e arredondada",
+        "palette": ["#39FF14", "#FF1493", "#FFFFFF"],
+        "texture": "padrão de grade, respingos de tinta colorida, formas geométricas vibrantes",
+        "emotion": "Festivo e Vibrante",
+        "lighting": "Brilhante e saturada, luz de festa diurna"
+      },
+      "Agenda_Funk_Monocromatico_Azul": {
+        "style": "Funk / Eletrônico / Neon / Rave, com tipografia outline/wireframe",
+        "palette": ["#00008B", "#00FFFF", "#FFFFFF"],
+        "texture": "brilho de neon, fumaça sutil, reflexos de água",
+        "emotion": "Elétrico e Frio",
+        "lighting": "Luz de LED azul e ciano, criando uma atmosfera futurista"
+      },
+      "Agenda_Pagode_Palco": {
+        "style": "Pagode / Samba, com tipografia script",
+        "palette": ["#0000CD", "#FFD700", "#FFFFFF"],
+        "texture": "spotlights de palco, padrão de luz de fundo, lens flare",
+        "emotion": "Alegre e Energético",
+        "lighting": "Iluminação de show ao vivo, com feixes de luz amarelos e azuis"
+      },
+      "Agenda_Pagodao_Retro": {
+        "style": "Pagode / Axé Retrô, com tipografia street/tagging",
+        "palette": ["#F5F5DC", "#008080", "#000000"],
+        "texture": "pinceladas, respingos de tinta, textura de papel antigo, tratamento de cor duotone",
+        "emotion": "Descontraído e Artístico",
+        "lighting": "Suave com um leve desbotamento, imitando fotos antigas"
+      },
+      "Agenda_Funk_Ostentacao": {
+        "style": "Funk / Luxo / Premium, com tipografia de luxo",
+        "palette": ["#800080", "#FF00FF", "#C0C0C0"],
+        "texture": "padrão de monograma de luxo, brilho de joias, formas de coração suaves",
+        "emotion": "Luxuoso e Ousado",
+        "lighting": "Iluminação de estúdio de moda, com brilho suave e realces"
+      },
+      "Nightclub_Duotone_Glow": {
+        "style": "Nightclub / Duotone Neon / Neon / Rave, com tipografia moderna",
+        "palette": ["#FF00FF", "#00FFFF", "#1A1A1A"],
+        "texture": "fumaça suave, brilho de lente, gradiente atmosférico, pele iluminada por neon",
+        "emotion": "Elétrico e Intenso",
+        "lighting": "Iluminação de estúdio dividida (split lighting), com uma fonte de luz magenta forte de um lado e uma luz de preenchimento ciano do outro, criando contornos vibrantes."
+      },
+      "Nightclub_Geometric_Lines": {
+        "style": "Nightclub / Geométrico Futurista / Minimalista, com tipografia geométrica sans-serif",
+        "palette": ["#9400D3", "#00BFFF", "#FFFFFF"],
+        "texture": "linhas de neon finas, formas geométricas (quadrados, triângulos), fundo escuro com gradiente sutil, brilho de lente",
+        "emotion": "Moderno e Digital",
+        "lighting": "Luzes de neon que formam a geometria da cena, com um brilho suave (glow) que ilumina o ambiente."
+      },
+      "Nightclub_Pixel_Retro": {
+        "style": "Nightclub / Retro-Futurista Pixelado / Retrô, com tipografia digital/pixel",
+        "palette": ["#FF007F", "#7F00FF", "#FFFFFF"],
+        "texture": "tipografia em pixel art, grade digital, fundo com gradiente suave e colorido, ruído sutil",
+        "emotion": "Nostálgico e Divertido",
+        "lighting": "A própria tipografia pixelada emite um brilho de neon, iluminando a cena com uma luz difusa e colorida."
+      },
+      "Nightclub_Urban_Grunge": {
+        "style": "Nightclub / Urbano Grunge / Street Art / Graffiti, com tipografia street/tagging",
+        "palette": ["#FF00FF", "#00FFFF", "#FFFFFF", "#000000"],
+        "texture": "textura de papel rasgado, respingos de tinta aquarela, sobreposição de fotos com ruído, tipografia neon borrada",
+        "emotion": "Rebelde e Caótico",
+        "lighting": "Iluminação de flash duro e estourado sobre o tema principal, com brilho de neon vindo do texto e dos elementos gráficos."
+      },
+      "Nightclub_Minimal_Brutal": {
+        "style": "Nightclub / Minimalista Brutalista / Swiss Design, com tipografia bold",
+        "palette": ["#0000FF", "#FFFFFF", "#000000"],
+        "texture": "cores sólidas, formas geométricas simples, foto em preto e branco de alto contraste, tipografia sans-serif bold",
+        "emotion": "Direto e Impactante",
+        "lighting": "Iluminação gráfica e limpa, com sombras duras e pouca luz de preenchimento."
+      },
+      "Nightclub_Holo_Abstract": {
+        "style": "Nightclub / Abstrato Holográfico / Futurista, com tipografia moderna e etérea",
+        "palette": ["#FF00FF", "#00BFFF", "#FFD700"],
+        "texture": "formas 3D iridescentes e fluidas, fundo preto, brilho holográfico, linhas finas e orgânicas",
+        "emotion": "Futurista e Sonhador",
+        "lighting": "A luz vem das próprias formas 3D, que emitem um brilho colorido e refletem em superfícies imaginárias."
+      },
+      "Nightclub_Vibrant_Rings": {
+        "style": "Nightclub / Palco Neon / Eletrônico, com tipografia outline/wireframe",
+        "palette": ["#FF00A8", "#B400FF", "#FFFFFF"],
+        "texture": "círculos de neon brilhantes, reflexos de lente, fumaça de palco, grade de pontos de LED",
+        "emotion": "Energético e Cativante",
+        "lighting": "Contraluz forte vinda dos anéis de neon, com uma luz frontal suave no artista para destaque."
+      },
+      "Nightclub_Carnival_Glitter": {
+        "style": "Evento / Carnaval Vibrante / Luxo / Premium, com tipografia bold e arredondada",
+        "palette": ["#9400D3", "#FFD700", "#FF1493"],
+        "texture": "textura de glitter grosso, gradiente granulado, formas 3D douradas, tipografia 3D bold",
+        "emotion": "Festivo e Exuberante",
+        "lighting": "Luz de festa brilhante e difusa, com múltiplos pontos de brilho e reflexos dourados."
+      }
+    }
+  }
+}

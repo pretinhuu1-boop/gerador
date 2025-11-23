@@ -1,0 +1,22 @@
+{
+  "characters": {
+    "MC_PROTAGONIST": {
+      "base_look": "Jaqueta de Couro Vermelha, Calça Jeans Preta",
+      "dynamic_states": []
+    }
+  },
+  "environment": {
+    "global_weather": "clear",
+    "time_of_day": "night",
+    "lighting_scheme": {
+      "primary_source": "Néon de rua",
+      "direction_consistency": true
+    }
+  },
+  "props": {
+      "moto_artista": {
+          "initial_state": "limpa e nova",
+          "current_damage_level": "none"
+      }
+  }
+}

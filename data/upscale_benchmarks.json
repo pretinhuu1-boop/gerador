@@ -1,0 +1,28 @@
+{
+    "benchmarks": [
+        {
+            "id": "photographic",
+            "name": "Fotográfico Realista",
+            "description": "Ideal para retratos e fotos. Foca em textura de pele natural, detalhes finos e iluminação suave.",
+            "prompt": "[TAREFA PRINCIPAL]\nFaça o upscale da imagem do usuário fornecida para uma resolução 4K com qualidade de fotografia profissional de alta resolução.\n- **FOCO EM DETALHES:** Reconstrua detalhes finos e micro-texturas (como poros da pele, texturas de tecido, fios de cabelo). O resultado deve ser extremamente nítido.\n- **RESTAURAÇÃO:** Elimine ruído digital, artefatos de compressão (blocos de JPEG) e desfoque, mas sem criar uma aparência de plástico ou excessivamente suave. Preserve a textura natural.\n- **FIDELIDADE DE COR E LUZ:** Garanta que a fidelidade de cor e a iluminação sejam naturais, ricas e consistentes. Melhore a gradação de cores para que seja suave e sem 'banding'.\n- **PRESERVAÇÃO OBRIGATÓRIA:** O conteúdo, a composição e o assunto da imagem original do usuário devem ser perfeitamente preservados. NÃO altere, adicione ou remova elementos.\n\nExecute a operação de upscale de alta fidelidade agora."
+        },
+        {
+            "id": "cinematic",
+            "name": "Cinematográfico",
+            "description": "Aplica um look de cinema, com contraste sutil, grão de filme e um color grading teal & orange.",
+            "prompt": "[TAREFA PRINCIPAL]\nFaça o upscale da imagem do usuário para 4K, aplicando um estilo cinematográfico de alta qualidade.\n- **GRÃO DE FILME:** Adicione uma camada sutil e realista de granulação de filme (35mm) para dar textura e profundidade cinematográfica. Evite ruído digital.\n- **COLOR GRADING:** Aplique um leve color grading no estilo 'teal and orange', onde os realces tendem para o laranja/quente e as sombras para o azul/frio. Mantenha os tons de pele naturais.\n- **CONTRASTE SUAVE:** Aumente levemente o contraste para criar um look mais dramático, mas sem 'clipar' os pretos ou estourar os brancos. As sombras devem ter detalhes.\n- **NITIDEZ SELETIVA:** Aumente a nitidez nos pontos de foco (como olhos em um retrato) e mantenha o resto natural.\n- **PRESERVAÇÃO OBRIGATÓRIA:** O conteúdo e a composição da imagem original devem ser preservados. Apenas o estilo visual deve ser aprimorado.\n\nExecute a operação de upscale cinematográfico agora."
+        },
+        {
+            "id": "digital_art",
+            "name": "Arte Digital / Ilustração",
+            "description": "Perfeito para ilustrações e 3D. Remove artefatos e define as linhas, criando um acabamento limpo.",
+            "prompt": "[TAREFA PRINCIPAL]\nRealize o upscale da ilustração ou arte digital fornecida para uma resolução 4K, com qualidade de render de estúdio.\n- **LINHAS E BORDAS:** Defina e aprimore todas as linhas e bordas para serem extremamente nítidas e limpas, sem serrilhados (aliasing) ou borrões.\n- **CORES E GRADIENTES:** Torne as cores vibrantes e uniformes. Suavize quaisquer gradientes para eliminar 'banding' e garantir transições perfeitas.\n- **REMOÇÃO DE ARTEFATOS:** Remova completamente quaisquer artefatos de compressão (JPEG) ou ruído digital, resultando em uma imagem perfeitamente limpa.\n- **TEXTURA INTENCIONAL:** Se a arte original tiver uma textura intencional (como pinceladas ou ruído de design), preserve e aprimore essa textura. Se não tiver, não adicione nenhuma.\n- **PRESERVAÇÃO OBRIGATÓRIA:** O estilo artístico, as formas e o conteúdo da arte original devem ser 100% preservados.\n\nExecute o upscale para arte digital agora."
+        },
+        {
+            "id": "product_shot",
+            "name": "Foto de Produto (Comercial)",
+            "description": "Cria um visual de anúncio, com cores vibrantes, brilho acentuado e um fundo limpo.",
+            "prompt": "[TAREFA PRINCIPAL]\nFaça o upscale da foto de produto para 4K, dando a ela um acabamento de alta qualidade para publicidade comercial.\n- **BRILHO E REFLEXOS:** Acentue os brilhos especulares e reflexos nas superfícies do produto (metal, vidro, plástico) para fazê-lo parecer novo e atraente.\n- **CORES VIBRANTES:** Aumente a saturação de forma inteligente para que as cores do produto e da marca se destaquem, sem parecerem artificiais.\n- **FUNDO LIMPO:** Se houver um fundo, limpe qualquer ruído ou imperfeição, tornando-o uniforme e não distrativo.\n- **NITIDEZ EXTREMA:** Aplique nitidez para destacar todos os detalhes do produto, como texturas e rótulos, garantindo que sejam perfeitamente legíveis.\n- **PRESERVAÇÃO OBRIGATÓRIA:** O produto em si não deve ser alterado. Apenas o acabamento visual deve ser aprimorado para um padrão comercial.\n\nExecute o upscale comercial agora."
+        }
+    ]
+}
