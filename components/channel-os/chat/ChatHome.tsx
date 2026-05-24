@@ -1,16 +1,44 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Telescope, Wand2, Megaphone, Brain, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  Sparkles,
+  Telescope,
+  Wand2,
+  Megaphone,
+  Brain,
+  AlertCircle,
+  CheckCircle2,
+  History,
+  Plus,
+} from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useAppStore } from '../../../stores/appStore';
-import { gatewayHealthcheck } from '../../../services/hermesGateway';
+import { gatewayHealthcheck, sendHermesMessage, type HermesStreamEvent } from '../../../services/hermesGateway';
+import { supabase } from '../../../services/supabase';
+import {
+  createSession,
+  insertMessage,
+  listMessages,
+  listSessions,
+  archiveSession,
+  touchSession,
+  renameSession,
+} from '../../../services/channelOS/sessionsService';
+import type { HermesSession, ToolCall } from '../../../types/database';
 import { Badge } from '../../ui/Badge';
+import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { ChatComposer } from './ChatComposer';
 import { ChatStream } from './ChatStream';
+import { SessionsDrawer } from './SessionsDrawer';
 import type { ChatMessage } from './types';
 
-const SUGGESTIONS: Array<{ icon: typeof Sparkles; label: string; prompt: string; tone: 'brand' | 'accent' | 'info' | 'warn' }> = [
+const SUGGESTIONS: Array<{
+  icon: typeof Sparkles;
+  label: string;
+  prompt: string;
+  tone: 'brand' | 'accent' | 'info' | 'warn';
+}> = [
   {
     icon: Telescope,
     label: 'Achar nichos com gap',
@@ -27,8 +55,7 @@ const SUGGESTIONS: Array<{ icon: typeof Sparkles; label: string; prompt: string;
   {
     icon: Megaphone,
     label: 'Brainstorm de roteiros',
-    prompt:
-      'Me dá 10 ideias de Shorts faceless de mistério/conspiração, com hook nos primeiros 3 segundos.',
+    prompt: 'Me dá 10 ideias de Shorts faceless de mistério/conspiração, com hook nos primeiros 3 segundos.',
     tone: 'info',
   },
   {
@@ -39,25 +66,328 @@ const SUGGESTIONS: Array<{ icon: typeof Sparkles; label: string; prompt: string;
   },
 ];
 
+const newMessage = (m: Partial<ChatMessage> & { role: ChatMessage['role'] }): ChatMessage => ({
+  id: crypto.randomUUID(),
+  content: '',
+  ...m,
+});
+
 export const ChatHome = () => {
   const { user } = useAuth();
   const setActiveWorkspace = useAppStore((s) => s.setActiveWorkspace);
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [gatewayOk, setGatewayOk] = useState<boolean | null>(null);
 
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<HermesSession[] | null>(null);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const abortRef = useRef<AbortController | null>(null);
+
+  // ---- gateway health ----
   useEffect(() => {
     let cancelled = false;
-    gatewayHealthcheck().then((r) => {
-      if (!cancelled) setGatewayOk(r.ok);
-    });
-    const id = setInterval(() => {
-      gatewayHealthcheck().then((r) => !cancelled && setGatewayOk(r.ok));
-    }, 30_000);
+    const check = () => gatewayHealthcheck().then((r) => !cancelled && setGatewayOk(r.ok));
+    check();
+    const id = setInterval(check, 30_000);
     return () => {
       cancelled = true;
       clearInterval(id);
     };
+  }, []);
+
+  // ---- sessions list ----
+  const refreshSessions = useCallback(async () => {
+    if (!user) return;
+    setSessionsLoading(true);
+    setSessionsError(null);
+    try {
+      const list = await Promise.race([
+        listSessions(user.id),
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout 6s')), 6000)),
+      ]);
+      setSessions(list);
+    } catch (e) {
+      setSessionsError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    refreshSessions();
+  }, [refreshSessions]);
+
+  // ---- session load ----
+  const loadSession = useCallback(async (id: string) => {
+    setSessionId(id);
+    setDrawerOpen(false);
+    try {
+      const msgs = await listMessages(id);
+      setMessages(
+        msgs.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content ?? '',
+          agent: m.agent_name ?? undefined,
+          model: m.model ?? undefined,
+          toolCalls: m.tool_calls ?? undefined,
+          toolCallId: m.tool_call_id ?? undefined,
+        })),
+      );
+    } catch (e) {
+      setMessages([
+        newMessage({
+          role: 'system',
+          content: `Falha ao carregar sessão: ${e instanceof Error ? e.message : String(e)}`,
+        }),
+      ]);
+    }
+  }, []);
+
+  const startNewSession = useCallback(() => {
+    setSessionId(null);
+    setMessages([]);
+    setDrawerOpen(false);
+  }, []);
+
+  const onArchive = useCallback(
+    async (id: string) => {
+      try {
+        await archiveSession(id);
+        if (id === sessionId) startNewSession();
+        await refreshSessions();
+      } catch (e) {
+        console.error('archive failed', e);
+      }
+    },
+    [sessionId, startNewSession, refreshSessions],
+  );
+
+  // ---- send ----
+  const send = useCallback(
+    async (text: string) => {
+      if (!user || !text.trim() || streaming) return;
+
+      // Stub mode when gateway offline OR no Supabase auth session
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      // Persist user message in memory immediately
+      const userMsg = newMessage({ role: 'user', content: text });
+      setMessages((prev) => [...prev, userMsg]);
+
+      if (gatewayOk === false || !accessToken) {
+        const stubMsg = newMessage({
+          role: 'assistant',
+          agent: gatewayOk === false ? 'gateway-offline' : 'auth-required',
+          content:
+            gatewayOk === false
+              ? 'Hermes gateway offline. Suba `docker compose up hermes-gateway` com `OPENROUTER_API_KEY` no `.env` pra ter streaming real. Enquanto isso, o workspace **Scout** funciona standalone — descoberta + scoring + persistência rodam direto do navegador.'
+              : 'Sem sessão Supabase ativa. Faça login pra que o gateway possa autenticar suas requests.',
+        });
+        setMessages((prev) => [...prev, stubMsg]);
+        return;
+      }
+
+      // Ensure a session exists (creates if needed)
+      let currentSessionId = sessionId;
+      try {
+        if (!currentSessionId) {
+          const created = await createSession(user.id, 'mixed');
+          currentSessionId = created.id;
+          setSessionId(created.id);
+        }
+        // Persist the user message
+        await insertMessage({
+          sessionId: currentSessionId,
+          userId: user.id,
+          role: 'user',
+          content: text,
+        });
+        await touchSession(currentSessionId);
+      } catch (e) {
+        const errMsg = e instanceof Error ? e.message : String(e);
+        setMessages((prev) => [
+          ...prev,
+          newMessage({
+            role: 'assistant',
+            agent: 'storage-error',
+            content: `Não consegui persistir essa mensagem no Supabase (${errMsg}). A conversa segue em memória nesta sessão.`,
+          }),
+        ]);
+        // continue anyway with streaming, just without persistence
+      }
+
+      // Auto-name session from first message
+      if (!sessions?.some((s) => s.id === currentSessionId && s.title)) {
+        renameSession(currentSessionId!, text.slice(0, 60)).catch(() => undefined);
+      }
+
+      // Set up streaming placeholder
+      const streamId = crypto.randomUUID();
+      const placeholder: ChatMessage = {
+        id: streamId,
+        role: 'assistant',
+        content: '',
+        pending: true,
+      };
+      setMessages((prev) => [...prev, placeholder]);
+      setStreaming(true);
+
+      const abort = new AbortController();
+      abortRef.current = abort;
+
+      let agent: string | undefined;
+      let model: string | undefined;
+      let activeStreamId = streamId;
+      let toolCallsForCurrent: ToolCall[] = [];
+
+      try {
+        await sendHermesMessage({
+          sessionId: currentSessionId,
+          message: text,
+          accessToken,
+          workspace: 'mixed',
+          signal: abort.signal,
+          onEvent: (event: HermesStreamEvent) => {
+            switch (event.type) {
+              case 'agent.start':
+                agent = (event.agent as string) ?? (event.data?.name as string);
+                model = (event.data?.model as string) ?? model;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === activeStreamId ? { ...m, agent, model, pending: true } : m,
+                  ),
+                );
+                break;
+
+              case 'agent.handoff': {
+                // start a new bubble for the sub-agent
+                const handoffId = crypto.randomUUID();
+                activeStreamId = handoffId;
+                toolCallsForCurrent = [];
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: handoffId,
+                    role: 'assistant',
+                    content: '',
+                    agent: (event.data?.to as string) ?? 'agent',
+                    pending: true,
+                  },
+                ]);
+                break;
+              }
+
+              case 'message.delta': {
+                const piece = (event as { content?: string }).content ?? (event.data?.content as string) ?? '';
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === activeStreamId
+                      ? { ...m, content: m.content + piece, pending: true }
+                      : m,
+                  ),
+                );
+                break;
+              }
+
+              case 'tool.call': {
+                const id = (event.data?.id as string) ?? crypto.randomUUID();
+                const name = (event.data?.name as string) ?? 'unknown';
+                let args: Record<string, unknown> = {};
+                try {
+                  args = JSON.parse((event.data?.arguments_raw as string) ?? '{}');
+                } catch {
+                  /* ignore */
+                }
+                const tc: ToolCall = { id, name, arguments: args, status: 'running' };
+                toolCallsForCurrent = [...toolCallsForCurrent, tc];
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === activeStreamId ? { ...m, toolCalls: toolCallsForCurrent } : m,
+                  ),
+                );
+                break;
+              }
+
+              case 'tool.result': {
+                const id = (event.data?.id as string) ?? '';
+                const result = event.data?.result;
+                const isError = Boolean(event.data?.is_error);
+                const tcName =
+                  toolCallsForCurrent.find((t) => t.id === id)?.name ?? 'tool';
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: crypto.randomUUID(),
+                    role: 'tool',
+                    content: '',
+                    toolCallId: id,
+                    toolName: tcName,
+                    toolResult: result,
+                    toolError: isError ? (result as { error?: string })?.error ?? 'erro' : null,
+                  },
+                ]);
+                break;
+              }
+
+              case 'message.complete': {
+                const final = (event.data?.content as string) ?? '';
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === activeStreamId
+                      ? { ...m, content: final || m.content, pending: false }
+                      : m,
+                  ),
+                );
+                break;
+              }
+
+              case 'error': {
+                const detail =
+                  (event.data?.message as string) ??
+                  (event.data?.detail as string) ??
+                  'falha desconhecida';
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === activeStreamId ? { ...m, pending: false, error: detail } : m,
+                  ),
+                );
+                break;
+              }
+
+              case 'done':
+                setStreaming(false);
+                refreshSessions();
+                break;
+            }
+          },
+        });
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === activeStreamId
+              ? { ...m, pending: false, error: e instanceof Error ? e.message : String(e) }
+              : m,
+          ),
+        );
+      } finally {
+        setStreaming(false);
+        abortRef.current = null;
+      }
+    },
+    [user, sessionId, sessions, gatewayOk, streaming, refreshSessions],
+  );
+
+  const cancel = useCallback(() => {
+    abortRef.current?.abort();
+    setStreaming(false);
   }, []);
 
   const empty = messages.length === 0;
@@ -66,25 +396,39 @@ export const ChatHome = () => {
   return (
     <div className="h-full flex flex-col">
       <header className="h-14 shrink-0 flex items-center justify-between gap-3 pl-14 pr-6 md:pl-6 border-b border-border-subtle/50 backdrop-blur bg-bg-base/60">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-brand" />
-          <h2 className="font-display font-semibold text-sm">Hermes</h2>
-          <Badge variant="brand" size="sm" className="ml-1 font-mono">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles className="h-4 w-4 text-brand shrink-0" />
+          <h2 className="font-display font-semibold text-sm truncate">
+            {sessions?.find((s) => s.id === sessionId)?.title ?? 'Hermes'}
+          </h2>
+          <Badge variant="brand" size="sm" className="ml-1 font-mono shrink-0">
             chat
           </Badge>
         </div>
-        <div className="flex items-center gap-2 text-xs text-fg-muted">
-          {gatewayOk === null ? (
-            <span className="opacity-60">checando gateway…</span>
-          ) : gatewayOk ? (
-            <span className="inline-flex items-center gap-1 text-success">
-              <CheckCircle2 className="h-3 w-3" /> gateway online
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-warn">
-              <AlertCircle className="h-3 w-3" /> gateway offline · scout funciona standalone
-            </span>
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2 text-xs text-fg-muted">
+            {gatewayOk === null ? (
+              <span className="opacity-60">checando gateway…</span>
+            ) : gatewayOk ? (
+              <span className="inline-flex items-center gap-1 text-success">
+                <CheckCircle2 className="h-3 w-3" /> gateway online
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-warn">
+                <AlertCircle className="h-3 w-3" /> gateway offline
+              </span>
+            )}
+          </div>
+          {sessionId && (
+            <Button variant="ghost" size="sm" onClick={startNewSession}>
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Nova</span>
+            </Button>
           )}
+          <Button variant="ghost" size="sm" onClick={() => setDrawerOpen(true)}>
+            <History className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Sessões</span>
+          </Button>
         </div>
       </header>
 
@@ -104,21 +448,20 @@ export const ChatHome = () => {
                 Oi, {greeting}. <span className="text-gradient-brand">O que vamos atacar hoje?</span>
               </h1>
               <p className="text-fg-secondary text-sm mt-2 max-w-lg mx-auto">
-                Hermes é seu chefe de operações de canal. Pede pra ele caçar nicho, analisar concorrência,
-                roteirizar, e ele invoca o subagente certo.
+                Hermes é seu chefe de operações de canal. Pede pra ele caçar nicho, analisar
+                concorrência, roteirizar, e ele invoca o subagente certo.
               </p>
 
-              <div className="grid grid-cols-2 gap-3 mt-8 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8 text-left">
                 {SUGGESTIONS.map((s) => (
                   <Card
                     key={s.label}
                     interactive
                     onClick={() => {
-                      // For Phase 0: route obvious cases to standalone workspaces.
                       if (s.label.includes('canal') || s.label.includes('nichos')) {
                         setActiveWorkspace('scout');
                       } else {
-                        setMessages([{ id: crypto.randomUUID(), role: 'user', content: s.prompt }]);
+                        send(s.prompt);
                       }
                     }}
                     className="group hover:border-brand/40 hover:shadow-glow-brand"
@@ -148,36 +491,21 @@ export const ChatHome = () => {
             </motion.div>
           </div>
         ) : (
-          <ChatStream messages={messages} streaming={streaming} />
+          <ChatStream messages={messages} />
         )}
 
         <div className="shrink-0 border-t border-border-subtle/50 bg-bg-base/80 backdrop-blur px-4 sm:px-8 py-4">
           <div className="mx-auto max-w-3xl">
             <ChatComposer
-              disabled={streaming}
+              disabled={false}
+              streaming={streaming}
+              onCancel={cancel}
               placeholder={
                 gatewayOk === false
-                  ? 'Gateway offline — você pode digitar mas só vai receber resposta stub. Use Scout pra análise real.'
+                  ? 'Gateway offline — você pode digitar, vou responder com stub.'
                   : 'Pede pro Hermes... ex: "achar 5 canais de mistério com até 50k subs"'
               }
-              onSubmit={(text) => {
-                if (!text.trim()) return;
-                const stubReply =
-                  gatewayOk === false
-                    ? 'Hermes gateway offline. Suba o serviço (`docker compose up hermes-gateway`) com OPENROUTER_API_KEY no `.env` pra ter streaming real. Enquanto isso, o workspace **Scout** funciona standalone — descoberta + scoring + persistência rodam direto do navegador.'
-                    : 'Streaming SSE ainda não está plugado nesta build (Fase 1 wireup). Por enquanto, use o workspace Scout pra rodar análise real de canal.';
-                setMessages((prev) => [
-                  ...prev,
-                  { id: crypto.randomUUID(), role: 'user', content: text },
-                  {
-                    id: crypto.randomUUID(),
-                    role: 'assistant',
-                    content: stubReply,
-                    agent: gatewayOk === false ? 'gateway-offline' : 'system',
-                  },
-                ]);
-                setStreaming(false);
-              }}
+              onSubmit={send}
             />
             <p className="mt-2 text-center text-[11px] text-fg-muted">
               {gatewayOk
@@ -187,6 +515,19 @@ export const ChatHome = () => {
           </div>
         </div>
       </div>
+
+      <SessionsDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        sessions={sessions}
+        loading={sessionsLoading}
+        error={sessionsError}
+        activeId={sessionId}
+        onSelect={loadSession}
+        onArchive={onArchive}
+        onNew={startNewSession}
+        onRefresh={refreshSessions}
+      />
     </div>
   );
 };

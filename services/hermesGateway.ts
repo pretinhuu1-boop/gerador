@@ -2,25 +2,30 @@ import type { ToolCall } from '../types/database';
 
 const GATEWAY_URL = import.meta.env.VITE_HERMES_GATEWAY_URL ?? 'http://localhost:8088';
 
+export type HermesEventType =
+  | 'session.created'
+  | 'agent.start'
+  | 'agent.handoff'
+  | 'message.delta'
+  | 'message.complete'
+  | 'tool.call'
+  | 'tool.result'
+  | 'error'
+  | 'done';
+
 export interface HermesStreamEvent {
-  type:
-    | 'session.created'
-    | 'message.start'
-    | 'message.delta'
-    | 'message.complete'
-    | 'tool.call'
-    | 'tool.result'
-    | 'agent.handoff'
-    | 'error'
-    | 'done';
-  data: Record<string, unknown>;
+  type: HermesEventType;
+  agent?: string;
+  data?: Record<string, unknown>;
+  [k: string]: unknown;
 }
 
 export interface SendOptions {
-  sessionId?: string | null;
+  sessionId: string | null;
   message: string;
   accessToken: string;
   workspace?: 'home' | 'scout' | 'channels' | 'memory' | 'mixed';
+  history?: Array<{ role: string; content: string }>;
   signal?: AbortSignal;
   onEvent: (event: HermesStreamEvent) => void;
 }
@@ -30,12 +35,14 @@ export async function sendHermesMessage(opts: SendOptions): Promise<void> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
       Authorization: `Bearer ${opts.accessToken}`,
     },
     body: JSON.stringify({
       session_id: opts.sessionId,
       message: opts.message,
       workspace: opts.workspace ?? 'mixed',
+      history: opts.history ?? [],
     }),
     signal: opts.signal,
   });
@@ -44,7 +51,7 @@ export async function sendHermesMessage(opts: SendOptions): Promise<void> {
     const body = await res.text().catch(() => '');
     opts.onEvent({
       type: 'error',
-      data: { message: `Gateway returned ${res.status}`, detail: body },
+      data: { message: `Gateway returned ${res.status}`, detail: body.slice(0, 400) },
     });
     return;
   }
@@ -57,17 +64,26 @@ export async function sendHermesMessage(opts: SendOptions): Promise<void> {
     const { value, done } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || !trimmed.startsWith('data:')) continue;
-      const payload = trimmed.slice(5).trim();
+    // SSE frames are separated by blank lines
+    const frames = buffer.split('\n\n');
+    buffer = frames.pop() ?? '';
+    for (const frame of frames) {
+      const trimmed = frame.trim();
+      if (!trimmed) continue;
+      let eventName: string | undefined;
+      const dataLines: string[] = [];
+      for (const line of trimmed.split('\n')) {
+        if (line.startsWith('event:')) eventName = line.slice(6).trim();
+        else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim());
+      }
+      const payload = dataLines.join('\n');
       if (!payload) continue;
       try {
-        opts.onEvent(JSON.parse(payload));
+        const parsed = JSON.parse(payload) as HermesStreamEvent;
+        if (eventName && !parsed.type) parsed.type = eventName as HermesEventType;
+        opts.onEvent(parsed);
       } catch (err) {
-        console.warn('[hermes] bad SSE chunk', err, payload);
+        console.warn('[hermes] bad SSE chunk', err, payload.slice(0, 120));
       }
     }
   }

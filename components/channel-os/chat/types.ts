@@ -1,10 +1,18 @@
-export type ChatMessage = {
+import type { ToolCall } from '../../../types/database';
+
+export type ChatMessageRole = 'user' | 'assistant' | 'tool' | 'system';
+
+export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'tool' | 'system';
+  role: ChatMessageRole;
   content: string;
   agent?: string;
-  toolCallId?: string;
-  toolName?: string;
+  toolCalls?: ToolCall[] | null;
+  toolCallId?: string | null;
+  toolName?: string | null;
+  toolResult?: unknown;
+  toolError?: string | null;
   pending?: boolean;
-  error?: string;
-};
+  error?: string | null;
+  model?: string | null;
+}
