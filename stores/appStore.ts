@@ -7,15 +7,20 @@ export type Surface =
   | 'video-studio'
   | 'tools-studio';
 
+export type Workspace = 'home' | 'scout' | 'channels' | 'memory';
+
 interface AppState {
   surface: Surface;
   sidebarCollapsed: boolean;
+  mobileSidebarOpen: boolean;
   activeSessionId: string | null;
-  activeWorkspace: 'home' | 'scout' | 'channels' | 'memory';
+  activeWorkspace: Workspace;
   setSurface: (s: Surface) => void;
   toggleSidebar: () => void;
+  openMobileSidebar: () => void;
+  closeMobileSidebar: () => void;
   setActiveSession: (id: string | null) => void;
-  setActiveWorkspace: (w: AppState['activeWorkspace']) => void;
+  setActiveWorkspace: (w: Workspace) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -23,12 +28,15 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       surface: 'channel-os',
       sidebarCollapsed: false,
+      mobileSidebarOpen: false,
       activeSessionId: null,
       activeWorkspace: 'home',
-      setSurface: (surface) => set({ surface }),
+      setSurface: (surface) => set({ surface, mobileSidebarOpen: false }),
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+      openMobileSidebar: () => set({ mobileSidebarOpen: true }),
+      closeMobileSidebar: () => set({ mobileSidebarOpen: false }),
       setActiveSession: (activeSessionId) => set({ activeSessionId }),
-      setActiveWorkspace: (activeWorkspace) => set({ activeWorkspace }),
+      setActiveWorkspace: (activeWorkspace) => set({ activeWorkspace, mobileSidebarOpen: false }),
     }),
     {
       name: 'channel-os-app',

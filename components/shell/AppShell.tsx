@@ -1,6 +1,7 @@
 import { Suspense, lazy, type ReactNode } from 'react';
 import { useAppStore } from '../../stores/appStore';
 import { Sidebar } from './Sidebar';
+import { MobileMenuButton } from './MobileMenuButton';
 import { Spinner } from '../ui/Spinner';
 
 const ImageStudio = lazy(() => import('../ImageStudio'));
@@ -41,6 +42,7 @@ export const AppShell = ({
   return (
     <div className="h-screen w-screen flex bg-bg-base overflow-hidden">
       <Sidebar />
+      <MobileMenuButton />
       <main className="flex-1 min-w-0 ambient-bg overflow-hidden">
         <Suspense fallback={<StudioFallback />}>{render()}</Suspense>
       </main>
