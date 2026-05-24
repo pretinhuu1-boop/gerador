@@ -3,7 +3,22 @@ import { Sparkles, ChevronDown, ChevronRight, Wrench, AlertCircle, CheckCircle2 
 import { Avatar } from '../../ui/Avatar';
 import { Badge } from '../../ui/Badge';
 import { cn } from '../../../lib/cn';
+import { Markdown } from './Markdown';
 import type { ChatMessage } from './types';
+
+const AGENT_LABELS: Record<string, string> = {
+  orchestrator: 'Hermes',
+  scout: 'Scout',
+  'gateway-offline': 'Gateway offline',
+  'auth-required': 'Auth requerida',
+  'storage-error': 'Erro de armazenamento',
+  system: 'Sistema',
+};
+
+const agentDisplay = (raw?: string | null): string => {
+  if (!raw) return '';
+  return AGENT_LABELS[raw] ?? raw;
+};
 
 export const MessageBubble = ({
   message,
@@ -18,7 +33,7 @@ export const MessageBubble = ({
   const isUser = message.role === 'user';
 
   return (
-    <div className={cn('flex gap-3 animate-fade-in', isUser && 'flex-row-reverse')}>
+    <div className={cn('flex gap-3 min-w-0 animate-fade-in', isUser && 'flex-row-reverse')}>
       {isUser ? (
         <Avatar
           size="sm"
@@ -32,13 +47,13 @@ export const MessageBubble = ({
       )}
       <div
         className={cn(
-          'rounded-2xl px-4 py-2.5 max-w-[85%] text-sm leading-relaxed',
+          'min-w-0 rounded-2xl px-4 py-2.5 max-w-[85%] text-sm leading-relaxed overflow-hidden',
           isUser ? 'bg-brand/15 border border-brand/30 text-fg-primary' : 'surface-panel',
         )}
       >
         {message.agent && !isUser && (
-          <div className="text-[10px] font-mono text-fg-muted mb-1 uppercase tracking-wider inline-flex items-center gap-1.5">
-            <span>{message.agent}</span>
+          <div className="text-[10px] font-mono text-fg-muted mb-1.5 tracking-wider inline-flex items-center gap-1.5">
+            <span className="uppercase">{agentDisplay(message.agent)}</span>
             {message.model && (
               <Badge variant="default" size="sm" className="font-mono">
                 {message.model.split('/').pop()}
@@ -46,7 +61,13 @@ export const MessageBubble = ({
             )}
           </div>
         )}
-        {message.content && <div className="whitespace-pre-wrap break-words">{message.content}</div>}
+        {message.content && (
+          isUser ? (
+            <div className="whitespace-pre-wrap break-words">{message.content}</div>
+          ) : (
+            <Markdown>{message.content}</Markdown>
+          )
+        )}
         {message.pending && !message.content && (
           <span className="inline-flex h-2 gap-1 items-center">
             <span className="h-1.5 w-1.5 rounded-full bg-fg-muted animate-pulse" style={{ animationDelay: '0ms' }} />

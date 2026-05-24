@@ -15,7 +15,7 @@ export const ChatStream = ({ messages }: { messages: ChatMessage[] }) => {
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 py-6">
-      <div className="mx-auto max-w-3xl flex flex-col gap-5">
+      <div className="mx-auto max-w-3xl flex flex-col gap-5 min-w-0">
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} userInitials={initials} />
         ))}
