@@ -1,6 +1,7 @@
 """Hermes orchestrator — top-level agent that delegates to specialists."""
 from __future__ import annotations
 
+import json
 import logging
 from collections.abc import AsyncIterator
 from typing import Any
@@ -10,6 +11,7 @@ from .agents.scout import scout_agent
 from .config import get_settings
 from .connectors.openrouter import OpenRouterClient
 from .tools import ToolSpec, register
+from .tools.memory_tools import render_memory_context
 
 log = logging.getLogger(__name__)
 
@@ -23,6 +25,8 @@ Sua função:
     • `delegate_to_scout` — descoberta, análise e tracking de canais YouTube/TikTok/IG.
     • (mais subagentes virão: Content, Channel, Publisher).
 - Responder direto quando for conversa, brainstorm ou explicação que não precisa de dados externos.
+- Quando o usuário disser algo que vale lembrar (preferências, metas, fatos do canal, regras), use `pin_memory` — sem precisar pedir confirmação. Mas não polua: só pin do que é estável e útil em sessões futuras.
+- Quando o usuário perguntar "o que você lembra de mim", use `list_memory` antes de responder.
 - NUNCA invente números — se precisa de fato, chama uma tool.
 - Cite o subagente quando delegar ("Vou pedir pro Scout dar uma olhada...").
 
@@ -34,13 +38,8 @@ async def _delegate_to_scout(
     request: str,
     *,
     user_id: str,
-    session_id: str | None,
-    workspace: str,
-    client: OpenRouterClient,
 ) -> dict[str, Any]:
-    """Internal: not a regular tool — invoked directly by the orchestrator stream."""
-    # The actual orchestration is handled in `run_orchestrator`; this stub exists
-    # so the orchestrator LLM can ask to delegate via standard tool-calling.
+    """Internal placeholder — actual delegation streamed by `run_orchestrator`."""
     return {
         "delegated_to": "scout",
         "note": "Scout agent invoked — see follow-up events for streaming output.",
@@ -58,6 +57,7 @@ register(
         parameters={
             "type": "object",
             "properties": {
+                "user_id": {"type": "string"},
                 "request": {
                     "type": "string",
                     "description": "Self-contained task description for the Scout sub-agent.",
@@ -70,13 +70,16 @@ register(
 )
 
 
-def orchestrator_agent() -> AgentRun:
+def orchestrator_agent(memory_context: str = "") -> AgentRun:
     s = get_settings()
+    prompt = ORCHESTRATOR_SYSTEM
+    if memory_context:
+        prompt = f"{ORCHESTRATOR_SYSTEM}\n\n{memory_context}"
     return AgentRun(
         name="orchestrator",
         model=s.hermes_model_orchestrator,
-        system_prompt=ORCHESTRATOR_SYSTEM,
-        allowed_tools=["delegate_to_scout"],
+        system_prompt=prompt,
+        allowed_tools=["delegate_to_scout", "pin_memory", "list_memory", "deactivate_memory"],
         temperature=0.7,
     )
 
@@ -90,40 +93,39 @@ async def run_orchestrator(
     """Top-level streaming entrypoint. Intercepts delegate_to_scout calls and runs the
     subagent's stream inline so the SSE consumer sees a unified event timeline."""
     history = history or []
-    agent = orchestrator_agent()
+    memory_context = render_memory_context(ctx.user_id)
+    agent = orchestrator_agent(memory_context=memory_context)
     messages = [*history, {"role": "user", "content": user_message}]
 
     async for event in run_agent(client, agent, ctx, messages):
-        # Catch delegation: when the orchestrator finishes a tool call delegating to scout,
-        # we run the scout subagent inline as a real LLM stream.
-        if event.get("type") == "tool.result" and event.get("name") is None:
-            # base loop emits tool.result with id but no name; we use the previous call
-            pass
-
         if (
             event.get("type") == "tool.call"
             and event.get("name") == "delegate_to_scout"
         ):
-            # Yield the delegation marker
-            yield {"type": "agent.handoff", "to": "scout", "from": "orchestrator"}
-            # Parse the request payload
-            import json
-
+            yield {
+                "type": "agent.handoff",
+                "data": {"to": "scout", "from": "orchestrator"},
+                "to": "scout",
+                "from": "orchestrator",
+            }
             try:
                 payload = json.loads(event.get("arguments_raw") or "{}")
             except json.JSONDecodeError:
                 payload = {}
             scout_request = payload.get("request", user_message)
 
-            # Run Scout subagent
             scout_msgs = [{"role": "user", "content": scout_request}]
             async for sub in run_agent(client, scout_agent(), ctx, scout_msgs):
-                # Re-tag the agent name so the UI can color-code
                 if sub.get("type") == "message.delta":
                     yield {**sub, "agent": "scout"}
                 else:
                     yield {**sub, "agent": "scout"}
-            yield {"type": "agent.handoff", "to": "orchestrator", "from": "scout"}
+            yield {
+                "type": "agent.handoff",
+                "data": {"to": "orchestrator", "from": "scout"},
+                "to": "orchestrator",
+                "from": "scout",
+            }
             continue
 
         yield event

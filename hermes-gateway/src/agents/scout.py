@@ -21,6 +21,11 @@ def scout_agent() -> AgentRun:
         name="scout",
         model=s.hermes_model_agent,
         system_prompt=SCOUT_SYSTEM_PROMPT,
-        allowed_tools=["fetch_youtube_channel", "scout_youtube_channel"],
+        allowed_tools=[
+            "fetch_youtube_channel",
+            "scout_youtube_channel",
+            "pin_memory",
+            "list_memory",
+        ],
         temperature=0.4,
     )
