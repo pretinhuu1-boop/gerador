@@ -7,6 +7,7 @@ from collections.abc import AsyncIterator
 from typing import Any
 
 from .agents.base import AgentContext, AgentRun, run_agent
+from .agents.content import content_agent
 from .agents.scout import scout_agent
 from .config import get_settings
 from .connectors.openrouter import OpenRouterClient
@@ -20,15 +21,16 @@ ORCHESTRATOR_SYSTEM = """Você é Hermes — o chefe de operações de canal do 
 Personalidade: estratégico, direto, com voz de mentor de criador de conteúdo bem-sucedido. Português brasileiro, sem rodeios, com humor seco quando cabe. Trata o usuário como sócio, não cliente.
 
 Sua função:
-- Entender o que o usuário quer (achar canais, analisar, brainstormar conteúdo, agendar, etc).
+- Entender o que o usuário quer (achar canais, analisar, brainstormar conteúdo, roteirizar, agendar, etc).
 - Delegar para o subagente certo via tools quando a tarefa é especialista:
     • `delegate_to_scout` — descoberta, análise e tracking de canais YouTube/TikTok/IG.
-    • (mais subagentes virão: Content, Channel, Publisher).
-- Responder direto quando for conversa, brainstorm ou explicação que não precisa de dados externos.
-- Quando o usuário disser algo que vale lembrar (preferências, metas, fatos do canal, regras), use `pin_memory` — sem precisar pedir confirmação. Mas não polua: só pin do que é estável e útil em sessões futuras.
+    • `delegate_to_content` — brainstorm de ideias e roteirização (Shorts, Reels, TikTok, vídeos longos). O Content persiste drafts no workspace "Content" do usuário.
+    • (mais subagentes virão: Channel, Publisher).
+- Responda direto quando for conversa, opinião, explicação ou estratégia macro que não precisa de dados externos.
+- Quando o usuário disser algo que vale lembrar (preferências, metas, fatos do canal, regras), use `pin_memory` — sem precisar pedir confirmação. Não polua: só pin do que é estável e útil em sessões futuras.
 - Quando o usuário perguntar "o que você lembra de mim", use `list_memory` antes de responder.
 - NUNCA invente números — se precisa de fato, chama uma tool.
-- Cite o subagente quando delegar ("Vou pedir pro Scout dar uma olhada...").
+- Cite o subagente quando delegar ("Vou pedir pro Content dar uma olhada...").
 
 Importante: o usuário tem identidade (user_id) injetada no contexto — você NUNCA pede pra ele.
 """
@@ -39,10 +41,21 @@ async def _delegate_to_scout(
     *,
     user_id: str,
 ) -> dict[str, Any]:
-    """Internal placeholder — actual delegation streamed by `run_orchestrator`."""
     return {
         "delegated_to": "scout",
         "note": "Scout agent invoked — see follow-up events for streaming output.",
+        "request": request,
+    }
+
+
+async def _delegate_to_content(
+    request: str,
+    *,
+    user_id: str,
+) -> dict[str, Any]:
+    return {
+        "delegated_to": "content",
+        "note": "Content agent invoked — see follow-up events for streaming output.",
         "request": request,
     }
 
@@ -69,6 +82,29 @@ register(
     )
 )
 
+register(
+    ToolSpec(
+        name="delegate_to_content",
+        description=(
+            "Delegate brainstorming or scripting to the Content sub-agent. "
+            "Use whenever the user wants: ideas (Shorts/Reels/TikTok/long), full scripts, hooks, captions, "
+            "or to review their existing drafts. The Content agent persists results in Supabase."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "request": {
+                    "type": "string",
+                    "description": "Self-contained task description for the Content sub-agent.",
+                },
+            },
+            "required": ["request"],
+        },
+        handler=_delegate_to_content,
+    )
+)
+
 
 def orchestrator_agent(memory_context: str = "") -> AgentRun:
     s = get_settings()
@@ -79,7 +115,13 @@ def orchestrator_agent(memory_context: str = "") -> AgentRun:
         name="orchestrator",
         model=s.hermes_model_orchestrator,
         system_prompt=prompt,
-        allowed_tools=["delegate_to_scout", "pin_memory", "list_memory", "deactivate_memory"],
+        allowed_tools=[
+            "delegate_to_scout",
+            "delegate_to_content",
+            "pin_memory",
+            "list_memory",
+            "deactivate_memory",
+        ],
         temperature=0.7,
     )
 
@@ -97,34 +139,36 @@ async def run_orchestrator(
     agent = orchestrator_agent(memory_context=memory_context)
     messages = [*history, {"role": "user", "content": user_message}]
 
+    delegations: dict[str, AgentRun] = {
+        "delegate_to_scout": scout_agent(),
+        "delegate_to_content": content_agent(),
+    }
+
     async for event in run_agent(client, agent, ctx, messages):
-        if (
-            event.get("type") == "tool.call"
-            and event.get("name") == "delegate_to_scout"
-        ):
+        tool_name = event.get("name") if event.get("type") == "tool.call" else None
+        if tool_name in delegations:
+            sub_agent = delegations[tool_name]
+            sub_name = sub_agent.name
             yield {
                 "type": "agent.handoff",
-                "data": {"to": "scout", "from": "orchestrator"},
-                "to": "scout",
+                "data": {"to": sub_name, "from": "orchestrator"},
+                "to": sub_name,
                 "from": "orchestrator",
             }
             try:
                 payload = json.loads(event.get("arguments_raw") or "{}")
             except json.JSONDecodeError:
                 payload = {}
-            scout_request = payload.get("request", user_message)
+            sub_request = payload.get("request", user_message)
 
-            scout_msgs = [{"role": "user", "content": scout_request}]
-            async for sub in run_agent(client, scout_agent(), ctx, scout_msgs):
-                if sub.get("type") == "message.delta":
-                    yield {**sub, "agent": "scout"}
-                else:
-                    yield {**sub, "agent": "scout"}
+            sub_msgs = [{"role": "user", "content": sub_request}]
+            async for sub in run_agent(client, sub_agent, ctx, sub_msgs):
+                yield {**sub, "agent": sub_name}
             yield {
                 "type": "agent.handoff",
-                "data": {"to": "orchestrator", "from": "scout"},
+                "data": {"to": "orchestrator", "from": sub_name},
                 "to": "orchestrator",
-                "from": "scout",
+                "from": sub_name,
             }
             continue
 
