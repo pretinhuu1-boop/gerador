@@ -8,6 +8,7 @@ import { Input, Textarea } from '../../ui/Input';
 import type { ContentBeat, ContentDraft } from '../../../types/database';
 import { updateDraft } from '../../../services/channelOS/contentService';
 import { DraftPreview } from './DraftPreview';
+import { VoicePreview } from './VoicePreview';
 import { cn } from '../../../lib/cn';
 
 interface Props {
@@ -126,15 +127,21 @@ export const DraftDetail = ({ draft, onClose, onSaved }: Props) => {
 
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {tab === 'preview' && (
-            <DraftPreview
-              draft={{
-                ...draft,
-                title: title.trim() || draft.title,
-                hook: hook.trim() || draft.hook,
-                cta: cta.trim() || draft.cta,
-                beats: beats.filter((b) => b.text.trim().length > 0),
-              }}
-            />
+            <div className="space-y-4">
+              <DraftPreview
+                draft={{
+                  ...draft,
+                  title: title.trim() || draft.title,
+                  hook: hook.trim() || draft.hook,
+                  cta: cta.trim() || draft.cta,
+                  beats: beats.filter((b) => b.text.trim().length > 0),
+                }}
+              />
+              <VoicePreview
+                hook={hook.trim() || draft.hook}
+                beats={beats.filter((b) => b.text.trim().length > 0)}
+              />
+            </div>
           )}
           {tab !== 'editor' ? null : (
           <>

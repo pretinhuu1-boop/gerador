@@ -33,6 +33,8 @@ def content_agent() -> AgentRun:
             "brainstorm_ideas",
             "write_script",
             "list_content_drafts",
+            "list_elevenlabs_voices",
+            "preview_voice",
             "pin_memory",
             "list_memory",
         ],

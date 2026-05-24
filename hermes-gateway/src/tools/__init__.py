@@ -48,3 +48,4 @@ from . import youtube_tools  # noqa: E402, F401
 from . import scout_tools  # noqa: E402, F401
 from . import memory_tools  # noqa: E402, F401
 from . import content_tools  # noqa: E402, F401
+from . import voice_tools  # noqa: E402, F401

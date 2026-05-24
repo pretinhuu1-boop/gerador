@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     # YouTube
     youtube_api_key: str = Field(default="", alias="YOUTUBE_API_KEY")
 
+    # ElevenLabs (TTS)
+    elevenlabs_api_key: str = Field(default="", alias="ELEVENLABS_API_KEY")
+    elevenlabs_default_voice: str = Field(
+        default="21m00Tcm4TlvDq8ikWAM", alias="ELEVENLABS_DEFAULT_VOICE"
+    )
+    elevenlabs_model: str = Field(default="eleven_multilingual_v2", alias="ELEVENLABS_MODEL")
+
     # CORS
     allowed_origins: str = Field(default="http://localhost:3000,http://localhost:5173", alias="ALLOWED_ORIGINS")
 

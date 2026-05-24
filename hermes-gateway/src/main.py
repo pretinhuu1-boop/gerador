@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
@@ -69,6 +70,7 @@ async def healthz() -> dict[str, object]:
         "openrouter_configured": bool(s.openrouter_api_key),
         "youtube_configured": bool(s.youtube_api_key),
         "supabase_configured": bool(s.supabase_url and s.supabase_service_role_key),
+        "elevenlabs_configured": bool(s.elevenlabs_api_key),
         "models": {
             "orchestrator": s.hermes_model_orchestrator,
             "agent": s.hermes_model_agent,
@@ -234,3 +236,44 @@ async def scout_run(
     from .tools.scout_tools import _scout_youtube_channel  # type: ignore[attr-defined]
 
     return await _scout_youtube_channel(user_id=identity.user_id, query=payload.query)
+
+
+class TTSRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=5000)
+    voice_id: str | None = None
+    model_id: str | None = None
+
+
+@app.post("/v1/voice/stream")
+async def voice_stream(
+    payload: TTSRequest,
+    identity: AuthIdentity = Depends(_auth),
+):
+    """Streams MP3 audio of the synthesized text. Auth-guarded so anonymous
+    visitors can't burn the user's ElevenLabs quota."""
+    from .connectors import elevenlabs
+
+    s = get_settings()
+    if not s.elevenlabs_api_key:
+        raise HTTPException(status_code=503, detail="ELEVENLABS_API_KEY not configured")
+
+    async def stream_audio():
+        try:
+            async for chunk in elevenlabs.stream(
+                payload.text,
+                voice_id=payload.voice_id,
+                model_id=payload.model_id,
+            ):
+                yield chunk
+        except elevenlabs.ElevenLabsError as e:
+            log.warning("ElevenLabs stream failed for user %s: %s", identity.user_id, e)
+            raise HTTPException(status_code=502, detail=f"upstream tts failed: {e}")
+
+    return StreamingResponse(stream_audio(), media_type="audio/mpeg")
+
+
+@app.get("/v1/voice/voices")
+async def voice_voices(identity: AuthIdentity = Depends(_auth)):
+    from .tools.voice_tools import _list_voices  # type: ignore[attr-defined]
+
+    return await _list_voices(user_id=identity.user_id, limit=50)
