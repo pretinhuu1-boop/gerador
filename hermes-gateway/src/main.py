@@ -17,6 +17,7 @@ from .auth import AuthIdentity, authenticate_request
 from .config import get_settings
 from .connectors.openrouter import OpenRouterClient
 from .orchestrator import run_orchestrator
+from .persistence import ensure_session, save_message
 
 logging.basicConfig(
     level=get_settings().log_level,
@@ -76,11 +77,16 @@ async def healthz() -> dict[str, object]:
     }
 
 
+class HistoryEntry(BaseModel):
+    role: str
+    content: str
+
+
 class ChatRequest(BaseModel):
     session_id: str | None = None
     message: str = Field(..., min_length=1)
     workspace: str = "mixed"
-    history: list[dict] | None = None
+    history: list[HistoryEntry] | None = None
 
 
 def _auth(request: Request) -> AuthIdentity:
@@ -96,22 +102,115 @@ async def chat_stream(
     if not openrouter_client:
         raise HTTPException(status_code=503, detail="gateway not ready")
 
-    ctx = AgentContext(
+    ensured_session_id = ensure_session(
         user_id=identity.user_id,
         session_id=payload.session_id,
         workspace=payload.workspace,
     )
 
+    ctx = AgentContext(
+        user_id=identity.user_id,
+        session_id=ensured_session_id,
+        workspace=payload.workspace,
+    )
+
+    history_payload: list[dict[str, str]] = (
+        [h.model_dump() for h in (payload.history or [])][-20:]  # last 20 turns
+    )
+
     async def event_stream() -> AsyncIterator[dict]:
         try:
-            yield {"event": "session.created", "data": json.dumps({"session_id": payload.session_id})}
+            yield {
+                "event": "session.created",
+                "data": json.dumps({"session_id": ensured_session_id}),
+            }
+
+            # Persist the user turn up-front (best effort).
+            save_message(
+                session_id=ensured_session_id,
+                user_id=identity.user_id,
+                role="user",
+                content=payload.message,
+            )
+
+            current_agent: str | None = None
+            current_model: str | None = None
+            pending_content_by_agent: dict[str, str] = {}
+
+            def flush_assistant(agent_key: str | None) -> None:
+                key = agent_key or "orchestrator"
+                txt = pending_content_by_agent.pop(key, "")
+                if txt.strip():
+                    save_message(
+                        session_id=ensured_session_id,
+                        user_id=identity.user_id,
+                        role="assistant",
+                        content=txt,
+                        agent_name=key,
+                        model=current_model,
+                    )
+
             async for ev in run_orchestrator(
                 openrouter_client,
                 ctx,
                 payload.message,
-                history=payload.history or [],
+                history=history_payload,
             ):
-                yield {"event": ev["type"], "data": json.dumps(ev, default=str)}
+                etype = ev.get("type")
+
+                if etype == "agent.start":
+                    current_agent = ev.get("name") or current_agent
+                    current_model = ev.get("model") or current_model
+
+                elif etype == "agent.handoff":
+                    # Whoever is "from" finishes their accumulated content
+                    from_ = ev.get("from")
+                    if from_:
+                        flush_assistant(from_)
+                    current_agent = ev.get("to") or current_agent
+
+                elif etype == "message.delta":
+                    key = (ev.get("agent") or current_agent) or "orchestrator"
+                    pending_content_by_agent[key] = (
+                        pending_content_by_agent.get(key, "")
+                        + (ev.get("content") or ev.get("data", {}).get("content") or "")
+                    )
+
+                elif etype == "message.complete":
+                    key = (ev.get("agent") or current_agent) or "orchestrator"
+                    final_content = (
+                        ev.get("content")
+                        or ev.get("data", {}).get("content")
+                        or pending_content_by_agent.get(key, "")
+                    )
+                    if final_content.strip():
+                        save_message(
+                            session_id=ensured_session_id,
+                            user_id=identity.user_id,
+                            role="assistant",
+                            content=final_content,
+                            agent_name=key,
+                            model=current_model,
+                        )
+                    pending_content_by_agent.pop(key, None)
+
+                elif etype == "tool.result":
+                    result = ev.get("result") or ev.get("data", {}).get("result")
+                    save_message(
+                        session_id=ensured_session_id,
+                        user_id=identity.user_id,
+                        role="tool",
+                        content=json.dumps(result, default=str)[:8000] if result is not None else None,
+                        tool_call_id=ev.get("id"),
+                        agent_name=ev.get("agent") or current_agent,
+                    )
+
+                yield {"event": etype or "message", "data": json.dumps(ev, default=str)}
+
+            # Drain anything left
+            for key in list(pending_content_by_agent.keys()):
+                flush_assistant(key)
+
         except Exception as e:  # noqa: BLE001
             log.exception("stream failed")
             yield {"event": "error", "data": json.dumps({"message": str(e)})}
@@ -130,8 +229,8 @@ async def scout_run(
     payload: ScoutRequest,
     identity: AuthIdentity = Depends(_auth),
 ):
-    """Direct synchronous scout — no LLM in the loop. Useful for the standalone Scout workspace
-    when a user hits the gateway from a script."""
+    """Direct synchronous scout — no LLM in the loop. Useful when consumers want the scoring
+    pipeline without invoking the orchestrator."""
     from .tools.scout_tools import _scout_youtube_channel  # type: ignore[attr-defined]
 
     return await _scout_youtube_channel(user_id=identity.user_id, query=payload.query)

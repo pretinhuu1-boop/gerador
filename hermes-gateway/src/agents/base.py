@@ -50,7 +50,12 @@ async def run_agent(
       {"type": "tool.result", "id": ..., "result": ...}
       {"type": "message.complete", "content": "..."}
     """
-    yield {"type": "agent.start", "name": agent.name, "model": agent.model}
+    yield {
+        "type": "agent.start",
+        "data": {"name": agent.name, "model": agent.model},
+        "name": agent.name,
+        "model": agent.model,
+    }
 
     convo: list[dict[str, Any]] = [{"role": "system", "content": agent.system_prompt}, *messages]
     tools = agent.tools_schemas()
@@ -70,7 +75,11 @@ async def run_agent(
 
             if delta.get("content"):
                 accumulated_content += delta["content"]
-                yield {"type": "message.delta", "content": delta["content"]}
+                yield {
+                    "type": "message.delta",
+                    "content": delta["content"],
+                    "data": {"content": delta["content"]},
+                }
 
             for tc in delta.get("tool_calls") or []:
                 idx = tc.get("index", 0)
@@ -87,14 +96,22 @@ async def run_agent(
 
             finish_reason = choice.get("finish_reason")
             if finish_reason in ("stop", "length"):
-                yield {"type": "message.complete", "content": accumulated_content}
+                yield {
+                    "type": "message.complete",
+                    "content": accumulated_content,
+                    "data": {"content": accumulated_content},
+                }
                 return
             if finish_reason == "tool_calls":
                 break
 
         if not tool_calls_buffer:
             # stream ended without explicit finish_reason but also no tool calls
-            yield {"type": "message.complete", "content": accumulated_content}
+            yield {
+                "type": "message.complete",
+                "content": accumulated_content,
+                "data": {"content": accumulated_content},
+            }
             return
 
         # Append assistant turn with the tool calls
@@ -117,13 +134,24 @@ async def run_agent(
                 "id": tc["id"],
                 "name": tc["name"],
                 "arguments_raw": tc["arguments"],
+                "data": {
+                    "id": tc["id"],
+                    "name": tc["name"],
+                    "arguments_raw": tc["arguments"],
+                },
             }
             spec = get_tool(tc["name"])
             try:
                 args = json.loads(tc["arguments"] or "{}")
             except json.JSONDecodeError as e:
                 err = {"error": f"bad JSON args: {e}"}
-                yield {"type": "tool.result", "id": tc["id"], "result": err, "is_error": True}
+                yield {
+                    "type": "tool.result",
+                    "id": tc["id"],
+                    "result": err,
+                    "is_error": True,
+                    "data": {"id": tc["id"], "name": tc["name"], "result": err, "is_error": True},
+                }
                 convo.append(
                     {
                         "role": "tool",
@@ -135,7 +163,13 @@ async def run_agent(
 
             if not spec:
                 err = {"error": f"unknown tool {tc['name']!r}; registered: {list(REGISTRY)}"}
-                yield {"type": "tool.result", "id": tc["id"], "result": err, "is_error": True}
+                yield {
+                    "type": "tool.result",
+                    "id": tc["id"],
+                    "result": err,
+                    "is_error": True,
+                    "data": {"id": tc["id"], "name": tc["name"], "result": err, "is_error": True},
+                }
                 convo.append(
                     {"role": "tool", "tool_call_id": tc["id"], "content": json.dumps(err)}
                 )
@@ -149,7 +183,13 @@ async def run_agent(
             missing = [k for k in required if k not in args]
             if missing:
                 err = {"error": f"missing required args: {missing}"}
-                yield {"type": "tool.result", "id": tc["id"], "result": err, "is_error": True}
+                yield {
+                    "type": "tool.result",
+                    "id": tc["id"],
+                    "result": err,
+                    "is_error": True,
+                    "data": {"id": tc["id"], "name": tc["name"], "result": err, "is_error": True},
+                }
                 convo.append(
                     {"role": "tool", "tool_call_id": tc["id"], "content": json.dumps(err)}
                 )
@@ -160,9 +200,20 @@ async def run_agent(
             except Exception as e:  # noqa: BLE001
                 log.exception("tool %s failed", tc["name"])
                 result = {"error": str(e)}
-                yield {"type": "tool.result", "id": tc["id"], "result": result, "is_error": True}
+                yield {
+                    "type": "tool.result",
+                    "id": tc["id"],
+                    "result": result,
+                    "is_error": True,
+                    "data": {"id": tc["id"], "name": tc["name"], "result": result, "is_error": True},
+                }
             else:
-                yield {"type": "tool.result", "id": tc["id"], "result": result}
+                yield {
+                    "type": "tool.result",
+                    "id": tc["id"],
+                    "result": result,
+                    "data": {"id": tc["id"], "name": tc["name"], "result": result},
+                }
 
             convo.append(
                 {
@@ -172,7 +223,5 @@ async def run_agent(
                 }
             )
         # Continue loop to let the model summarize after tool results.
-    yield {
-        "type": "message.complete",
-        "content": "[gateway] max tool rounds reached without final answer.",
-    }
+    final = "[gateway] max tool rounds reached without final answer."
+    yield {"type": "message.complete", "content": final, "data": {"content": final}}
