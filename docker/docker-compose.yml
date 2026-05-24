@@ -1,0 +1,33 @@
+name: channel-os
+
+services:
+  hermes-gateway:
+    build:
+      context: ../hermes-gateway
+      dockerfile: Dockerfile
+    image: channel-os/hermes-gateway:0.1.0
+    container_name: channel-os-hermes-gateway
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      HERMES_MODEL_ORCHESTRATOR: ${HERMES_MODEL_ORCHESTRATOR:-nousresearch/hermes-4.3-36b}
+      HERMES_MODEL_AGENT: ${HERMES_MODEL_AGENT:-nousresearch/hermes-4-14b}
+      HERMES_MODEL_IMPROVER: ${HERMES_MODEL_IMPROVER:-nousresearch/hermes-4.3-36b}
+      SUPABASE_URL: ${SUPABASE_URL:-http://host.docker.internal:54321}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    extra_hosts:
+      # Lets the container reach the host's Supabase stack (Linux + Docker Desktop).
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8088/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
