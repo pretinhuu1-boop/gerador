@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Hash, Clock, FileText, Megaphone, Tag, Save, Loader2 } from 'lucide-react';
+import { X, Clock, FileText, Megaphone, Tag, Save, Film, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
 import { Input, Textarea } from '../../ui/Input';
 import type { ContentBeat, ContentDraft } from '../../../types/database';
 import { updateDraft } from '../../../services/channelOS/contentService';
+import { DraftPreview } from './DraftPreview';
+import { cn } from '../../../lib/cn';
 
 interface Props {
   draft: ContentDraft;
@@ -24,6 +26,7 @@ export const DraftDetail = ({ draft, onClose, onSaved }: Props) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [tab, setTab] = useState<'editor' | 'preview'>('editor');
 
   useEffect(() => {
     setTitle(draft.title);
@@ -110,7 +113,31 @@ export const DraftDetail = ({ draft, onClose, onSaved }: Props) => {
           </div>
         </div>
 
+        <div className="shrink-0 px-5 pt-3 border-b border-border-subtle/60 bg-bg-panel/95 backdrop-blur">
+          <div className="inline-flex p-0.5 rounded-lg bg-bg-elevated border border-border-subtle">
+            <TabButton active={tab === 'editor'} onClick={() => setTab('editor')} icon={Pencil}>
+              Editor
+            </TabButton>
+            <TabButton active={tab === 'preview'} onClick={() => setTab('preview')} icon={Film}>
+              Preview
+            </TabButton>
+          </div>
+        </div>
+
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          {tab === 'preview' && (
+            <DraftPreview
+              draft={{
+                ...draft,
+                title: title.trim() || draft.title,
+                hook: hook.trim() || draft.hook,
+                cta: cta.trim() || draft.cta,
+                beats: beats.filter((b) => b.text.trim().length > 0),
+              }}
+            />
+          )}
+          {tab !== 'editor' ? null : (
+          <>
           <Field label="Título">
             <Input
               value={title}
@@ -202,11 +229,36 @@ export const DraftDetail = ({ draft, onClose, onSaved }: Props) => {
           )}
 
           <Metadata draft={draft} />
+          </>
+          )}
         </div>
       </motion.aside>
     </div>
   );
 };
+
+const TabButton = ({
+  active,
+  onClick,
+  icon: Icon,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+      active ? 'bg-bg-base text-fg-primary shadow-card' : 'text-fg-muted hover:text-fg-primary',
+    )}
+  >
+    <Icon className="h-3.5 w-3.5" />
+    {children}
+  </button>
+);
 
 const Field = ({
   label,

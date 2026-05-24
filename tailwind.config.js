@@ -9,6 +9,7 @@ export default {
     './services/**/*.{ts,tsx}',
     './stores/**/*.{ts,tsx}',
     './lib/**/*.{ts,tsx}',
+    './remotion/**/*.{ts,tsx}',
   ],
   darkMode: 'class',
   theme: {

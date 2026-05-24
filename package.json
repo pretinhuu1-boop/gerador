@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
+    "@remotion/player": "^4.0.465",
     "@supabase/supabase-js": "^2.45.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -30,6 +31,7 @@
     "react-markdown": "^10.1.0",
     "recharts": "^2.13.0",
     "remark-gfm": "^4.0.1",
+    "remotion": "^4.0.465",
     "tailwind-merge": "^2.5.4",
     "uuid": "^13.0.0",
     "zustand": "^5.0.1"
