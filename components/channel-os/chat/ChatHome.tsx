@@ -65,7 +65,7 @@ export const ChatHome = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="h-14 shrink-0 flex items-center justify-between gap-3 px-6 border-b border-border-subtle/50 backdrop-blur bg-bg-base/60">
+      <header className="h-14 shrink-0 flex items-center justify-between gap-3 pl-14 pr-6 md:pl-6 border-b border-border-subtle/50 backdrop-blur bg-bg-base/60">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-brand" />
           <h2 className="font-display font-semibold text-sm">Hermes</h2>
@@ -154,23 +154,26 @@ export const ChatHome = () => {
         <div className="shrink-0 border-t border-border-subtle/50 bg-bg-base/80 backdrop-blur px-4 sm:px-8 py-4">
           <div className="mx-auto max-w-3xl">
             <ChatComposer
-              disabled={streaming || gatewayOk === false}
+              disabled={streaming}
               placeholder={
                 gatewayOk === false
-                  ? 'Hermes gateway offline — rode `docker compose up hermes-gateway` ou use Scout direto'
+                  ? 'Gateway offline — você pode digitar mas só vai receber resposta stub. Use Scout pra análise real.'
                   : 'Pede pro Hermes... ex: "achar 5 canais de mistério com até 50k subs"'
               }
               onSubmit={(text) => {
                 if (!text.trim()) return;
+                const stubReply =
+                  gatewayOk === false
+                    ? 'Hermes gateway offline. Suba o serviço (`docker compose up hermes-gateway`) com OPENROUTER_API_KEY no `.env` pra ter streaming real. Enquanto isso, o workspace **Scout** funciona standalone — descoberta + scoring + persistência rodam direto do navegador.'
+                    : 'Streaming SSE ainda não está plugado nesta build (Fase 1 wireup). Por enquanto, use o workspace Scout pra rodar análise real de canal.';
                 setMessages((prev) => [
                   ...prev,
                   { id: crypto.randomUUID(), role: 'user', content: text },
                   {
                     id: crypto.randomUUID(),
                     role: 'assistant',
-                    content:
-                      'Hermes Gateway ainda não está plugado no streaming nesta build. Use o workspace Scout (sidebar) pra rodar a análise de canal real agora — o roteamento de chat→tool entra no próximo deploy.',
-                    agent: 'system',
+                    content: stubReply,
+                    agent: gatewayOk === false ? 'gateway-offline' : 'system',
                   },
                 ]);
                 setStreaming(false);
