@@ -866,7 +866,7 @@ export const generateVeoVideoFromPrompt = async (
         }
 
         if (operation.error) {
-             if (operation.error.message?.includes("Requested entity was not found.")) {
+             if (typeof operation.error.message === 'string' && operation.error.message.includes("Requested entity was not found.")) {
                 throw new ApiKeyError("A chave de API selecionada é inválida ou não tem permissão. Por favor, selecione outra.");
             }
             throw new GenerationError(`Erro na operação de vídeo: ${operation.error.message}`);
