@@ -12,6 +12,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   X,
+  PencilLine,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
@@ -77,6 +78,17 @@ export const Sidebar = () => {
         setActiveWorkspace('scout');
       },
       active: isChannelOS && activeWorkspace === 'scout',
+    },
+    {
+      id: 'content',
+      label: 'Content',
+      icon: PencilLine,
+      group: 'primary',
+      onClick: () => {
+        setSurface('channel-os');
+        setActiveWorkspace('content');
+      },
+      active: isChannelOS && activeWorkspace === 'content',
     },
     {
       id: 'channels',

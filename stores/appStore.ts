@@ -7,7 +7,7 @@ export type Surface =
   | 'video-studio'
   | 'tools-studio';
 
-export type Workspace = 'home' | 'scout' | 'channels' | 'memory';
+export type Workspace = 'home' | 'scout' | 'content' | 'channels' | 'memory';
 
 interface AppState {
   surface: Surface;
