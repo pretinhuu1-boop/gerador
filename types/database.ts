@@ -160,3 +160,46 @@ export interface ScoutRunChannel {
   score: number | null;
   rank: number | null;
 }
+
+// ============================================================
+// Content drafts
+// ============================================================
+
+export type ContentFormat = 'short' | 'long' | 'reel' | 'tiktok' | 'flyer' | 'thumbnail';
+export type ContentStatus =
+  | 'draft'
+  | 'approved'
+  | 'rendering'
+  | 'rendered'
+  | 'published'
+  | 'archived';
+
+export interface ContentBeat {
+  t?: number;
+  text: string;
+  b_roll?: string | null;
+  caption?: string | null;
+  voice?: string | null;
+}
+
+export interface ContentDraft {
+  id: string;
+  user_id: string;
+  channel_id: string | null;
+  session_id: string | null;
+  format: ContentFormat;
+  title: string;
+  hook: string | null;
+  thesis: string | null;
+  beats: ContentBeat[];
+  cta: string | null;
+  hashtags: string[];
+  duration_seconds: number | null;
+  metadata: Record<string, unknown>;
+  status: ContentStatus;
+  generated_by: string | null;
+  model: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
