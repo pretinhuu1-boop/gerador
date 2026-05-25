@@ -36,6 +36,30 @@ class Settings(BaseSettings):
     )
     elevenlabs_model: str = Field(default="eleven_multilingual_v2", alias="ELEVENLABS_MODEL")
 
+    # Gemini (used for text embeddings + multimodal Phase 3)
+    gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
+    gemini_embedding_model: str = Field(
+        default="text-embedding-004", alias="GEMINI_EMBEDDING_MODEL"
+    )
+
+    # OpenRouter fallback chain for the orchestrator + agents.
+    # Comma-separated model slugs; first is primary, rest are fallbacks.
+    hermes_fallback_models: str = Field(
+        default="", alias="HERMES_FALLBACK_MODELS"
+    )
+
+    # Render pipeline
+    render_node_bin: str = Field(default="npx", alias="RENDER_NODE_BIN")
+    render_remotion_entry: str = Field(
+        default="/app/remotion/Root.tsx", alias="RENDER_REMOTION_ENTRY"
+    )
+    render_workdir: str = Field(default="/tmp/channel-os-renders", alias="RENDER_WORKDIR")
+    render_storage_bucket: str = Field(default="renders", alias="RENDER_STORAGE_BUCKET")
+
+    @property
+    def hermes_fallback_models_list(self) -> list[str]:
+        return [m.strip() for m in self.hermes_fallback_models.split(",") if m.strip()]
+
     # CORS
     allowed_origins: str = Field(default="http://localhost:3000,http://localhost:5173", alias="ALLOWED_ORIGINS")
 

@@ -7,7 +7,8 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any
 
-from ..connectors.openrouter import OpenRouterClient
+from ..config import get_settings
+from ..connectors.openrouter import OpenRouterClient, cache_marker
 from ..tools import REGISTRY, get as get_tool, schemas as tool_schemas
 
 log = logging.getLogger(__name__)
@@ -30,9 +31,27 @@ class AgentRun:
     system_prompt: str
     allowed_tools: list[str]
     temperature: float = 0.6
+    fallback_models: list[str] = field(default_factory=list)
+    cache_system_prompt: bool = True
 
     def tools_schemas(self) -> list[dict[str, Any]]:
         return tool_schemas(self.allowed_tools) if self.allowed_tools else []
+
+    def build_system_message(self) -> dict[str, Any]:
+        """System messages use Anthropic-style content blocks when caching is enabled,
+        so OpenRouter can pass `cache_control` through to providers that honor it."""
+        if self.cache_system_prompt:
+            return {"role": "system", "content": cache_marker(self.system_prompt)}
+        return {"role": "system", "content": self.system_prompt}
+
+    def model_chain(self) -> list[str]:
+        """Returns [primary, *fallbacks] or [primary] alone."""
+        explicit = list(self.fallback_models)
+        if not explicit:
+            settings = get_settings()
+            explicit = settings.hermes_fallback_models_list
+        chain = [self.model, *[m for m in explicit if m and m != self.model]]
+        return chain
 
 
 async def run_agent(
@@ -57,8 +76,10 @@ async def run_agent(
         "model": agent.model,
     }
 
-    convo: list[dict[str, Any]] = [{"role": "system", "content": agent.system_prompt}, *messages]
+    convo: list[dict[str, Any]] = [agent.build_system_message(), *messages]
     tools = agent.tools_schemas()
+    chain = agent.model_chain()
+    use_chain = chain if len(chain) > 1 else None
 
     for round_i in range(MAX_TOOL_ROUNDS):
         accumulated_content = ""
@@ -69,6 +90,7 @@ async def run_agent(
             messages=convo,
             tools=tools if tools else None,
             temperature=agent.temperature,
+            models=use_chain,
         ):
             choice = (chunk.get("choices") or [{}])[0]
             delta = choice.get("delta") or {}
