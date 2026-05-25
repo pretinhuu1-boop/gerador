@@ -246,3 +246,97 @@ export interface ContentRender {
   created_at: string;
   updated_at: string;
 }
+
+// ============================================================
+// Missions framework
+// ============================================================
+
+export type HermesMissionStatus =
+  | 'draft'
+  | 'planning'
+  | 'approved'
+  | 'running'
+  | 'paused'
+  | 'done'
+  | 'error'
+  | 'cancelled';
+
+export type HermesMissionStepStatus =
+  | 'pending'
+  | 'running'
+  | 'done'
+  | 'error'
+  | 'skipped'
+  | 'cancelled';
+
+export interface HermesMissionPlanStep {
+  step_index: number;
+  title: string;
+  agent_key: string;
+  tool_name: string | null;
+  tool_args: Record<string, unknown>;
+  depends_on?: number[];
+  notes?: string;
+}
+
+export interface HermesMissionPlan {
+  title: string;
+  summary?: string;
+  steps: HermesMissionPlanStep[];
+}
+
+export interface HermesMission {
+  id: string;
+  user_id: string;
+  session_id: string | null;
+  title: string;
+  brief: string;
+  plan: HermesMissionPlan | Record<string, unknown>;
+  status: HermesMissionStatus;
+  progress: number;
+  outputs: Record<string, unknown>;
+  metadata: Record<string, unknown>;
+  total_steps: number;
+  done_steps: number;
+  started_at: string | null;
+  ended_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HermesMissionStep {
+  id: string;
+  mission_id: string;
+  step_index: number;
+  title: string;
+  agent_key: string;
+  tool_name: string | null;
+  tool_args: Record<string, unknown>;
+  depends_on: number[] | null;
+  status: HermesMissionStepStatus;
+  result: Record<string, unknown> | null;
+  error: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HermesCustomAgent {
+  id: string;
+  user_id: string;
+  key: string;
+  name: string;
+  badge: string;
+  badge_color: string;
+  role: string | null;
+  description: string | null;
+  model: string;
+  system_prompt: string;
+  allowed_tools: string[];
+  temperature: number;
+  active: boolean;
+  created_by_mission: string | null;
+  created_at: string;
+  updated_at: string;
+}
