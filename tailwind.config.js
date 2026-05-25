@@ -36,11 +36,16 @@ export default {
         brand: {
           DEFAULT: 'rgb(var(--brand) / <alpha-value>)',
           muted: 'rgb(var(--brand-muted) / <alpha-value>)',
+          light: 'rgb(var(--brand-light) / <alpha-value>)',
           contrast: 'rgb(var(--brand-contrast) / <alpha-value>)',
         },
         accent: {
           DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
           muted: 'rgb(var(--accent-muted) / <alpha-value>)',
+        },
+        tertiary: {
+          DEFAULT: 'rgb(var(--tertiary) / <alpha-value>)',
+          muted: 'rgb(var(--tertiary-muted) / <alpha-value>)',
         },
         success: 'rgb(var(--success) / <alpha-value>)',
         warn: 'rgb(var(--warn) / <alpha-value>)',
