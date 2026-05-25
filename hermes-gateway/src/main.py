@@ -240,6 +240,32 @@ async def scout_run(
     return await _scout_youtube_channel(user_id=identity.user_id, query=payload.query)
 
 
+class TrendingRequest(BaseModel):
+    region: str = "BR"
+    category_id: str | None = None
+    max_results: int = 25
+    force_refresh: bool = False
+
+
+@app.post("/v1/trending/fetch")
+async def trending_fetch(
+    payload: TrendingRequest,
+    identity: AuthIdentity = Depends(_auth),
+):
+    """Direct call to the trending tool — same handler the LLM uses, just
+    without going through the agent loop. Used by the Scout workspace to
+    refresh the trending strip without spawning a full mission."""
+    from .tools.trending_tools import _fetch_trending  # type: ignore[attr-defined]
+
+    return await _fetch_trending(
+        user_id=identity.user_id,
+        region=payload.region,
+        category_id=payload.category_id,
+        max_results=payload.max_results,
+        force_refresh=payload.force_refresh,
+    )
+
+
 class TTSRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=5000)
     voice_id: str | None = None

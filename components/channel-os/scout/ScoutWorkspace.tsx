@@ -19,6 +19,7 @@ import { ErrorState, LoadingGrid, SupabaseOfflineHint } from '../WorkspaceState'
 import { ChannelCard } from './ChannelCard';
 import { ChannelDetail } from './ChannelDetail';
 import { DiscoveryMode } from './DiscoveryMode';
+import { TrendingStrip } from './TrendingStrip';
 
 type ScoutView = 'tracked' | 'discovery';
 
@@ -143,7 +144,8 @@ const TrackedView = ({
 }: TrackedViewProps) => {
   return (
     <>
-      <div className="px-6 pt-6">
+      <div className="px-6 pt-6 space-y-4">
+        <TrendingStrip />
         <div className="surface-elevated p-4 rounded-2xl">
           <form onSubmit={onScout} className="flex flex-col sm:flex-row gap-2">
             <div className="flex-1 relative">

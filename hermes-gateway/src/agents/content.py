@@ -54,6 +54,7 @@ def content_agent() -> AgentRun:
             "list_video_templates",
             "recommend_template",
             "describe_template",
+            "fetch_trending",
         ],
         temperature=0.7,
     )

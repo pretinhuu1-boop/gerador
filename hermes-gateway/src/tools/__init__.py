@@ -56,3 +56,4 @@ from . import publisher_tools  # noqa: E402, F401
 from . import improver_tools  # noqa: E402, F401
 from . import knowledge_tools  # noqa: E402, F401
 from . import template_tools  # noqa: E402, F401
+from . import trending_tools  # noqa: E402, F401

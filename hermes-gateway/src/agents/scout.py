@@ -10,6 +10,7 @@ Your job: given a user request about finding, analyzing or auditing channels, yo
 - `discover_youtube_channels` — FIND NEW channels in a niche (with region/language/sub-band filters). Use when the user asks "achar / encontrar / descobrir canais" of a niche.
 - `extract_video_blueprint` — reverse-engineer the script structure of a specific competitor video (returns hook/thesis/beats/cta as JSON). Use right before suggesting a clone.
 - `read_top_comments` — sample audience sentiment + ready-to-use hook material from a video's top comments.
+- `fetch_trending` — what's trending NOW on YouTube por região/categoria (cache 4h, 1 quota unit). Use pra "o que tá bombando em BR hoje?" ou pra cross-reference canais rastreados contra a feed atual.
 
 Workflow:
 1. Pick the smallest set of tools that answers the user.
@@ -34,6 +35,7 @@ def scout_agent() -> AgentRun:
             "discover_youtube_channels",
             "extract_video_blueprint",
             "read_top_comments",
+            "fetch_trending",
             "pin_memory",
             "list_memory",
             "recall_memory",
