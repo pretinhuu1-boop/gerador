@@ -7,9 +7,7 @@ inherited from the legacy cinematography library.
 """
 from __future__ import annotations
 
-import json
 import logging
-import math
 from typing import Any
 
 from ..connectors import embeddings
@@ -40,33 +38,6 @@ ALLOWED_KINDS = {
     "remotion_workflow",
 }
 
-MAX_CANDIDATES = 800  # client-side rank window; bumped to RPC when this gets slow
-
-
-def _parse_vec(raw: Any) -> list[float] | None:
-    if not raw:
-        return None
-    if isinstance(raw, list):
-        return [float(v) for v in raw]
-    if isinstance(raw, str):
-        try:
-            return [float(v) for v in json.loads(raw.replace("'", '"'))]
-        except (json.JSONDecodeError, ValueError):
-            return None
-    return None
-
-
-def _cosine(a: list[float], b: list[float]) -> float:
-    if len(a) != len(b):
-        return -1.0
-    dot = sum(x * y for x, y in zip(a, b))
-    na = math.sqrt(sum(x * x for x in a))
-    nb = math.sqrt(sum(x * x for x in b))
-    if na == 0 or nb == 0:
-        return -1.0
-    return dot / (na * nb)
-
-
 async def _recall_knowledge(
     user_id: str,
     query: str,
@@ -74,9 +45,10 @@ async def _recall_knowledge(
     kind: str | None = None,
     snippet_chars: int = 600,
 ) -> dict[str, Any]:
-    """Semantic recall over global + user knowledge. Returns the top_k matches
-    ranked by cosine similarity, each with a truncated snippet so the model
-    doesn't get drowned in 5×3kB blobs of preset JSON."""
+    """Semantic recall via pgvector ANN over global + user knowledge. Delegates
+    ranking to the `match_hermes_knowledge` SQL function (HNSW + cosine
+    distance), so result quality stays correct as the table grows past the
+    point where client-side ranking was viable."""
     if not query or not query.strip():
         return {"error": "query is required"}
     top_k = max(1, min(15, int(top_k)))
@@ -89,26 +61,21 @@ async def _recall_knowledge(
         return {"error": f"embedding failed: {e}"}
 
     sb = supabase_admin()
-    q = (
-        sb.table("hermes_knowledge")
-        .select("id, kind, slug, title, summary, content, metadata, embedding")
-        .eq("active", True)
-        .or_(f"user_id.is.null,user_id.eq.{user_id}")
-        .limit(MAX_CANDIDATES)
-    )
-    if kind:
-        q = q.eq("kind", kind)
-    res = q.execute()
-    rows = res.data or []
+    try:
+        res = sb.rpc(
+            "match_hermes_knowledge",
+            {
+                "query_embedding": embeddings.vector_literal(qvec),
+                "match_count": top_k,
+                "filter_kind": kind,
+                "for_user_id": user_id,
+            },
+        ).execute()
+    except Exception as e:  # noqa: BLE001
+        log.exception("match_hermes_knowledge RPC failed")
+        return {"error": f"recall failed: {e}"}
 
-    ranked: list[tuple[float, dict[str, Any]]] = []
-    for row in rows:
-        pv = _parse_vec(row.get("embedding"))
-        if pv is None:
-            continue
-        ranked.append((_cosine(qvec, pv), row))
-    ranked.sort(key=lambda t: t[0], reverse=True)
-    top = ranked[:top_k]
+    rows: list[dict[str, Any]] = res.data or []
 
     def snippet(content: str) -> str:
         if len(content) <= snippet_chars:
@@ -125,11 +92,10 @@ async def _recall_knowledge(
                 "summary": r.get("summary") or "",
                 "snippet": snippet(r["content"]),
                 "metadata": r.get("metadata") or {},
-                "score": round(score, 4),
+                "score": round(float(r.get("similarity") or 0.0), 4),
             }
-            for score, r in top
+            for r in rows
         ],
-        "candidates_scanned": len(rows),
         "query": query,
     }
 
