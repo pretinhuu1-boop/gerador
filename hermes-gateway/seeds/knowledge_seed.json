@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "count": 1490,
+  "count": 1543,
   "records": [
     {
       "kind": "doc",
@@ -23268,6 +23268,1017 @@
           "positive": "Dust particles suspended in air, catching amber highlights over dark concrete floor. Aspect: 16:9. Duration: 8s. Motion notes: camera dolly through depth fog.",
           "negative": "CGI sparkle."
         }
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "template_tiktok_official",
+      "title": "template-tiktok (official)",
+      "summary": "Base 9:16 TikTok com captions word-by-word via Whisper.cpp.",
+      "content": "template-tiktok (official)\n\nBase 9:16 TikTok com captions word-by-word via Whisper.cpp.\n\nTemplate oficial Remotion pra Shorts/TikTok 9:16. Vem com captions auto-sync word-level via @remotion/install-whisper-cpp e suporte a beat-by-beat narration. Ponto de partida ideal pra qualquer canal faceless de Stories/Reddit/Scary/Top.\n\nInstall: npx create-video --template=remotion-dev/template-tiktok\n\nLink: https://github.com/remotion-dev/template-tiktok\n\nTags: 9:16, tiktok, shorts, reels, captions, whisper, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/template-tiktok",
+        "install": "npx create-video --template=remotion-dev/template-tiktok",
+        "tags": [
+          "9:16",
+          "tiktok",
+          "shorts",
+          "reels",
+          "captions",
+          "whisper",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "template_audiogram_official",
+      "title": "template-audiogram (official)",
+      "summary": "Podcast clip 9:16/1:1 com waveform + captions (SRT ou @remotion/captions).",
+      "content": "template-audiogram (official)\n\nPodcast clip 9:16/1:1 com waveform + captions (SRT ou @remotion/captions).\n\nTemplate oficial pra criar audiograms — clips de podcast/voice com waveform reativo e legendas sincronizadas. Ideal pra ASMR, sleep stories, motivational quotes, audiobook teasers. Aceita .srt direto ou Caption[] de Whisper/ElevenLabs alignment.\n\nInstall: npx create-video --template=remotion-dev/template-audiogram\n\nLink: https://github.com/remotion-dev/template-audiogram\n\nTags: 9:16, 1:1, audiogram, podcast, asmr, sleep, waveform, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/template-audiogram",
+        "install": "npx create-video --template=remotion-dev/template-audiogram",
+        "tags": [
+          "9:16",
+          "1:1",
+          "audiogram",
+          "podcast",
+          "asmr",
+          "sleep",
+          "waveform",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "template_music_visualization_official",
+      "title": "template-music-visualization (official)",
+      "summary": "Snippet musical 9:16 com visualizador reativo (FFT bars).",
+      "content": "template-music-visualization (official)\n\nSnippet musical 9:16 com visualizador reativo (FFT bars).\n\nTemplate oficial pra criar visualizers de música — pega um MP3, gera waveform/FFT animado em 9:16. Bom pra lo-fi clips, ASMR ambient, beat preview, Spotify-to-Reels.\n\nInstall: npx create-video --template=remotion-dev/template-music-visualization\n\nLink: https://github.com/remotion-dev/template-music-visualization\n\nTags: 9:16, music, lo-fi, asmr, visualizer, fft, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/template-music-visualization",
+        "install": "npx create-video --template=remotion-dev/template-music-visualization",
+        "tags": [
+          "9:16",
+          "music",
+          "lo-fi",
+          "asmr",
+          "visualizer",
+          "fft",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "template_prompt_to_video_official",
+      "title": "template-prompt-to-video (official)",
+      "summary": "CLI prompt → OpenAI script+imagens → ElevenLabs voz → MP4 render.",
+      "content": "template-prompt-to-video (official)\n\nCLI prompt → OpenAI script+imagens → ElevenLabs voz → MP4 render.\n\nTemplate oficial REFERÊNCIA pro pipeline Hermes-style. CLI que recebe prompt, gera roteiro via OpenAI, imagens via DALL-E, voz via ElevenLabs, e renderiza um vídeo final 9:16. Mostra o padrão canônico de orchestration que dá pra clonar/adaptar.\n\nInstall: git clone https://github.com/remotion-dev/template-prompt-to-video\n\nLink: https://github.com/remotion-dev/template-prompt-to-video\n\nTags: pipeline, cli, prompt-to-video, openai, elevenlabs, oficial, referencia",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/template-prompt-to-video",
+        "install": "git clone https://github.com/remotion-dev/template-prompt-to-video",
+        "tags": [
+          "pipeline",
+          "cli",
+          "prompt-to-video",
+          "openai",
+          "elevenlabs",
+          "oficial",
+          "referencia"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "template_shorts_customizer_official",
+      "title": "shorts-customizer (official)",
+      "summary": "Customizador interativo de Shorts dentro do <Player>.",
+      "content": "shorts-customizer (official)\n\nCustomizador interativo de Shorts dentro do <Player>.\n\nTemplate oficial — interface no <Player> pra customizar Shorts em real-time (texto, cores, branding) antes de renderizar. Pattern útil pra usuário \"tweakar\" um template antes de bater render.\n\nInstall: git clone https://github.com/remotion-dev/shorts-customizer\n\nLink: https://github.com/remotion-dev/shorts-customizer\n\nTags: shorts, customizer, player, interactive, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/shorts-customizer",
+        "install": "git clone https://github.com/remotion-dev/shorts-customizer",
+        "tags": [
+          "shorts",
+          "customizer",
+          "player",
+          "interactive",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "template_skia_official",
+      "title": "template-skia (official)",
+      "summary": "Base com React Native Skia pra GPU effects pesados.",
+      "content": "template-skia (official)\n\nBase com React Native Skia pra GPU effects pesados.\n\nTemplate oficial pra usar React Native Skia dentro de Remotion — efeitos GPU (shaders, blur, color grading) que CSS/Canvas não dão conta. Esforço médio-alto, mas necessário pra visual polido em ASMR/cinematic.\n\nLink: https://github.com/remotion-dev/template-skia\n\nTags: skia, gpu, shaders, effects, oficial, advanced",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/template-skia",
+        "install": null,
+        "tags": [
+          "skia",
+          "gpu",
+          "shaders",
+          "effects",
+          "oficial",
+          "advanced"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "template_three_official",
+      "title": "template-three (official)",
+      "summary": "Base com React Three Fiber (Three.js) — cenas 3D em Remotion.",
+      "content": "template-three (official)\n\nBase com React Three Fiber (Three.js) — cenas 3D em Remotion.\n\nTemplate oficial pra cenas 3D via R3F. Bom pra hooks que demandam profundidade (objetos rotacionando, ambientes 3D, mockups). Esforço alto, mas único caminho pra 3D real.\n\nLink: https://github.com/remotion-dev/template-three\n\nTags: 3d, three, r3f, oficial, advanced",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/template-three",
+        "install": null,
+        "tags": [
+          "3d",
+          "three",
+          "r3f",
+          "oficial",
+          "advanced"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "template_code_hike_official",
+      "title": "template-code-hike (official)",
+      "summary": "Snippets de código animados — dev content.",
+      "content": "template-code-hike (official)\n\nSnippets de código animados — dev content.\n\nTemplate oficial pra animar código (typing, highlighting, transições entre arquivos). Específico pra nichos de programação/dev — fora do escopo dark content faceless mainstream, mas útil pra subcanais técnicos.\n\nLink: https://github.com/remotion-dev/template-code-hike\n\nTags: 16:9, code, dev, tutorial, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/template-code-hike",
+        "install": null,
+        "tags": [
+          "16:9",
+          "code",
+          "dev",
+          "tutorial",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "template_render_server_official",
+      "title": "template-render-server (official)",
+      "summary": "Servidor Express com endpoint POST /render → MP4.",
+      "content": "template-render-server (official)\n\nServidor Express com endpoint POST /render → MP4.\n\nTemplate oficial pra expor render via HTTP. Padrão simples pra integrar Remotion em backend não-Node (Python/Go/etc) chamando via REST. Pattern útil enquanto Lambda não é necessário.\n\nLink: https://github.com/remotion-dev/template-render-server\n\nTags: render, server, express, rest, oficial, backend",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/template-render-server",
+        "install": null,
+        "tags": [
+          "render",
+          "server",
+          "express",
+          "rest",
+          "oficial",
+          "backend"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "superviral_community",
+      "title": "superviral (community)",
+      "summary": "Next.js + Remotion + Google TTS — Reddit/FakeChat/SplitScreen.",
+      "content": "superviral (community)\n\nNext.js + Remotion + Google TTS — Reddit/FakeChat/SplitScreen.\n\nRepo community com 3 templates prontos: Reddit Story (narrativa em primeira pessoa), FakeChat (chat tipo iMessage falso), SplitScreen (gameplay em baixo + narração em cima — o famoso \"Subway Surfers brain rot\"). UI Zustand + Tailwind. Vale fork pra swap TTS por ElevenLabs.\n\nLink: https://github.com/vaibhavvTripathi/superviral\n\nTags: 9:16, reddit, fakechat, splitscreen, community, brain-rot, next.js",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/vaibhavvTripathi/superviral",
+        "install": null,
+        "tags": [
+          "9:16",
+          "reddit",
+          "fakechat",
+          "splitscreen",
+          "community",
+          "brain-rot",
+          "next.js"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "remotion_lyrics_community",
+      "title": "remotion-lyrics (community)",
+      "summary": "Lyric video de áudio + loop com captions Whisper.",
+      "content": "remotion-lyrics (community)\n\nLyric video de áudio + loop com captions Whisper.\n\nTemplate comunidade pra lyric videos — recebe áudio + texto, transcreve via Whisper, sincroniza letras com timeline. 9:16 e 16:9.\n\nLink: https://github.com/rayanfer32/remotion-lyrics\n\nTags: 9:16, 16:9, lyrics, music, whisper, community",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/rayanfer32/remotion-lyrics",
+        "install": null,
+        "tags": [
+          "9:16",
+          "16:9",
+          "lyrics",
+          "music",
+          "whisper",
+          "community"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "karaoke_remotion_community",
+      "title": "karaoke-remotion (community)",
+      "summary": "Karaoke com highlight word-level via Whisper.",
+      "content": "karaoke-remotion (community)\n\nKaraoke com highlight word-level via Whisper.\n\nTemplate comunidade pra karaoke — destaca a palavra atual sendo cantada (word-level highlight) usando timing do Whisper. 9:16. Pattern reusável pra \"narration karaoke\" em qualquer Shorts.\n\nLink: https://github.com/binhkid2/karaoke-remotion\n\nTags: 9:16, karaoke, lyrics, whisper, community, word-highlight",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/binhkid2/karaoke-remotion",
+        "install": null,
+        "tags": [
+          "9:16",
+          "karaoke",
+          "lyrics",
+          "whisper",
+          "community",
+          "word-highlight"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "reactvideoeditor_effects_pack",
+      "title": "reactvideoeditor/remotion-templates",
+      "summary": "81 efeitos/animações free prontos pra colar.",
+      "content": "reactvideoeditor/remotion-templates\n\n81 efeitos/animações free prontos pra colar.\n\nRepo com 81 efeitos e animações Remotion gratuitos — transitions, text effects, particle systems, glitches, color grades. Não é template fechado: é biblioteca de receitas pra remixar em qualquer composition.\n\nLink: https://github.com/reactvideoeditor/remotion-templates\n\nTags: effects, animations, snippets, recipes, community, free",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/reactvideoeditor/remotion-templates",
+        "install": null,
+        "tags": [
+          "effects",
+          "animations",
+          "snippets",
+          "recipes",
+          "community",
+          "free"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_template",
+      "slug": "quriosity_prompts",
+      "title": "Quriosity-agent/remotion-prompts",
+      "summary": "21 prompts curados de remotion.dev/prompts — dataset pro Hermes.",
+      "content": "Quriosity-agent/remotion-prompts\n\n21 prompts curados de remotion.dev/prompts — dataset pro Hermes.\n\nColeção de 21 prompts oficiais Remotion (Audio Spectrum Visualizer, Captions, Lower-thirds, etc) em formato fácil de consumir. Bom dataset pro Hermes \"aprender\" padrões Remotion sem ler doc toda.\n\nLink: https://github.com/Quriosity-agent/remotion-prompts\n\nTags: prompts, dataset, reference, community",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/Quriosity-agent/remotion-prompts",
+        "install": null,
+        "tags": [
+          "prompts",
+          "dataset",
+          "reference",
+          "community"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_core",
+      "title": "remotion (core)",
+      "summary": "Core: <Composition>, interpolate, Sequence, useCurrentFrame.",
+      "content": "remotion (core)\n\nCore: <Composition>, interpolate, Sequence, useCurrentFrame.\n\nPacote core. Importa <Composition>, <Sequence>, <AbsoluteFill>, interpolate, useCurrentFrame, useVideoConfig, spring, Easing. Base de qualquer composition.\n\nInstall: npm i remotion\n\nLink: https://www.remotion.dev/docs/api\n\nTags: core, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/api",
+        "install": "npm i remotion",
+        "tags": [
+          "core",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_player",
+      "title": "@remotion/player",
+      "summary": "Player React pra preview no app/admin.",
+      "content": "@remotion/player\n\nPlayer React pra preview no app/admin.\n\nPlayer React standalone. Embuti previews de compositions no app sem precisar rodar studio. Já usado no DraftDetail tab Preview do Channel OS.\n\nInstall: npm i @remotion/player\n\nLink: https://www.remotion.dev/docs/player\n\nTags: player, preview, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/player",
+        "install": "npm i @remotion/player",
+        "tags": [
+          "player",
+          "preview",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_lambda",
+      "title": "@remotion/lambda",
+      "summary": "Render distribuído AWS Lambda (~$0.01/min 1080p).",
+      "content": "@remotion/lambda\n\nRender distribuído AWS Lambda (~$0.01/min 1080p).\n\nRender serverless via Lambda. Paralelismo automático (1 short 60s renderiza em <30s, frames-per-lambda=12), ~$0.01/min de vídeo 1080p ARM64 us-east-1. Ideal pra produção quando precisar escalar batch render multi-canal.\n\nInstall: npm i @remotion/lambda\n\nLink: https://www.remotion.dev/docs/lambda\n\nTags: lambda, aws, render, serverless, production, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/lambda",
+        "install": "npm i @remotion/lambda",
+        "tags": [
+          "lambda",
+          "aws",
+          "render",
+          "serverless",
+          "production",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_cloudrun",
+      "title": "@remotion/cloudrun",
+      "summary": "Render distribuído GCP Cloud Run (alternativa Lambda).",
+      "content": "@remotion/cloudrun\n\nRender distribuído GCP Cloud Run (alternativa Lambda).\n\nWrapper Cloud Run pra render serverless quando o stack já tá no GCP. Alternativa direta ao Lambda — mesmo padrão de API.\n\nInstall: npm i @remotion/cloudrun\n\nLink: https://www.remotion.dev/docs/cloudrun\n\nTags: cloudrun, gcp, render, serverless, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/cloudrun",
+        "install": "npm i @remotion/cloudrun",
+        "tags": [
+          "cloudrun",
+          "gcp",
+          "render",
+          "serverless",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_renderer",
+      "title": "@remotion/renderer",
+      "summary": "Render Node/Bun standalone (self-host).",
+      "content": "@remotion/renderer\n\nRender Node/Bun standalone (self-host).\n\nAPI programática pra renderizar MP4 no próprio servidor (Node/Bun). Usado quando o gateway Python dispara render via subprocess. Já adotado no plano de render local do Channel OS.\n\nInstall: npm i @remotion/renderer\n\nLink: https://www.remotion.dev/docs/renderer\n\nTags: render, self-host, node, cli, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/renderer",
+        "install": "npm i @remotion/renderer",
+        "tags": [
+          "render",
+          "self-host",
+          "node",
+          "cli",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_captions",
+      "title": "@remotion/captions",
+      "summary": "Tipo Caption + serialize/parse SRT + tiktok-style helpers.",
+      "content": "@remotion/captions\n\nTipo Caption + serialize/parse SRT + tiktok-style helpers.\n\nPacote oficial pra trabalhar com captions: tipo Caption{token, startMs, endMs}, parseSrt/serializeSrt, createTikTokStyleCaptions (agrupa word-timestamps em frases curtas estilo karaoke pop). Compat ElevenLabs alignment + Whisper.\n\nInstall: npm i @remotion/captions\n\nLink: https://www.remotion.dev/docs/captions/api\n\nTags: captions, srt, whisper, elevenlabs, tiktok-style, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/captions/api",
+        "install": "npm i @remotion/captions",
+        "tags": [
+          "captions",
+          "srt",
+          "whisper",
+          "elevenlabs",
+          "tiktok-style",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_transitions",
+      "title": "@remotion/transitions",
+      "summary": "<TransitionSeries> com presets fade/slide/wipe entre beats.",
+      "content": "@remotion/transitions\n\n<TransitionSeries> com presets fade/slide/wipe entre beats.\n\nTransitionSeries pra transições declarativas entre Sequences. Presets: fade, slide, wipe, flip. Substitui interpolate manual em transições padronizadas.\n\nInstall: npm i @remotion/transitions\n\nLink: https://www.remotion.dev/docs/transitions\n\nTags: transitions, fade, slide, wipe, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/transitions",
+        "install": "npm i @remotion/transitions",
+        "tags": [
+          "transitions",
+          "fade",
+          "slide",
+          "wipe",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_media_utils",
+      "title": "@remotion/media-utils",
+      "summary": "getAudioDurationInSeconds, useAudioData, visualizeAudio.",
+      "content": "@remotion/media-utils\n\ngetAudioDurationInSeconds, useAudioData, visualizeAudio.\n\nUtils essenciais: getAudioDurationInSeconds (lê MP3 do ElevenLabs pra setar duração exata do beat), useAudioData (carrega samples), visualizeAudio (FFT bars por frame), visualizeAudioWaveform (waveform de voz), useWindowedAudioData (essencial pra narração longa sem OOM).\n\nInstall: npm i @remotion/media-utils\n\nLink: https://www.remotion.dev/docs/media-utils\n\nTags: audio, duration, waveform, fft, visualize, oficial, essencial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/media-utils",
+        "install": "npm i @remotion/media-utils",
+        "tags": [
+          "audio",
+          "duration",
+          "waveform",
+          "fft",
+          "visualize",
+          "oficial",
+          "essencial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_google_fonts",
+      "title": "@remotion/google-fonts",
+      "summary": "Catalog tipado de Google Fonts com tree-shaking.",
+      "content": "@remotion/google-fonts\n\nCatalog tipado de Google Fonts com tree-shaking.\n\nGoogle Fonts tipadas — `loadFont` por família, tree-shake quem não usa. Recomendado em vez do <link> manual pra garantir font ready antes de render frame.\n\nInstall: npm i @remotion/google-fonts\n\nLink: https://www.remotion.dev/docs/google-fonts\n\nTags: fonts, google-fonts, typography, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/google-fonts",
+        "install": "npm i @remotion/google-fonts",
+        "tags": [
+          "fonts",
+          "google-fonts",
+          "typography",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_shapes",
+      "title": "@remotion/shapes",
+      "summary": "<Triangle>, <Star>, <Pie> SVG animáveis.",
+      "content": "@remotion/shapes\n\n<Triangle>, <Star>, <Pie> SVG animáveis.\n\nPrimitivos SVG (Triangle, Star, Pie, Circle, Rect) com props animáveis. Útil pra overlays decorativos, CTAs estilizados, decorações de hook.\n\nInstall: npm i @remotion/shapes\n\nLink: https://www.remotion.dev/docs/shapes\n\nTags: shapes, svg, overlays, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/shapes",
+        "install": "npm i @remotion/shapes",
+        "tags": [
+          "shapes",
+          "svg",
+          "overlays",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_paths",
+      "title": "@remotion/paths",
+      "summary": "Utils SVG path — interpolate, bbox, reverse.",
+      "content": "@remotion/paths\n\nUtils SVG path — interpolate, bbox, reverse.\n\nManipulação de SVG paths: interpolate entre 2 paths (morph), bounding box, reverse direction. Bom pra animações path-drawn (linha desenhando, texto sendo escrito).\n\nInstall: npm i @remotion/paths\n\nLink: https://www.remotion.dev/docs/paths\n\nTags: svg, paths, morph, animation, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/paths",
+        "install": "npm i @remotion/paths",
+        "tags": [
+          "svg",
+          "paths",
+          "morph",
+          "animation",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_noise",
+      "title": "@remotion/noise",
+      "summary": "Noise functions tipadas — grain/glitch fx.",
+      "content": "@remotion/noise\n\nNoise functions tipadas — grain/glitch fx.\n\nFunções de noise (perlin, simplex) pra efeitos de grain, glitch, texture overlay. Subtle film grain dá feel cinematográfico em qualquer template.\n\nInstall: npm i @remotion/noise\n\nLink: https://www.remotion.dev/docs/noise\n\nTags: noise, grain, glitch, effects, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/noise",
+        "install": "npm i @remotion/noise",
+        "tags": [
+          "noise",
+          "grain",
+          "glitch",
+          "effects",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_motion_blur",
+      "title": "@remotion/motion-blur",
+      "summary": "<Trail> + <CameraMotionBlur> HOCs.",
+      "content": "@remotion/motion-blur\n\n<Trail> + <CameraMotionBlur> HOCs.\n\nHOCs pra motion blur: <Trail> deixa rastro do elemento em movimento, <CameraMotionBlur> blur global em câmera rápida. Adiciona feel cinematográfico de movimento.\n\nInstall: npm i @remotion/motion-blur\n\nLink: https://www.npmjs.com/package/@remotion/motion-blur\n\nTags: motion-blur, cinematic, effects, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.npmjs.com/package/@remotion/motion-blur",
+        "install": "npm i @remotion/motion-blur",
+        "tags": [
+          "motion-blur",
+          "cinematic",
+          "effects",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_animation_utils",
+      "title": "@remotion/animation-utils",
+      "summary": "Helpers de animation/easing reutilizáveis.",
+      "content": "@remotion/animation-utils\n\nHelpers de animation/easing reutilizáveis.\n\nHelpers tipo makeTransform, easings customizados, interpolate builders. Reduz boilerplate em composition complexa.\n\nInstall: npm i @remotion/animation-utils\n\nLink: https://www.remotion.dev/docs/animation-utils\n\nTags: animation, easing, utils, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/animation-utils",
+        "install": "npm i @remotion/animation-utils",
+        "tags": [
+          "animation",
+          "easing",
+          "utils",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_lottie",
+      "title": "@remotion/lottie",
+      "summary": "<Lottie> typesafe (animações LottieFiles/AE).",
+      "content": "@remotion/lottie\n\n<Lottie> typesafe (animações LottieFiles/AE).\n\nComponente <Lottie> tipado pra animações exportadas de After Effects/LottieFiles. Solução padrão pra UI animations sem precisar codificar à mão.\n\nInstall: npm i @remotion/lottie\n\nLink: https://www.remotion.dev/docs/lottie\n\nTags: lottie, after-effects, animations, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/lottie",
+        "install": "npm i @remotion/lottie",
+        "tags": [
+          "lottie",
+          "after-effects",
+          "animations",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_rive",
+      "title": "@remotion/rive",
+      "summary": "Rive animations (lighter/faster que Lottie).",
+      "content": "@remotion/rive\n\nRive animations (lighter/faster que Lottie).\n\nSuporte a Rive — alternativa moderna ao Lottie, arquivos menores e GPU-accelerated. Útil pra animações de UI interativas reusadas em vídeo.\n\nInstall: npm i @remotion/rive\n\nLink: https://www.remotion.dev/docs/rive\n\nTags: rive, animations, gpu, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/rive",
+        "install": "npm i @remotion/rive",
+        "tags": [
+          "rive",
+          "animations",
+          "gpu",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_gif",
+      "title": "@remotion/gif",
+      "summary": "<Gif> + getGifDurationInSeconds.",
+      "content": "@remotion/gif\n\n<Gif> + getGifDurationInSeconds.\n\nRenderizar GIFs como camadas em composition. Útil pra meme content, reaction stickers, loops curtos.\n\nInstall: npm i @remotion/gif\n\nLink: https://www.remotion.dev/docs/gif\n\nTags: gif, memes, overlays, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/gif",
+        "install": "npm i @remotion/gif",
+        "tags": [
+          "gif",
+          "memes",
+          "overlays",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_preload",
+      "title": "@remotion/preload",
+      "summary": "preloadVideo/Audio/Font/Image — evita stalls.",
+      "content": "@remotion/preload\n\npreloadVideo/Audio/Font/Image — evita stalls.\n\nAPI pra pré-carregar assets antes do Player iniciar. Evita flicker/stall ao trocar de beat. Essencial em previews longas.\n\nInstall: npm i @remotion/preload\n\nLink: https://www.remotion.dev/docs/preload\n\nTags: preload, performance, player, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/preload",
+        "install": "npm i @remotion/preload",
+        "tags": [
+          "preload",
+          "performance",
+          "player",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_zod_types",
+      "title": "@remotion/zod-types",
+      "summary": "zColor(), zTextarea(), zMatrix() pra schema de props.",
+      "content": "@remotion/zod-types\n\nzColor(), zTextarea(), zMatrix() pra schema de props.\n\nTipos Zod customizados que o Remotion Studio renderiza como inputs ricos (color picker, textarea, matrix). Permite que Hermes gere JSON tipado de props pra qualquer composition + UI auto-gera form.\n\nInstall: npm i @remotion/zod-types\n\nLink: https://www.remotion.dev/docs/zod-types\n\nTags: zod, schema, props, studio, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/zod-types",
+        "install": "npm i @remotion/zod-types",
+        "tags": [
+          "zod",
+          "schema",
+          "props",
+          "studio",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_tailwind_v4",
+      "title": "@remotion/tailwind-v4",
+      "summary": "Tailwind v4 dentro do bundler Remotion.",
+      "content": "@remotion/tailwind-v4\n\nTailwind v4 dentro do bundler Remotion.\n\nPlugin pra usar Tailwind v4 em compositions. Channel OS usa Tailwind 3 atualmente — futura migração v4 ganharia esse plugin.\n\nInstall: npm i @remotion/tailwind-v4\n\nLink: https://www.remotion.dev/docs/tailwind/tailwind-v4\n\nTags: tailwind, bundler, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/tailwind/tailwind-v4",
+        "install": "npm i @remotion/tailwind-v4",
+        "tags": [
+          "tailwind",
+          "bundler",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_install_whisper_cpp",
+      "title": "@remotion/install-whisper-cpp",
+      "summary": "Instala Whisper.cpp cross-platform + transcribe local.",
+      "content": "@remotion/install-whisper-cpp\n\nInstala Whisper.cpp cross-platform + transcribe local.\n\nAuto-instala Whisper.cpp e transcreve áudios localmente. Word-level timestamps. Custo zero, CPU pesada — ótimo pra dev/preview, na prod alternativa OpenAI Whisper API se preferir.\n\nInstall: npm i @remotion/install-whisper-cpp\n\nLink: https://www.remotion.dev/docs/install-whisper-cpp\n\nTags: whisper, captions, transcribe, local, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/install-whisper-cpp",
+        "install": "npm i @remotion/install-whisper-cpp",
+        "tags": [
+          "whisper",
+          "captions",
+          "transcribe",
+          "local",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_openai_whisper",
+      "title": "@remotion/openai-whisper",
+      "summary": "Wrapper OpenAI Whisper API → Caption[].",
+      "content": "@remotion/openai-whisper\n\nWrapper OpenAI Whisper API → Caption[].\n\nConverte resposta da OpenAI Whisper API pro formato Caption[]. Use quando não quiser carga de CPU local. ~$0.006/min.\n\nInstall: npm i @remotion/openai-whisper\n\nLink: https://www.remotion.dev/docs/openai-whisper\n\nTags: whisper, openai, api, captions, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/openai-whisper",
+        "install": "npm i @remotion/openai-whisper",
+        "tags": [
+          "whisper",
+          "openai",
+          "api",
+          "captions",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_layout_utils",
+      "title": "@remotion/layout-utils",
+      "summary": "Layout helpers — fit text, measure DOM.",
+      "content": "@remotion/layout-utils\n\nLayout helpers — fit text, measure DOM.\n\nHelpers pra calcular layouts dinamicamente: fit text em área, measure DOM antes do render. Útil pra captions que se adaptam ao tamanho da tela.\n\nInstall: npm i @remotion/layout-utils\n\nLink: https://www.remotion.dev/docs/layout-utils\n\nTags: layout, text-fit, measure, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/layout-utils",
+        "install": "npm i @remotion/layout-utils",
+        "tags": [
+          "layout",
+          "text-fit",
+          "measure",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_mcp",
+      "title": "@remotion/mcp",
+      "summary": "MCP server oficial — Claude/Gemini geram comps.",
+      "content": "@remotion/mcp\n\nMCP server oficial — Claude/Gemini geram comps.\n\nServidor MCP (Model Context Protocol) oficial Remotion. Expõe ferramentas pra LLMs (Claude Desktop, Gemini) gerarem compositions diretamente. Vale plugar como tool no Hermes Gateway pra geração ad-hoc de compositions novas.\n\nInstall: npm i @remotion/mcp\n\nLink: https://www.remotion.dev/docs/mcp\n\nTags: mcp, ai, llm, codegen, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/mcp",
+        "install": "npm i @remotion/mcp",
+        "tags": [
+          "mcp",
+          "ai",
+          "llm",
+          "codegen",
+          "oficial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_animated_community",
+      "title": "remotion-animated (community)",
+      "summary": "<Animated animations={[Move,Fade,Scale,Rotate]}> declarativo.",
+      "content": "remotion-animated (community)\n\n<Animated animations={[Move,Fade,Scale,Rotate]}> declarativo.\n\nAPI declarativa pra animações dentro de JSX — em vez de useCurrentFrame+interpolate, passa array de animations props. Reduz boilerplate em compositions com muitas micro-animações.\n\nInstall: npm i remotion-animated\n\nLink: https://github.com/stefanwittwer/remotion-animated\n\nTags: animations, declarative, community",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/stefanwittwer/remotion-animated",
+        "install": "npm i remotion-animated",
+        "tags": [
+          "animations",
+          "declarative",
+          "community"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_library",
+      "slug": "pkg_remotion_subtitles_community",
+      "title": "remotion-subtitles (ahgsql)",
+      "summary": "Parse SRT + caption components animados drop-in.",
+      "content": "remotion-subtitles (ahgsql)\n\nParse SRT + caption components animados drop-in.\n\nComponentes <Subtitles src=\".srt\"> drop-in com animações built-in (typewriter, fade, pop). Mais simples que @remotion/captions pra caso de uso básico.\n\nInstall: npm i remotion-subtitles\n\nLink: https://github.com/ahgsql/remotion-subtitles\n\nTags: subtitles, srt, captions, community",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/ahgsql/remotion-subtitles",
+        "install": "npm i remotion-subtitles",
+        "tags": [
+          "subtitles",
+          "srt",
+          "captions",
+          "community"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_skill",
+      "slug": "skill_audio_duration",
+      "title": "getAudioDurationInSeconds",
+      "summary": "Lê MP3/WAV e retorna duração exata em segundos.",
+      "content": "getAudioDurationInSeconds\n\nLê MP3/WAV e retorna duração exata em segundos.\n\nFunção do @remotion/media-utils. Setar `durationInFrames` da Composition com base na duração real do MP3 do ElevenLabs (em vez de estimar por chars). Padrão pra alinhar narração ↔ duration.\n\nLink: https://www.remotion.dev/docs/get-audio-duration-in-seconds\n\nTags: audio, duration, pattern, essencial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/get-audio-duration-in-seconds",
+        "install": null,
+        "tags": [
+          "audio",
+          "duration",
+          "pattern",
+          "essencial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_skill",
+      "slug": "skill_use_windowed_audio",
+      "title": "useWindowedAudioData",
+      "summary": "Carrega só janela do áudio ao redor do frame atual.",
+      "content": "useWindowedAudioData\n\nCarrega só janela do áudio ao redor do frame atual.\n\nPra narração longa (>2min), useAudioData carrega tudo em RAM. useWindowedAudioData carrega só os samples necessários ao frame atual — evita OOM em renders de vídeos longos.\n\nLink: https://www.remotion.dev/docs/use-windowed-audio-data\n\nTags: audio, performance, memory, long-form, pattern",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/use-windowed-audio-data",
+        "install": null,
+        "tags": [
+          "audio",
+          "performance",
+          "memory",
+          "long-form",
+          "pattern"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_skill",
+      "slug": "skill_visualize_audio",
+      "title": "visualizeAudio / visualizeAudioWaveform",
+      "summary": "Espectro FFT (bars) ou waveform (voz) por frame.",
+      "content": "visualizeAudio / visualizeAudioWaveform\n\nEspectro FFT (bars) ou waveform (voz) por frame.\n\nDuas funções do @remotion/media-utils. visualizeAudio retorna magnitudes FFT (32-64 bins) — ideal pra music viz. visualizeAudioWaveform retorna samples crus — ideal pra voz/podcast.\n\nLink: https://www.remotion.dev/docs/visualize-audio\n\nTags: audio, fft, waveform, audiogram, pattern",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/visualize-audio",
+        "install": null,
+        "tags": [
+          "audio",
+          "fft",
+          "waveform",
+          "audiogram",
+          "pattern"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_skill",
+      "slug": "skill_calculate_metadata",
+      "title": "calculateMetadata()",
+      "summary": "Resolve fps/duração/dim dinamicamente por inputProps.",
+      "content": "calculateMetadata()\n\nResolve fps/duração/dim dinamicamente por inputProps.\n\nFunction passada pra <Composition calculateMetadata={...}>. Recebe inputProps e retorna {durationInFrames, fps, width, height}. Hermes manda só os beats + audio_urls, calculateMetadata soma as durações reais e seta o resto.\n\nLink: https://www.remotion.dev/docs/calculate-metadata\n\nTags: metadata, dynamic-duration, pattern, essencial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/calculate-metadata",
+        "install": null,
+        "tags": [
+          "metadata",
+          "dynamic-duration",
+          "pattern",
+          "essencial"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_skill",
+      "slug": "skill_caption_srt",
+      "title": "parseSrt / serializeSrt",
+      "summary": "Ida-volta SRT ↔ Caption[] (compat ElevenLabs + Whisper).",
+      "content": "parseSrt / serializeSrt\n\nIda-volta SRT ↔ Caption[] (compat ElevenLabs + Whisper).\n\nFunções do @remotion/captions. ElevenLabs retorna alignment word-level — serializeSrt salva como .srt. Whisper retorna .srt — parseSrt converte pra Caption[]. Mesma estrutura, qualquer source funciona.\n\nLink: https://www.remotion.dev/docs/captions/serialize-srt\n\nTags: captions, srt, whisper, elevenlabs, pattern",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/captions/serialize-srt",
+        "install": null,
+        "tags": [
+          "captions",
+          "srt",
+          "whisper",
+          "elevenlabs",
+          "pattern"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_skill",
+      "slug": "skill_preload_assets",
+      "title": "preloadVideo / preloadAudio / preloadFont / preloadImage",
+      "summary": "Evita flicker no Player ao trocar beats.",
+      "content": "preloadVideo / preloadAudio / preloadFont / preloadImage\n\nEvita flicker no Player ao trocar beats.\n\nAntes de mostrar <Player>, chamar preloadX(url) garante que asset tá em cache. Sem isso, primeiro beat com asset novo dá hiccup. Crítico pra UX de preview.\n\nLink: https://www.remotion.dev/docs/preload\n\nTags: preload, player, ux, pattern",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/preload",
+        "install": null,
+        "tags": [
+          "preload",
+          "player",
+          "ux",
+          "pattern"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_skill",
+      "slug": "skill_audio_spectrum_prompt",
+      "title": "Audio Spectrum Visualizer (Remotion prompt oficial)",
+      "summary": "32 bars dark + gradient magenta→cyan reagindo a bass/mid/high.",
+      "content": "Audio Spectrum Visualizer (Remotion prompt oficial)\n\n32 bars dark + gradient magenta→cyan reagindo a bass/mid/high.\n\nPrompt oficial Remotion que gera audio spectrum visualizer pronto: 32 bars, gradient magenta→cyan, separação bass/mid/high. Copia pro ContentAgent system prompt como exemplo canônico.\n\nLink: https://www.remotion.dev/prompts/audio-spectrum-visualizer\n\nTags: audio, spectrum, visualizer, prompt, reference",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/prompts/audio-spectrum-visualizer",
+        "install": null,
+        "tags": [
+          "audio",
+          "spectrum",
+          "visualizer",
+          "prompt",
+          "reference"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_workflow",
+      "slug": "workflow_short_video_maker_gyoridavid",
+      "title": "gyoridavid/short-video-maker",
+      "summary": "Script→Kokoro TTS→Whisper captions→Remotion render→MP4. MCP+REST. Docker.",
+      "content": "gyoridavid/short-video-maker\n\nScript→Kokoro TTS→Whisper captions→Remotion render→MP4. MCP+REST. Docker.\n\nRepo OSS 1.1k★ com pipeline arquiteturalmente similar ao Hermes: orquestrador → TTS local Kokoro → Whisper.cpp captions → Remotion render. Expõe servidor MCP e REST. Background music por mood. Roda em Docker. MIT. VALE PLUGAR: trocar Kokoro por ElevenLabs e adotar o padrão MCP/REST como referência.\n\nLink: https://github.com/gyoridavid/short-video-maker\n\nTags: pipeline, workflow, mcp, docker, kokoro, whisper, mit, reference",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/gyoridavid/short-video-maker",
+        "install": null,
+        "tags": [
+          "pipeline",
+          "workflow",
+          "mcp",
+          "docker",
+          "kokoro",
+          "whisper",
+          "mit",
+          "reference"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_workflow",
+      "slug": "workflow_superviral_vaibhav",
+      "title": "vaibhavvTripathi/superviral",
+      "summary": "Next.js + Remotion + Google TTS — Reddit/FakeChat/SplitScreen.",
+      "content": "vaibhavvTripathi/superviral\n\nNext.js + Remotion + Google TTS — Reddit/FakeChat/SplitScreen.\n\n3 modos de short prontos com UI (Zustand + Tailwind). Vale fork pra adotar templates Reddit/FakeChat/SplitScreen e swap Google TTS por ElevenLabs.\n\nLink: https://github.com/vaibhavvTripathi/superviral\n\nTags: pipeline, next.js, reddit, fakechat, splitscreen, reference",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/vaibhavvTripathi/superviral",
+        "install": null,
+        "tags": [
+          "pipeline",
+          "next.js",
+          "reddit",
+          "fakechat",
+          "splitscreen",
+          "reference"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_workflow",
+      "slug": "workflow_prompt_to_video_official",
+      "title": "remotion-dev/template-prompt-to-video",
+      "summary": "CLI prompt → OpenAI script+imagens → ElevenLabs voz → render.",
+      "content": "remotion-dev/template-prompt-to-video\n\nCLI prompt → OpenAI script+imagens → ElevenLabs voz → render.\n\nPipeline oficial canônica. Pattern direto pro fluxo Hermes/Gemini/ElevenLabs. Estudo obrigatório antes de implementar render server next phase.\n\nLink: https://github.com/remotion-dev/template-prompt-to-video\n\nTags: pipeline, cli, openai, elevenlabs, oficial, canonical",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/remotion-dev/template-prompt-to-video",
+        "install": null,
+        "tags": [
+          "pipeline",
+          "cli",
+          "openai",
+          "elevenlabs",
+          "oficial",
+          "canonical"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_workflow",
+      "slug": "workflow_yumcut",
+      "title": "IgorShadurin/app.yumcut.com",
+      "summary": "Next.js full-stack: prompt→cenas→voz→subtitles→watermark. Batch+API.",
+      "content": "IgorShadurin/app.yumcut.com\n\nNext.js full-stack: prompt→cenas→voz→subtitles→watermark. Batch+API.\n\nStack TS (Next.js + FFmpeg + Remotion) com batch render + API hooks + multi-language. Vale estudar UX de batch processing e patterns de hooks de API.\n\nLink: https://github.com/IgorShadurin/app.yumcut.com\n\nTags: pipeline, next.js, ffmpeg, batch, api, reference",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/IgorShadurin/app.yumcut.com",
+        "install": null,
+        "tags": [
+          "pipeline",
+          "next.js",
+          "ffmpeg",
+          "batch",
+          "api",
+          "reference"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_workflow",
+      "slug": "workflow_remotion_studio_monorepo",
+      "title": "Takamasa045/remotion-studio-monorepo",
+      "summary": "Monorepo: apps/_template clona por projeto, render isolado.",
+      "content": "Takamasa045/remotion-studio-monorepo\n\nMonorepo: apps/_template clona por projeto, render isolado.\n\nPattern pra escalar N canais num único repo Remotion — cada canal vira app/ herdeiro de _template. Vale plugar quando Channel OS quiser separar branding/templates por canal.\n\nLink: https://github.com/Takamasa045/remotion-studio-monorepo\n\nTags: monorepo, multi-channel, scaling, reference",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://github.com/Takamasa045/remotion-studio-monorepo",
+        "install": null,
+        "tags": [
+          "monorepo",
+          "multi-channel",
+          "scaling",
+          "reference"
+        ]
+      }
+    },
+    {
+      "kind": "remotion_workflow",
+      "slug": "workflow_lambda_sqs",
+      "title": "Remotion Lambda + SQS (oficial pattern)",
+      "summary": "Fila SQS → renderMediaOnLambda paralelo → S3.",
+      "content": "Remotion Lambda + SQS (oficial pattern)\n\nFila SQS → renderMediaOnLambda paralelo → S3.\n\nPattern oficial pra batch render multi-canal serverless. Drop jobs em SQS, Lambda consumer renderiza paralelo, output no S3. Setup quando Channel OS for production-scale.\n\nLink: https://www.remotion.dev/docs/lambda/sqs\n\nTags: lambda, sqs, s3, queue, production, scale, oficial",
+      "metadata": {
+        "source_file": "data/remotion_catalog.ts",
+        "link": "https://www.remotion.dev/docs/lambda/sqs",
+        "install": null,
+        "tags": [
+          "lambda",
+          "sqs",
+          "s3",
+          "queue",
+          "production",
+          "scale",
+          "oficial"
+        ]
       }
     }
   ]

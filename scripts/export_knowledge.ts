@@ -305,6 +305,44 @@ for (const d of docs) {
   }
 }
 
+// ─── Remotion ecosystem catalog (templates / libraries / skills / workflows) ─
+{
+  const mod = await import('../data/remotion_catalog');
+  const groups: Array<{ kind: string; items: typeof mod.remotionTemplates }> = [
+    { kind: 'remotion_template', items: mod.remotionTemplates },
+    { kind: 'remotion_library', items: mod.remotionLibraries },
+    { kind: 'remotion_skill', items: mod.remotionSkills },
+    { kind: 'remotion_workflow', items: mod.remotionWorkflows },
+  ];
+  for (const g of groups) {
+    for (const item of g.items) {
+      const body = [
+        item.name,
+        item.summary,
+        item.description,
+        item.install ? `Install: ${item.install}` : '',
+        `Link: ${item.link}`,
+        item.tags.length ? `Tags: ${item.tags.join(', ')}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n\n');
+      records.push({
+        kind: g.kind,
+        slug: item.slug,
+        title: item.name,
+        summary: item.summary,
+        content: body,
+        metadata: {
+          source_file: 'data/remotion_catalog.ts',
+          link: item.link,
+          install: item.install ?? null,
+          tags: item.tags,
+        },
+      });
+    }
+  }
+}
+
 // ─── Write out ───────────────────────────────────────────────────────────────
 const seenSlugs = new Map<string, number>();
 for (const r of records) {

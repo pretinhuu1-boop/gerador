@@ -33,6 +33,11 @@ ALLOWED_KINDS = {
     "texture_preset",
     "prompt",
     "vfx_preset",
+    # Remotion ecosystem catalog (templates / libraries / skills / workflows)
+    "remotion_template",
+    "remotion_library",
+    "remotion_skill",
+    "remotion_workflow",
 }
 
 MAX_CANDIDATES = 800  # client-side rank window; bumped to RPC when this gets slow
@@ -175,13 +180,16 @@ register(
     ToolSpec(
         name="recall_knowledge",
         description=(
-            "Semantic search over the shared creative knowledge base seeded from the legacy "
-            "cinematography library: long-form docs (DRC, CME/CLAFE/CIME, RSSE, WardrobeEngine, "
-            "ImageScience_4K, actor_behavior, TrapStyleGuide), style/environment/narrative/lens "
-            "presets, b-roll scenarios, vibe presets, context modifiers, texture presets, prompt "
-            "library and VFX presets. Use whenever you need a concrete reference for visual style, "
-            "lens choice, lighting setup, wardrobe direction, b-roll inspiration or proven prompt "
-            "patterns BEFORE generating new content from scratch. Pass `kind` to scope the search."
+            "Semantic search over the shared creative knowledge base. Includes: the legacy "
+            "cinematography library (DRC, CME/CLAFE/CIME, RSSE, WardrobeEngine, ImageScience_4K, "
+            "actor_behavior, TrapStyleGuide, style/environment/narrative/lens presets, b-roll "
+            "scenarios, vibe presets, context modifiers, texture presets, prompt library, VFX), "
+            "PLUS the Remotion ecosystem catalog (kinds: `remotion_template`, `remotion_library`, "
+            "`remotion_skill`, `remotion_workflow`) — use these when reasoning about which "
+            "composition/package/utility/pipeline to recommend for rendering a draft. Use whenever "
+            "you need a concrete reference for visual style, lens choice, lighting setup, wardrobe "
+            "direction, b-roll inspiration, proven prompt patterns OR Remotion building blocks "
+            "BEFORE generating content from scratch. Pass `kind` to scope."
         ),
         parameters={
             "type": "object",
