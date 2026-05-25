@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Clock, FileText, Megaphone, Tag, Save, Film, Pencil } from 'lucide-react';
+import { X, Clock, FileText, Megaphone, Tag, Save, Film, Pencil, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
@@ -9,6 +9,7 @@ import type { ContentBeat, ContentDraft } from '../../../types/database';
 import { updateDraft } from '../../../services/channelOS/contentService';
 import { DraftPreview } from './DraftPreview';
 import { VoicePreview } from './VoicePreview';
+import { RenderModal } from './RenderModal';
 import { cn } from '../../../lib/cn';
 
 interface Props {
@@ -28,6 +29,7 @@ export const DraftDetail = ({ draft, onClose, onSaved }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [tab, setTab] = useState<'editor' | 'preview'>('editor');
+  const [renderModalOpen, setRenderModalOpen] = useState(false);
 
   useEffect(() => {
     setTitle(draft.title);
@@ -100,6 +102,15 @@ export const DraftDetail = ({ draft, onClose, onSaved }: Props) => {
             <Badge variant="brand" size="sm">{draft.status}</Badge>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="accent"
+              size="sm"
+              onClick={() => setRenderModalOpen(true)}
+              disabled={dirty || beats.filter((b) => b.text.trim()).length === 0}
+              title={dirty ? 'Salva antes de renderizar' : 'Renderizar MP4'}
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Renderizar
+            </Button>
             <Button variant="primary" size="sm" loading={saving} disabled={!dirty || saving} onClick={save}>
               {!saving && <Save className="h-3.5 w-3.5" />}
               {dirty ? 'Salvar' : 'Salvo'}
@@ -113,6 +124,13 @@ export const DraftDetail = ({ draft, onClose, onSaved }: Props) => {
             </button>
           </div>
         </div>
+
+        <RenderModal
+          draft={draft}
+          open={renderModalOpen}
+          onClose={() => setRenderModalOpen(false)}
+          onRendered={() => onSaved(draft)}
+        />
 
         <div className="shrink-0 px-5 pt-3 border-b border-border-subtle/60 bg-bg-panel/95 backdrop-blur">
           <div className="inline-flex p-0.5 rounded-lg bg-bg-elevated border border-border-subtle">
