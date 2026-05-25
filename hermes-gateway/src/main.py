@@ -240,6 +240,219 @@ async def scout_run(
     return await _scout_youtube_channel(user_id=identity.user_id, query=payload.query)
 
 
+# ------------------------------------------------------------------ oauth ---
+
+
+@app.get("/v1/oauth/google/start")
+async def oauth_google_start(identity: AuthIdentity = Depends(_auth)):
+    """Returns the Google consent URL — frontend opens it in a new tab."""
+    from .connectors import google_oauth
+
+    try:
+        url = google_oauth.authorize_url(identity.user_id)
+    except google_oauth.GoogleOAuthError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    return {"authorize_url": url}
+
+
+@app.get("/v1/oauth/google/callback")
+async def oauth_google_callback(code: str, state: str):
+    """Google redirects here after consent. We exchange the code, fetch the
+    channel info, persist the connection, then 302 to the frontend success URL."""
+    from datetime import datetime, timedelta, timezone as tz
+    from fastapi.responses import RedirectResponse
+
+    from .connectors import google_oauth
+    from .connectors.supabase_client import supabase_admin
+
+    s = get_settings()
+    try:
+        user_id = google_oauth.parse_state(state)
+    except Exception:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail="invalid state parameter")
+    try:
+        tokens = await google_oauth.exchange_code(code)
+    except google_oauth.GoogleOAuthError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    access_token = tokens.get("access_token")
+    refresh_token = tokens.get("refresh_token")
+    expires_in = int(tokens.get("expires_in") or 3600)
+    scope = tokens.get("scope", "")
+    if not access_token:
+        raise HTTPException(status_code=502, detail="Google response missing access_token")
+
+    try:
+        channel = await google_oauth.fetch_channel_info(access_token)
+    except google_oauth.GoogleOAuthError as e:
+        raise HTTPException(status_code=502, detail=f"channel fetch failed: {e}")
+    if not channel:
+        raise HTTPException(status_code=400, detail="Google account has no YouTube channel")
+
+    snip = channel.get("snippet") or {}
+    sb = supabase_admin()
+    sb.table("oauth_connections").upsert(
+        {
+            "user_id": user_id,
+            "platform": "youtube",
+            "external_account_id": channel.get("id"),
+            "display_name": snip.get("title"),
+            "handle": snip.get("customUrl"),
+            "avatar_url": (snip.get("thumbnails") or {}).get("default", {}).get("url"),
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "scopes": [s for s in scope.split(" ") if s],
+            "expires_at": (datetime.now(tz.utc) + timedelta(seconds=expires_in)).isoformat(),
+            "raw": {"channel": channel},
+            "refreshed_at": datetime.now(tz.utc).isoformat(),
+        },
+        on_conflict="user_id,platform,external_account_id",
+    ).execute()
+
+    return RedirectResponse(s.oauth_success_redirect, status_code=302)
+
+
+@app.get("/v1/oauth/connections")
+async def oauth_connections_list(identity: AuthIdentity = Depends(_auth)):
+    """List the calling user's connected platforms (sensitive fields stripped)."""
+    from .connectors.supabase_client import supabase_admin
+
+    sb = supabase_admin()
+    res = (
+        sb.table("oauth_connections")
+        .select(
+            "id, platform, external_account_id, display_name, handle, avatar_url, scopes, connected_at, expires_at"
+        )
+        .eq("user_id", identity.user_id)
+        .order("connected_at", desc=True)
+        .execute()
+    )
+    return {"connections": res.data or []}
+
+
+@app.delete("/v1/oauth/connections/{connection_id}")
+async def oauth_connection_delete(connection_id: str, identity: AuthIdentity = Depends(_auth)):
+    from .connectors.supabase_client import supabase_admin
+
+    sb = supabase_admin()
+    sb.table("oauth_connections").delete().eq("id", connection_id).eq(
+        "user_id", identity.user_id
+    ).execute()
+    return {"deleted": True}
+
+
+class PublishYouTubeRequest(BaseModel):
+    render_id: str
+    connection_id: str
+    title: str
+    description: str = ""
+    tags: list[str] = []
+    category_id: str = "22"
+    privacy_status: str = Field(default="private", pattern="^(private|unlisted|public)$")
+    made_for_kids: bool = False
+
+
+@app.post("/v1/publish/youtube")
+async def publish_youtube(
+    payload: PublishYouTubeRequest,
+    identity: AuthIdentity = Depends(_auth),
+):
+    """Downloads the rendered MP4 from Supabase Storage and uploads to YouTube
+    using the user's OAuth connection. Returns the YouTube video resource."""
+    from datetime import datetime, timedelta, timezone as tz
+    import tempfile
+
+    from .connectors import google_oauth
+    from .connectors.supabase_client import supabase_admin
+
+    sb = supabase_admin()
+
+    conn_res = (
+        sb.table("oauth_connections")
+        .select("*")
+        .eq("id", payload.connection_id)
+        .eq("user_id", identity.user_id)
+        .eq("platform", "youtube")
+        .maybe_single()
+        .execute()
+    )
+    if not (conn_res and conn_res.data):
+        raise HTTPException(status_code=404, detail="connection not found")
+    conn = conn_res.data
+
+    render_res = (
+        sb.table("content_renders")
+        .select("id, mp4_url, status, user_id")
+        .eq("id", payload.render_id)
+        .eq("user_id", identity.user_id)
+        .maybe_single()
+        .execute()
+    )
+    if not (render_res and render_res.data):
+        raise HTTPException(status_code=404, detail="render not found")
+    render = render_res.data
+    if render.get("status") != "rendered" or not render.get("mp4_url"):
+        raise HTTPException(status_code=400, detail="render not finished yet")
+
+    # Refresh access token if needed.
+    access_token = conn["access_token"]
+    if google_oauth.access_token_expired(conn.get("expires_at")):
+        if not conn.get("refresh_token"):
+            raise HTTPException(status_code=400, detail="token expired + no refresh_token; reconnect")
+        refreshed = await google_oauth.refresh_access_token(conn["refresh_token"])
+        access_token = refreshed["access_token"]
+        new_exp = datetime.now(tz.utc) + timedelta(seconds=int(refreshed.get("expires_in") or 3600))
+        sb.table("oauth_connections").update(
+            {
+                "access_token": access_token,
+                "expires_at": new_exp.isoformat(),
+                "refreshed_at": datetime.now(tz.utc).isoformat(),
+            }
+        ).eq("id", payload.connection_id).execute()
+
+    # Download MP4 from Storage to temp file.
+    import httpx as _httpx
+    from pathlib import Path
+
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
+        async with _httpx.AsyncClient(timeout=600.0) as client:
+            mp4 = await client.get(render["mp4_url"])
+        if mp4.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"mp4 fetch {mp4.status_code}")
+        tmp.write(mp4.content)
+        mp4_local = Path(tmp.name)
+
+    try:
+        result = await google_oauth.upload_video(
+            access_token,
+            mp4_local,
+            title=payload.title,
+            description=payload.description,
+            tags=payload.tags,
+            category_id=payload.category_id,
+            privacy_status=payload.privacy_status,
+            made_for_kids=payload.made_for_kids,
+        )
+    except google_oauth.GoogleOAuthError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    finally:
+        try:
+            mp4_local.unlink(missing_ok=True)
+        except Exception:  # noqa: BLE001
+            pass
+
+    video_id = result.get("id")
+    return {
+        "video_id": video_id,
+        "url": f"https://www.youtube.com/watch?v={video_id}" if video_id else None,
+        "snippet": result.get("snippet"),
+        "status": result.get("status"),
+    }
+
+
+# ----------------------------------------------------------------- improver ---
+
+
 class ImproverRequest(BaseModel):
     days: int = 7
 

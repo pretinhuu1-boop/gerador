@@ -9,6 +9,7 @@ import { TopAppBar } from '../../shell/TopAppBar';
 import { ChannelCard } from '../scout/ChannelCard';
 import { ChannelDetail } from '../scout/ChannelDetail';
 import { ErrorState, LoadingGrid, SupabaseOfflineHint } from '../WorkspaceState';
+import { OAuthConnections } from './OAuthConnections';
 
 export const ChannelsWorkspace = () => {
   const { user } = useAuth();
@@ -32,14 +33,16 @@ export const ChannelsWorkspace = () => {
         }
       />
 
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        <OAuthConnections />
+
         {loading ? (
           <LoadingGrid count={3} />
         ) : error ? (
           <ErrorState detail={error} onRetry={refresh} hint={<SupabaseOfflineHint />} />
         ) : !channels?.length ? (
           <p className="text-sm text-fg-secondary text-center py-20">
-            Nenhum canal ainda. Use o workspace <strong>Scout</strong> pra adicionar.
+            Nenhum canal rastreado ainda. Use o workspace <strong>Scout</strong> pra adicionar.
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">

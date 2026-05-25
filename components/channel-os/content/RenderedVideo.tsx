@@ -1,6 +1,7 @@
 import { Download, ExternalLink, Film } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import type { ContentRender } from '../../../types/database';
+import { PublishYouTubeButton } from './PublishYouTubeButton';
 
 export const RenderedVideo = ({ render }: { render: ContentRender }) => {
   if (!render.mp4_url) return null;
@@ -21,7 +22,7 @@ export const RenderedVideo = ({ render }: { render: ContentRender }) => {
           className="w-full h-full object-contain bg-black"
         />
       </div>
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex flex-wrap items-center justify-center gap-2">
         <Button
           variant="secondary"
           size="sm"
@@ -36,6 +37,7 @@ export const RenderedVideo = ({ render }: { render: ContentRender }) => {
         >
           <Download className="h-3.5 w-3.5" /> Baixar MP4
         </a>
+        <PublishYouTubeButton renderId={render.id} defaultTitle="Untitled render" />
       </div>
     </div>
   );

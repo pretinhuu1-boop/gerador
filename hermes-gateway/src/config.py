@@ -29,6 +29,19 @@ class Settings(BaseSettings):
     # YouTube
     youtube_api_key: str = Field(default="", alias="YOUTUBE_API_KEY")
 
+    # Google OAuth (YouTube upload via OAuth flow — distinct from the public Data API key)
+    google_oauth_client_id: str = Field(default="", alias="GOOGLE_OAUTH_CLIENT_ID")
+    google_oauth_client_secret: str = Field(default="", alias="GOOGLE_OAUTH_CLIENT_SECRET")
+    google_oauth_redirect_uri: str = Field(
+        default="http://localhost:8088/v1/oauth/google/callback",
+        alias="GOOGLE_OAUTH_REDIRECT_URI",
+    )
+    # Where to send the user back after a successful connect (frontend URL).
+    oauth_success_redirect: str = Field(
+        default="http://localhost:5173/?connected=youtube",
+        alias="OAUTH_SUCCESS_REDIRECT",
+    )
+
     # ElevenLabs (TTS)
     elevenlabs_api_key: str = Field(default="", alias="ELEVENLABS_API_KEY")
     elevenlabs_default_voice: str = Field(
