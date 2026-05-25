@@ -8,6 +8,9 @@ from typing import Any
 
 from .agents.base import AgentContext, AgentRun, run_agent
 from .agents.content import content_agent
+from .agents.editor import editor_agent
+from .agents.improver import improver_agent
+from .agents.publisher import publisher_agent
 from .agents.scout import scout_agent
 from .config import get_settings
 from .connectors.openrouter import OpenRouterClient
@@ -21,10 +24,13 @@ ORCHESTRATOR_SYSTEM = """Você é Hermes — o chefe de operações de canal do 
 Personalidade: estratégico, direto, com voz de mentor de criador de conteúdo bem-sucedido. Português brasileiro, sem rodeios, com humor seco quando cabe. Trata o usuário como sócio, não cliente.
 
 Sua função:
-- Entender o que o usuário quer (achar canais, analisar, brainstormar conteúdo, roteirizar, agendar, etc).
+- Entender o que o usuário quer (achar canais, analisar, brainstormar conteúdo, roteirizar, refinar, agendar, etc).
 - Delegar pro subagente certo:
     • `delegate_to_scout` — descoberta, análise e tracking de canais YouTube.
-    • `delegate_to_content` — brainstorm de ideias e roteirização (Shorts, Reels, TikTok, vídeos longos). Persiste drafts no workspace "Content".
+    • `delegate_to_content` — brainstorm de ideias e roteirização DO ZERO (Shorts, Reels, TikTok, vídeos longos). Persiste drafts no workspace "Content".
+    • `delegate_to_editor` — refinar/editar drafts EXISTENTES (mexer no hook, regenerar beat fraco, ajustar CTA, aprovar ou arquivar). Nunca escreve do zero — pra isso usa Content.
+    • `delegate_to_publisher` — agendar posts pra YouTube/TikTok/Instagram. Linka draft/render quando o user já tem.
+    • `delegate_to_improver` — meta-agente raríssimo: analisa atividade recente e propõe melhorias estruturais (skills, automações, memory pins). Só invoca quando o user pede "o que dá pra melhorar" / "analisa meus padrões" / "propõe automações".
 
 MISSÕES (multi-etapa): quando o pedido envolve MAIS DE UMA ETAPA ou coordenação de subagentes, use `plan_mission(brief)` em vez de uma delegação simples. Gatilhos:
     • Prefixo explícito `/mission ...`
@@ -66,6 +72,42 @@ async def _delegate_to_content(
     }
 
 
+async def _delegate_to_editor(
+    request: str,
+    *,
+    user_id: str,
+) -> dict[str, Any]:
+    return {
+        "delegated_to": "editor",
+        "note": "Editor agent invoked — see follow-up events for streaming output.",
+        "request": request,
+    }
+
+
+async def _delegate_to_publisher(
+    request: str,
+    *,
+    user_id: str,
+) -> dict[str, Any]:
+    return {
+        "delegated_to": "publisher",
+        "note": "Publisher agent invoked — see follow-up events for streaming output.",
+        "request": request,
+    }
+
+
+async def _delegate_to_improver(
+    request: str,
+    *,
+    user_id: str,
+) -> dict[str, Any]:
+    return {
+        "delegated_to": "improver",
+        "note": "Improver agent invoked — see follow-up events for streaming output.",
+        "request": request,
+    }
+
+
 register(
     ToolSpec(
         name="delegate_to_scout",
@@ -92,9 +134,10 @@ register(
     ToolSpec(
         name="delegate_to_content",
         description=(
-            "Delegate brainstorming or scripting to the Content sub-agent. "
-            "Use whenever the user wants: ideas (Shorts/Reels/TikTok/long), full scripts, hooks, captions, "
-            "or to review their existing drafts. The Content agent persists results in Supabase."
+            "Delegate brainstorming or NEW-script writing to the Content sub-agent. "
+            "Use whenever the user wants: ideas (Shorts/Reels/TikTok/long), full scripts FROM SCRATCH, hooks, captions. "
+            "Do NOT use for refining an EXISTING draft — use delegate_to_editor for that. "
+            "The Content agent persists results in Supabase."
         ),
         parameters={
             "type": "object",
@@ -111,6 +154,76 @@ register(
     )
 )
 
+register(
+    ToolSpec(
+        name="delegate_to_editor",
+        description=(
+            "Delegate refinement of an EXISTING draft to the Editor sub-agent. "
+            "Use whenever the user wants to edit/tweak/refine an already-written script: "
+            "change the hook, regenerate a specific beat, adjust the CTA, approve or archive. "
+            "Never use for writing from scratch — use delegate_to_content for that."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "request": {
+                    "type": "string",
+                    "description": "Self-contained task description for the Editor sub-agent. Include the draft_id when known.",
+                },
+            },
+            "required": ["request"],
+        },
+        handler=_delegate_to_editor,
+    )
+)
+
+register(
+    ToolSpec(
+        name="delegate_to_publisher",
+        description=(
+            "Delegate scheduling of a post to the Publisher sub-agent. "
+            "Use whenever the user wants to agendar/publicar conteúdo no YouTube/TikTok/Instagram. "
+            "Pode linkar draft_id e/ou render_id quando já existem."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "request": {
+                    "type": "string",
+                    "description": "Self-contained task description for the Publisher sub-agent (plataforma, horário, draft/render se houver).",
+                },
+            },
+            "required": ["request"],
+        },
+        handler=_delegate_to_publisher,
+    )
+)
+
+register(
+    ToolSpec(
+        name="delegate_to_improver",
+        description=(
+            "Delegate meta-analysis to the Improver sub-agent. "
+            "Use SOMENTE quando o user explicitamente pede análise dos próprios padrões / propostas de melhoria / "
+            "automações sugeridas / skills novas. Não invoque por iniciativa própria — é um agente caro e raro."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "request": {
+                    "type": "string",
+                    "description": "Self-contained task description for the Improver sub-agent.",
+                },
+            },
+            "required": ["request"],
+        },
+        handler=_delegate_to_improver,
+    )
+)
+
 
 def orchestrator_agent(memory_context: str = "") -> AgentRun:
     s = get_settings()
@@ -124,6 +237,9 @@ def orchestrator_agent(memory_context: str = "") -> AgentRun:
         allowed_tools=[
             "delegate_to_scout",
             "delegate_to_content",
+            "delegate_to_editor",
+            "delegate_to_publisher",
+            "delegate_to_improver",
             "plan_mission",
             "list_missions",
             "pin_memory",
@@ -151,6 +267,9 @@ async def run_orchestrator(
     delegations: dict[str, AgentRun] = {
         "delegate_to_scout": scout_agent(),
         "delegate_to_content": content_agent(),
+        "delegate_to_editor": editor_agent(),
+        "delegate_to_publisher": publisher_agent(),
+        "delegate_to_improver": improver_agent(),
     }
 
     async for event in run_agent(client, agent, ctx, messages):
