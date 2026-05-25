@@ -37,6 +37,7 @@ def content_agent() -> AgentRun:
             "preview_voice",
             "pin_memory",
             "list_memory",
+            "recall_memory",
         ],
         temperature=0.7,
     )

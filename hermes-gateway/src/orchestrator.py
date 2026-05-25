@@ -120,6 +120,7 @@ def orchestrator_agent(memory_context: str = "") -> AgentRun:
             "delegate_to_content",
             "pin_memory",
             "list_memory",
+            "recall_memory",
             "deactivate_memory",
         ],
         temperature=0.7,

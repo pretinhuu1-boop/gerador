@@ -1,15 +1,29 @@
 """Memory pin tools — Hermes can persist preferences/facts/goals across sessions."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
+from ..connectors import embeddings
 from ..connectors.supabase_client import supabase_admin
 from . import ToolSpec, register
 
 log = logging.getLogger(__name__)
 
 ALLOWED_KINDS = {"preference", "fact", "goal", "channel_pin", "rule"}
+
+
+async def _embed_and_attach(memory_id: str, content: str) -> None:
+    """Background task: compute embedding and store it as a pgvector string literal."""
+    try:
+        vec = await embeddings.embed_text(content)
+        sb = supabase_admin()
+        sb.table("hermes_memory").update({"embedding": embeddings.vector_literal(vec)}).eq(
+            "id", memory_id
+        ).execute()
+    except Exception as e:  # noqa: BLE001
+        log.warning("embedding pin %s failed: %s", memory_id, e)
 
 
 async def _pin_memory(
@@ -42,11 +56,104 @@ async def _pin_memory(
     data = inserted.data[0] if inserted.data else None
     if not data:
         return {"error": "insert returned no row"}
+    # Embedding is non-blocking — fire and forget so the agent loop stays snappy.
+    try:
+        asyncio.create_task(_embed_and_attach(data["id"], data["content"]))
+    except RuntimeError:
+        # No running loop (sync caller); skip.
+        pass
     return {
         "id": data["id"],
         "kind": data["kind"],
         "content": data["content"],
         "importance": data["importance"],
+    }
+
+
+async def _recall_memory(
+    user_id: str,
+    query: str,
+    top_k: int = 5,
+    kind: str | None = None,
+) -> dict[str, Any]:
+    """Semantic recall via pgvector cosine distance. Returns the top_k most
+    relevant pins for a free-text query."""
+    if not query or not query.strip():
+        return {"error": "query is required"}
+    top_k = max(1, min(20, int(top_k)))
+    if kind and kind not in ALLOWED_KINDS:
+        return {"error": f"invalid kind {kind!r}"}
+
+    try:
+        vec = await embeddings.embed_text(query, task_type="RETRIEVAL_QUERY")
+    except embeddings.EmbeddingError as e:
+        return {"error": f"embedding failed: {e}"}
+
+    sb = supabase_admin()
+    # supabase-py doesn't expose the pgvector `<=>` operator directly. For <500
+    # pins client-side ranking is plenty; we'll add an SQL function + RPC when
+    # users start hitting that volume.
+    q = (
+        sb.table("hermes_memory")
+        .select("id, kind, content, importance, embedding")
+        .eq("user_id", user_id)
+        .eq("active", True)
+        .limit(500)
+    )
+    if kind:
+        q = q.eq("kind", kind)
+    res = q.execute()
+    pins = res.data or []
+
+    # Parse stored vector strings into floats and rank by cosine similarity.
+    import json
+    import math
+
+    def parse_vec(raw: Any) -> list[float] | None:
+        if not raw:
+            return None
+        if isinstance(raw, list):
+            return [float(v) for v in raw]
+        if isinstance(raw, str):
+            try:
+                return [float(v) for v in json.loads(raw.replace("'", '"'))]
+            except (json.JSONDecodeError, ValueError):
+                return None
+        return None
+
+    def cosine(a: list[float], b: list[float]) -> float:
+        if len(a) != len(b):
+            return -1.0
+        dot = sum(x * y for x, y in zip(a, b))
+        na = math.sqrt(sum(x * x for x in a))
+        nb = math.sqrt(sum(x * x for x in b))
+        if na == 0 or nb == 0:
+            return -1.0
+        return dot / (na * nb)
+
+    ranked: list[tuple[float, dict[str, Any]]] = []
+    for p in pins:
+        pv = parse_vec(p.get("embedding"))
+        if pv is None:
+            # No embedding yet — give it a baseline score below similar pins.
+            ranked.append((-0.5 + (p["importance"] / 10.0), p))
+            continue
+        ranked.append((cosine(vec, pv), p))
+    ranked.sort(key=lambda t: t[0], reverse=True)
+    top = ranked[:top_k]
+    return {
+        "pins": [
+            {
+                "id": p["id"],
+                "kind": p["kind"],
+                "content": p["content"],
+                "importance": p["importance"],
+                "score": round(score, 4),
+            }
+            for score, p in top
+        ],
+        "total_active": len(pins),
+        "query": query,
     }
 
 
@@ -140,6 +247,37 @@ register(
             "required": ["user_id"],
         },
         handler=_list_memory,
+    )
+)
+
+register(
+    ToolSpec(
+        name="recall_memory",
+        description=(
+            "Semantic search across the user's active memory pins. Use this INSTEAD of "
+            "list_memory whenever you have a topic/intent to filter by (the user mentioned "
+            "voice tone, a niche, a goal, etc). Returns top_k pins ranked by cosine similarity "
+            "to the query, plus a score per pin."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "query": {
+                    "type": "string",
+                    "description": "Free-text intent or topic to search pins by.",
+                },
+                "top_k": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20,
+                    "default": 5,
+                },
+                "kind": {"type": "string", "enum": sorted(ALLOWED_KINDS)},
+            },
+            "required": ["user_id", "query"],
+        },
+        handler=_recall_memory,
     )
 )
 

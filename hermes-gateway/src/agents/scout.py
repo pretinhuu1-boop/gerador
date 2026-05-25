@@ -26,6 +26,7 @@ def scout_agent() -> AgentRun:
             "scout_youtube_channel",
             "pin_memory",
             "list_memory",
+            "recall_memory",
         ],
         temperature=0.4,
     )
