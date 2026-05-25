@@ -11,6 +11,8 @@ import {
 import type { ContentDraft, ContentRender, RenderQuality } from '../../../types/database';
 import { RenderProgress } from './RenderProgress';
 import { RenderedVideo } from './RenderedVideo';
+import { TemplatePicker } from './TemplatePicker';
+import type { VideoTemplate } from '../../../services/channelOS/templatesService';
 
 interface Props {
   draft: ContentDraft;
@@ -23,6 +25,7 @@ export const RenderModal = ({ draft, open, onClose, onRendered }: Props) => {
   const [voices, setVoices] = useState<ElevenLabsVoice[] | null>(null);
   const [voiceId, setVoiceId] = useState<string>('');
   const [quality, setQuality] = useState<RenderQuality>('preview');
+  const [template, setTemplate] = useState<VideoTemplate | null>(null);
   const [renderId, setRenderId] = useState<string | null>(null);
   const [finalRender, setFinalRender] = useState<ContentRender | null>(null);
   const [busy, setBusy] = useState(false);
@@ -125,6 +128,20 @@ export const RenderModal = ({ draft, open, onClose, onRendered }: Props) => {
                         <code className="font-mono ml-1">ELEVENLABS_API_KEY</code> no docker/.env.
                       </div>
                     )}
+                    <div>
+                      <span className="text-xs font-medium text-fg-secondary mb-1.5 block">
+                        Template Remotion
+                      </span>
+                      <TemplatePicker
+                        value={template?.id ?? null}
+                        onChange={setTemplate}
+                        brief={`${draft.title ?? ''} ${draft.format ?? ''}`}
+                      />
+                      <div className="mt-1.5 text-[11px] text-fg-muted">
+                        Por enquanto o backend renderiza StoriesVertical — picker aqui é UX preview
+                        do próximo passo (render por template).
+                      </div>
+                    </div>
                     <label className="block">
                       <span className="text-xs font-medium text-fg-secondary mb-1.5 block">Voz</span>
                       <select
