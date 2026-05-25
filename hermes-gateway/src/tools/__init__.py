@@ -51,3 +51,6 @@ from . import content_tools  # noqa: E402, F401
 from . import voice_tools  # noqa: E402, F401
 from . import youtube_discovery_tools  # noqa: E402, F401
 from . import mission_tools  # noqa: E402, F401
+from . import editor_tools  # noqa: E402, F401
+from . import publisher_tools  # noqa: E402, F401
+from . import improver_tools  # noqa: E402, F401
