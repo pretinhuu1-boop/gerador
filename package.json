@@ -17,7 +17,12 @@
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
+    "@remotion/captions": "^4.0.465",
+    "@remotion/google-fonts": "^4.0.465",
+    "@remotion/media-utils": "^4.0.465",
     "@remotion/player": "^4.0.465",
+    "@remotion/shapes": "^4.0.465",
+    "@remotion/transitions": "^4.0.465",
     "@supabase/supabase-js": "^2.45.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
