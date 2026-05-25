@@ -21,6 +21,17 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // DEMO MOCK — REVERT BEFORE COMMIT
+    if (typeof window !== 'undefined' && window.location.search.includes('demo=1')) {
+      setUser({
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'bruno@channel-os.dev',
+        displayName: 'Bruno',
+        avatarUrl: null,
+      });
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     getCurrentUser().then((u) => {
       if (!cancelled) {
