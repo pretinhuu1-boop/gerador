@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Telescope, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Telescope, Plus, Loader2, AlertCircle, Search, Bookmark } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import {
@@ -12,11 +12,15 @@ import {
 import type { Channel } from '../../../types/database';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
+import { SegmentedControl } from '../../ui/SegmentedControl';
 import { StatusChip } from '../../ui/StatusChip';
 import { TopAppBar } from '../../shell/TopAppBar';
 import { ErrorState, LoadingGrid, SupabaseOfflineHint } from '../WorkspaceState';
 import { ChannelCard } from './ChannelCard';
 import { ChannelDetail } from './ChannelDetail';
+import { DiscoveryMode } from './DiscoveryMode';
+
+type ScoutView = 'tracked' | 'discovery';
 
 export const ScoutWorkspace = () => {
   const { user } = useAuth();
@@ -24,6 +28,7 @@ export const ScoutWorkspace = () => {
   const [scanning, setScanning] = useState(false);
   const [scoutError, setScoutError] = useState<string | null>(null);
   const [active, setActive] = useState<Channel | null>(null);
+  const [view, setView] = useState<ScoutView>('tracked');
 
   const { data: channels, loading, error: listError, refresh } = useAsyncResource<Channel[]>(
     () => (user ? listTrackedChannels(user.id) : Promise.resolve([])),
@@ -64,13 +69,80 @@ export const ScoutWorkspace = () => {
   return (
     <div className="h-full flex flex-col canvas-grid">
       <TopAppBar
+        center={
+          <SegmentedControl<ScoutView>
+            value={view}
+            onChange={setView}
+            options={[
+              { value: 'tracked', label: 'Rastreados', count, icon: Bookmark },
+              { value: 'discovery', label: 'Discovery', icon: Search },
+            ]}
+          />
+        }
         right={
-          <StatusChip tone={count > 0 ? 'brand' : 'default'}>
-            {count} rastreado{count === 1 ? '' : 's'}
-          </StatusChip>
+          view === 'tracked' ? (
+            <StatusChip tone={count > 0 ? 'brand' : 'default'}>
+              {count} {count === 1 ? 'canal' : 'canais'}
+            </StatusChip>
+          ) : (
+            <StatusChip tone="info">YouTube search</StatusChip>
+          )
         }
       />
 
+      {view === 'discovery' ? (
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
+          <DiscoveryMode onTracked={refresh} />
+        </div>
+      ) : (
+        <TrackedView
+          channels={channels}
+          loading={loading}
+          listError={listError}
+          refresh={refresh}
+          query={query}
+          setQuery={setQuery}
+          scanning={scanning}
+          scoutError={scoutError}
+          onScout={onScout}
+          onOpenChannel={setActive}
+        />
+      )}
+
+      <AnimatePresence>
+        {active && <ChannelDetail channel={active} onClose={() => setActive(null)} />}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+interface TrackedViewProps {
+  channels: Channel[] | null;
+  loading: boolean;
+  listError: string | null;
+  refresh: () => void;
+  query: string;
+  setQuery: (q: string) => void;
+  scanning: boolean;
+  scoutError: string | null;
+  onScout: (e: React.FormEvent) => Promise<void>;
+  onOpenChannel: (c: Channel) => void;
+}
+
+const TrackedView = ({
+  channels,
+  loading,
+  listError,
+  refresh,
+  query,
+  setQuery,
+  scanning,
+  scoutError,
+  onScout,
+  onOpenChannel,
+}: TrackedViewProps) => {
+  return (
+    <>
       <div className="px-6 pt-6">
         <div className="surface-elevated p-4 rounded-2xl">
           <form onSubmit={onScout} className="flex flex-col sm:flex-row gap-2">
@@ -144,15 +216,11 @@ export const ScoutWorkspace = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {channels.map((c) => (
-              <ChannelCard key={c.id} channel={c} onClick={() => setActive(c)} />
+              <ChannelCard key={c.id} channel={c} onClick={() => onOpenChannel(c)} />
             ))}
           </div>
         )}
       </div>
-
-      <AnimatePresence>
-        {active && <ChannelDetail channel={active} onClose={() => setActive(null)} />}
-      </AnimatePresence>
-    </div>
+    </>
   );
 };

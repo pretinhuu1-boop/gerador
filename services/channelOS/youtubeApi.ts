@@ -136,3 +136,75 @@ export function parseIsoDuration(iso: string): number {
   const [, h, mn, s] = m;
   return (+h || 0) * 3600 + (+mn || 0) * 60 + (+s || 0);
 }
+
+// ============================================================
+// Discovery (search.list + bulk channels)
+// ============================================================
+
+export interface DiscoveryResult {
+  channel_id: string;
+  title: string;
+  handle: string | null;
+  description: string;
+  country: string | null;
+  language: string | null;
+  subscriber_count: number;
+  view_count: number;
+  video_count: number;
+  thumbnail_url: string | null;
+}
+
+export interface DiscoveryParams {
+  query: string;
+  region?: string;
+  language?: string;
+  minSubs?: number;
+  maxSubs?: number;
+  maxResults?: number;
+  order?: 'relevance' | 'viewCount' | 'rating' | 'videoCount' | 'date';
+}
+
+export async function discoverChannels(p: DiscoveryParams): Promise<DiscoveryResult[]> {
+  if (!KEY) throw new Error('VITE_YOUTUBE_API_KEY ausente');
+  const search = await apiCall<{
+    items: Array<{ id: { channelId: string }; snippet: YouTubeChannel['snippet'] }>;
+  }>('search', {
+    part: 'snippet',
+    q: p.query,
+    type: 'channel',
+    maxResults: String(Math.min(50, (p.maxResults ?? 12) * 2)),
+    order: p.order ?? 'relevance',
+    ...(p.region ? { regionCode: p.region.toUpperCase() } : {}),
+    ...(p.language ? { relevanceLanguage: p.language } : {}),
+  });
+
+  const ids = search.items
+    .map((it) => it.id?.channelId)
+    .filter((id): id is string => Boolean(id));
+  if (!ids.length) return [];
+
+  // Bulk resolve (max 50 ids per call — we have ≤24)
+  const full = await apiCall<{ items: YouTubeChannel[] }>('channels', {
+    part: 'snippet,statistics',
+    id: ids.join(','),
+  });
+
+  const minSubs = p.minSubs ?? 0;
+  const maxSubs = p.maxSubs ?? Number.MAX_SAFE_INTEGER;
+  return full.items
+    .map((c) => ({
+      channel_id: c.id,
+      title: c.snippet.title,
+      handle: c.snippet.customUrl ?? null,
+      description: (c.snippet.description ?? '').slice(0, 240),
+      country: c.snippet.country ?? null,
+      language: c.snippet.defaultLanguage ?? null,
+      subscriber_count: Number(c.statistics.subscriberCount ?? 0),
+      view_count: Number(c.statistics.viewCount ?? 0),
+      video_count: Number(c.statistics.videoCount ?? 0),
+      thumbnail_url: c.snippet.thumbnails.high?.url ?? c.snippet.thumbnails.default?.url ?? null,
+    }))
+    .filter((r) => r.subscriber_count >= minSubs && r.subscriber_count <= maxSubs)
+    .sort((a, b) => b.subscriber_count - a.subscriber_count)
+    .slice(0, p.maxResults ?? 12);
+}
