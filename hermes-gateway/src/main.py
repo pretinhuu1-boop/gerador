@@ -6,7 +6,7 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -71,11 +71,13 @@ async def healthz() -> dict[str, object]:
         "youtube_configured": bool(s.youtube_api_key),
         "supabase_configured": bool(s.supabase_url and s.supabase_service_role_key),
         "elevenlabs_configured": bool(s.elevenlabs_api_key),
+        "gemini_embeddings_configured": bool(s.gemini_api_key),
         "models": {
             "orchestrator": s.hermes_model_orchestrator,
             "agent": s.hermes_model_agent,
             "improver": s.hermes_model_improver,
         },
+        "fallback_chain": s.hermes_fallback_models_list,
     }
 
 
@@ -277,3 +279,85 @@ async def voice_voices(identity: AuthIdentity = Depends(_auth)):
     from .tools.voice_tools import _list_voices  # type: ignore[attr-defined]
 
     return await _list_voices(user_id=identity.user_id, limit=50)
+
+
+# --------------------------------------------------------------------- render ---
+
+
+class RenderRequest(BaseModel):
+    voice_id: str | None = None
+    quality: str = Field(default="preview", pattern="^(preview|final)$")
+
+
+@app.post("/v1/render/draft/{draft_id}")
+async def render_draft(
+    draft_id: str,
+    payload: RenderRequest,
+    background: BackgroundTasks,
+    identity: AuthIdentity = Depends(_auth),
+):
+    """Creates a content_renders row and kicks off the pipeline in the background.
+    Returns the render_id immediately; frontend subscribes to Realtime CDC on
+    `content_renders` for live progress."""
+    from .connectors.supabase_client import supabase_admin
+    from .render import pipeline
+
+    s = get_settings()
+    if not s.elevenlabs_api_key:
+        raise HTTPException(status_code=503, detail="ELEVENLABS_API_KEY not configured")
+    if not s.supabase_service_role_key:
+        raise HTTPException(status_code=503, detail="SUPABASE_SERVICE_ROLE_KEY not configured")
+
+    sb = supabase_admin()
+    draft_check = (
+        sb.table("content_drafts")
+        .select("id, user_id, status")
+        .eq("id", draft_id)
+        .eq("user_id", identity.user_id)
+        .maybe_single()
+        .execute()
+    )
+    if not (draft_check and draft_check.data):
+        raise HTTPException(status_code=404, detail="draft not found")
+
+    inserted = (
+        sb.table("content_renders")
+        .insert(
+            {
+                "draft_id": draft_id,
+                "user_id": identity.user_id,
+                "voice_id": payload.voice_id,
+                "quality": payload.quality,
+                "status": "queued",
+                "stage": "queued",
+            }
+        )
+        .execute()
+    )
+    if not inserted.data:
+        raise HTTPException(status_code=500, detail="failed to create render row")
+    render_id = inserted.data[0]["id"]
+
+    background.add_task(pipeline.run, render_id)
+    return {"render_id": render_id, "status": "queued"}
+
+
+@app.get("/v1/render/{render_id}")
+async def render_status(
+    render_id: str,
+    identity: AuthIdentity = Depends(_auth),
+):
+    from .connectors.supabase_client import supabase_admin
+
+    sb = supabase_admin()
+    res = (
+        sb.table("content_renders")
+        .select("*")
+        .eq("id", render_id)
+        .eq("user_id", identity.user_id)
+        .maybe_single()
+        .execute()
+    )
+    if not (res and res.data):
+        raise HTTPException(status_code=404, detail="render not found")
+    return res.data
