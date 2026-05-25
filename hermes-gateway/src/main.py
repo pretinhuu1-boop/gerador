@@ -281,6 +281,53 @@ async def voice_voices(identity: AuthIdentity = Depends(_auth)):
     return await _list_voices(user_id=identity.user_id, limit=50)
 
 
+# --------------------------------------------------------------------- agents ---
+
+
+@app.get("/v1/agents")
+async def list_agents(_identity: AuthIdentity = Depends(_auth)):
+    """Returns the registry of sub-agents the gateway can spawn, with per-agent
+    metadata (model, system_prompt size, allowed_tools count) — used by the UI
+    AgentsWorkspace to render the cards grid. No execution, just spec."""
+    from .agents import REGISTRY
+    from .orchestrator import orchestrator_agent
+
+    s = get_settings()
+    out = []
+    for desc in REGISTRY:
+        if desc.key == "orchestrator":
+            run = orchestrator_agent()
+        else:
+            run = desc.factory()
+        out.append(
+            {
+                "key": desc.key,
+                "name": desc.name,
+                "badge": desc.badge,
+                "badge_color": desc.badge_color,
+                "role": desc.role,
+                "description": desc.description,
+                "is_main": desc.is_main,
+                "model": run.model,
+                "model_chain": run.model_chain(),
+                "allowed_tools": run.allowed_tools,
+                "tools_count": len(run.allowed_tools),
+                "temperature": run.temperature,
+                "system_prompt_chars": len(run.system_prompt),
+                "cache_system_prompt": run.cache_system_prompt,
+            }
+        )
+    return {
+        "agents": out,
+        "fallback_chain": s.hermes_fallback_models_list,
+        "models": {
+            "orchestrator": s.hermes_model_orchestrator,
+            "agent": s.hermes_model_agent,
+            "improver": s.hermes_model_improver,
+        },
+    }
+
+
 # --------------------------------------------------------------------- render ---
 
 
