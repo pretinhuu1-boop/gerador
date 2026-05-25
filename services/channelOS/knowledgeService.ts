@@ -34,6 +34,8 @@ export interface KnowledgeRecord {
     [k: string]: unknown;
   };
   active: boolean;
+  /** null = global (seeded); UUID = owned by a specific user. */
+  user_id: string | null;
   created_at: string;
 }
 
@@ -57,6 +59,7 @@ const DEMO_REMOTION: KnowledgeRecord[] = [
       tags: ['9:16', 'tiktok', 'captions', 'whisper', 'oficial'],
     },
     active: true,
+    user_id: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -72,6 +75,7 @@ const DEMO_REMOTION: KnowledgeRecord[] = [
       tags: ['captions', 'srt', 'oficial'],
     },
     active: true,
+    user_id: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -86,6 +90,7 @@ const DEMO_REMOTION: KnowledgeRecord[] = [
       tags: ['audio', 'duration', 'essencial'],
     },
     active: true,
+    user_id: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -100,6 +105,7 @@ const DEMO_REMOTION: KnowledgeRecord[] = [
       tags: ['pipeline', 'mcp', 'docker', 'mit'],
     },
     active: true,
+    user_id: null,
     created_at: new Date().toISOString(),
   },
 ];
@@ -115,7 +121,7 @@ export async function listKnowledgeByKind(kind: KnowledgeKind): Promise<Knowledg
   }
   const { data, count, error } = await supabase
     .from('hermes_knowledge')
-    .select('id, kind, slug, title, summary, content, metadata, active, created_at', {
+    .select('id, kind, slug, title, summary, content, metadata, active, user_id, created_at', {
       count: 'exact',
     })
     .eq('kind', kind)
@@ -149,4 +155,74 @@ export async function listKnowledgeCounts(): Promise<Record<KnowledgeKind, numbe
     counts[k] = (counts[k] ?? 0) + 1;
   }
   return counts as Record<KnowledgeKind, number>;
+}
+
+export interface NewKnowledgePin {
+  kind: KnowledgeKind;
+  title: string;
+  summary?: string | null;
+  content: string;
+  link?: string | null;
+  install?: string | null;
+  tags?: string[];
+}
+
+function slugify(input: string): string {
+  return input
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80) || `pin_${Date.now()}`;
+}
+
+/** Inserts a per-user pin into hermes_knowledge. RLS policy
+ * `hermes_knowledge_user_write` permits this when user_id = auth.uid().
+ * Slug is derived from title; collisions get a numeric suffix. */
+export async function createKnowledgePin(input: NewKnowledgePin): Promise<KnowledgeRecord> {
+  const { data: session } = await supabase.auth.getSession();
+  const userId = session.session?.user.id;
+  if (!userId) throw new Error('Sem sessão — faça login pra criar pins.');
+
+  const baseSlug = slugify(input.title);
+  const metadata: Record<string, unknown> = {
+    source: 'user_pin',
+    ...(input.link ? { link: input.link } : {}),
+    ...(input.install ? { install: input.install } : {}),
+    ...(input.tags && input.tags.length ? { tags: input.tags } : {}),
+  };
+
+  // Try insert with the base slug; on unique-violation, append a counter.
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const slug = attempt === 0 ? baseSlug : `${baseSlug}_${attempt + 1}`;
+    const { data, error } = await supabase
+      .from('hermes_knowledge')
+      .insert({
+        user_id: userId,
+        kind: input.kind,
+        slug,
+        title: input.title.trim(),
+        summary: input.summary?.trim() || null,
+        content: input.content.trim(),
+        metadata,
+        active: true,
+      })
+      .select('id, kind, slug, title, summary, content, metadata, active, user_id, created_at')
+      .single();
+    if (!error && data) return data as KnowledgeRecord;
+    if (error?.code !== '23505') {
+      // not a unique violation → real error
+      throw new Error(error?.message ?? 'falha ao criar pin');
+    }
+  }
+  throw new Error('não consegui gerar um slug único após 4 tentativas');
+}
+
+export async function deactivateKnowledgePin(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('hermes_knowledge')
+    .update({ active: false })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
 }

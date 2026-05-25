@@ -10,6 +10,8 @@ import {
   Check,
   Search,
   Sparkles,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { TopAppBar } from '../../shell/TopAppBar';
 import { StatusChip } from '../../ui/StatusChip';
@@ -17,17 +19,20 @@ import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
 import { ErrorState, LoadingGrid } from '../WorkspaceState';
 import { useAsyncResource } from '../../../hooks/useAsyncResource';
+import { useAuth } from '../../../hooks/useAuth';
 import {
   fetchTemplates,
   type TemplatesRegistry,
   type VideoTemplate,
 } from '../../../services/channelOS/templatesService';
 import {
+  deactivateKnowledgePin,
   listKnowledgeByKind,
   listKnowledgeCounts,
   type KnowledgeKind,
   type KnowledgeRecord,
 } from '../../../services/channelOS/knowledgeService';
+import { AddKnowledgePinModal } from './AddKnowledgePinModal';
 
 type Tab = 'local' | 'remotion_template' | 'remotion_library' | 'remotion_skill' | 'remotion_workflow';
 
@@ -42,6 +47,9 @@ const TABS: { id: Tab; label: string; icon: typeof Film; kind?: KnowledgeKind }[
 export const TemplatesWorkspace = () => {
   const [tab, setTab] = useState<Tab>('local');
   const [search, setSearch] = useState('');
+  const [addOpen, setAddOpen] = useState(false);
+  /** Bumped after a successful pin create/deactivate to invalidate the community list. */
+  const [refreshTick, setRefreshTick] = useState(0);
 
   const {
     data: registry,
@@ -51,11 +59,16 @@ export const TemplatesWorkspace = () => {
   } = useAsyncResource<TemplatesRegistry>(() => fetchTemplates(), [], { timeoutMs: 8000 });
 
   const [counts, setCounts] = useState<Record<KnowledgeKind, number> | null>(null);
-  useEffect(() => {
+  const reloadCounts = () =>
     listKnowledgeCounts()
       .then(setCounts)
       .catch(() => setCounts({} as Record<KnowledgeKind, number>));
-  }, []);
+  useEffect(() => {
+    reloadCounts();
+  }, [refreshTick]);
+
+  const canAddPin = tab !== 'local';
+  const currentKind: KnowledgeKind | null = tab === 'local' ? null : (tab as KnowledgeKind);
 
   return (
     <div className="h-full flex flex-col canvas-grid">
@@ -104,16 +117,23 @@ export const TemplatesWorkspace = () => {
               );
             })}
           </div>
-          <label className="relative inline-flex items-center w-full sm:w-72">
-            <Search className="absolute left-2.5 h-3.5 w-3.5 text-fg-muted pointer-events-none" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nome, tag, descrição…"
-              className="w-full rounded-lg border border-border-subtle bg-bg-elevated pl-8 pr-3 py-1.5 text-sm text-fg-primary placeholder:text-fg-muted focus:outline-none focus:border-brand/50"
-            />
-          </label>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label className="relative inline-flex items-center flex-1 sm:w-72">
+              <Search className="absolute left-2.5 h-3.5 w-3.5 text-fg-muted pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar por nome, tag, descrição…"
+                className="w-full rounded-lg border border-border-subtle bg-bg-elevated pl-8 pr-3 py-1.5 text-sm text-fg-primary placeholder:text-fg-muted focus:outline-none focus:border-brand/50"
+              />
+            </label>
+            {canAddPin && (
+              <Button variant="secondary" size="sm" onClick={() => setAddOpen(true)}>
+                <Plus className="h-3.5 w-3.5" /> Adicionar
+              </Button>
+            )}
+          </div>
         </div>
 
         {tab === 'local' ? (
@@ -129,9 +149,26 @@ export const TemplatesWorkspace = () => {
             <LocalGrid templates={filterTemplates(registry?.templates ?? [], search)} />
           )
         ) : (
-          <CommunityTab kind={tab as KnowledgeKind} search={search} />
+          <CommunityTab
+            kind={tab as KnowledgeKind}
+            search={search}
+            refreshTick={refreshTick}
+            onDeactivate={() => setRefreshTick((n) => n + 1)}
+          />
         )}
       </div>
+
+      {currentKind && (
+        <AddKnowledgePinModal
+          kind={currentKind}
+          open={addOpen}
+          onClose={() => setAddOpen(false)}
+          onCreated={() => {
+            setRefreshTick((n) => n + 1);
+            reloadCounts();
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -205,11 +242,22 @@ const LocalGrid = ({ templates }: { templates: VideoTemplate[] }) => {
   );
 };
 
-const CommunityTab = ({ kind, search }: { kind: KnowledgeKind; search: string }) => {
+const CommunityTab = ({
+  kind,
+  search,
+  refreshTick,
+  onDeactivate,
+}: {
+  kind: KnowledgeKind;
+  search: string;
+  refreshTick: number;
+  onDeactivate: () => void;
+}) => {
+  const { user } = useAuth();
   const { data, loading, error, refresh } = useAsyncResource<{
     records: KnowledgeRecord[];
     total: number;
-  }>(() => listKnowledgeByKind(kind), [kind], { timeoutMs: 8000 });
+  }>(() => listKnowledgeByKind(kind), [kind, refreshTick], { timeoutMs: 8000 });
 
   if (loading) return <LoadingGrid count={6} />;
   if (error) {
@@ -226,7 +274,7 @@ const CommunityTab = ({ kind, search }: { kind: KnowledgeKind; search: string })
     return (
       <div className="rounded-2xl border border-border-subtle bg-bg-elevated/30 py-12 text-center text-sm text-fg-muted">
         {data?.records.length === 0
-          ? 'Nenhum record desse tipo na base ainda. Rode o seeder pra popular a biblioteca.'
+          ? 'Nenhum record desse tipo na base ainda. Rode o seeder pra popular a biblioteca ou clica em "Adicionar" pra criar o primeiro pin.'
           : 'Nada bateu com sua busca.'}
       </div>
     );
@@ -234,7 +282,12 @@ const CommunityTab = ({ kind, search }: { kind: KnowledgeKind; search: string })
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {records.map((r) => (
-        <CommunityCard key={r.id} record={r} />
+        <CommunityCard
+          key={r.id}
+          record={r}
+          ownedByMe={Boolean(user && r.user_id === user.id)}
+          onDeactivate={onDeactivate}
+        />
       ))}
     </div>
   );
@@ -253,8 +306,17 @@ function useFilter(records: KnowledgeRecord[], search: string): KnowledgeRecord[
   }, [records, search]);
 }
 
-const CommunityCard = ({ record }: { record: KnowledgeRecord }) => {
+const CommunityCard = ({
+  record,
+  ownedByMe,
+  onDeactivate,
+}: {
+  record: KnowledgeRecord;
+  ownedByMe: boolean;
+  onDeactivate: () => void;
+}) => {
   const [copied, setCopied] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
   const link = record.metadata.link;
   const install = record.metadata.install;
   const tags = record.metadata.tags ?? [];
@@ -267,6 +329,20 @@ const CommunityCard = ({ record }: { record: KnowledgeRecord }) => {
       setTimeout(() => setCopied(false), 1400);
     } catch {
       // ignore — some browsers block clipboard in non-secure contexts
+    }
+  };
+
+  const deactivate = async () => {
+    if (!ownedByMe) return;
+    if (!window.confirm(`Remover "${record.title}" da sua biblioteca? Pode reativar via SQL depois.`)) return;
+    setDeactivating(true);
+    try {
+      await deactivateKnowledgePin(record.id);
+      onDeactivate();
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e));
+    } finally {
+      setDeactivating(false);
     }
   };
 
@@ -285,12 +361,17 @@ const CommunityCard = ({ record }: { record: KnowledgeRecord }) => {
             {record.slug}
           </div>
         </div>
+        {ownedByMe && (
+          <Badge size="sm" variant="accent">
+            seu
+          </Badge>
+        )}
         {isOficial && (
           <Badge size="sm" variant="brand">
             <Sparkles className="h-3 w-3" /> oficial
           </Badge>
         )}
-        {!isOficial && isCommunity && (
+        {!ownedByMe && !isOficial && isCommunity && (
           <Badge size="sm" variant="info">
             community
           </Badge>
@@ -321,17 +402,41 @@ const CommunityCard = ({ record }: { record: KnowledgeRecord }) => {
           )}
         </button>
       )}
-      {link && (
-        <a
-          href={link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-brand hover:underline mt-auto"
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-          {new URL(link).hostname}
-        </a>
-      )}
+      <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+        {link ? (
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-brand hover:underline"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            {hostnameSafe(link)}
+          </a>
+        ) : (
+          <span />
+        )}
+        {ownedByMe && (
+          <button
+            type="button"
+            onClick={deactivate}
+            disabled={deactivating}
+            aria-label="Remover pin"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-fg-muted hover:text-danger hover:bg-danger/10 transition disabled:opacity-50"
+            title="Remover este pin (soft delete)"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
     </motion.article>
   );
 };
+
+function hostnameSafe(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url.slice(0, 30);
+  }
+}
