@@ -27,7 +27,8 @@ from . import progress, props as props_builder, remotion, storage, tts_batch
 
 log = logging.getLogger(__name__)
 
-FPS = 30
+# FPS now comes from the template registry (template_dimensions) — keep the
+# seconds-based knobs here, frames are computed per-render with the template's fps.
 HOOK_S = 2.5
 CTA_S = 2.5
 TAIL_PADDING_S = 0.3  # small pause between beats to avoid clipping

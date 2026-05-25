@@ -11,14 +11,11 @@ recall_knowledge(query, kind='remotion_template' | 'remotion_library' | ...).
 """
 from __future__ import annotations
 
-import logging
 import re
 from typing import Any
 
 from ..templates import REGISTRY, get_template
 from . import ToolSpec, register
-
-log = logging.getLogger(__name__)
 
 STOPWORDS = {
     "de", "da", "do", "para", "pra", "com", "sem", "que", "um", "uma", "uns", "umas",

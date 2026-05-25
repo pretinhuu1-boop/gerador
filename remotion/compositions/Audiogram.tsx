@@ -106,29 +106,39 @@ const GradientOrb: React.FC<{ accent: string }> = ({ accent }) => {
   );
 };
 
-const WaveformBars: React.FC<{ accent: string; audioSrc: string | null }> = ({ accent, audioSrc }) => {
-  const audioData = useAudioData(audioSrc ?? '');
+// Hooks can't be conditional → split into two components. WaveformBarsFromAudio
+// only mounts when audioSrc is present, so useAudioData never gets an empty URL.
+const WaveformBarsProcedural: React.FC<{ accent: string }> = ({ accent }) => {
+  const frame = useCurrentFrame();
+  const levels = Array.from({ length: BAR_COUNT }, (_, i) => {
+    const offset = (i / BAR_COUNT) * Math.PI * 2;
+    const v = Math.sin(frame / 6 + offset) * 0.5 + 0.5;
+    const noise = ((frame * 13 + i * 7) % 100) / 600;
+    return Math.max(0.05, v * 0.7 + noise);
+  });
+  return <Bars accent={accent} levels={levels} />;
+};
+
+const WaveformBarsFromAudio: React.FC<{ accent: string; audioSrc: string }> = ({ accent, audioSrc }) => {
+  const audioData = useAudioData(audioSrc);
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-
-  let levels: number[];
-  if (audioSrc && audioData) {
-    levels = visualizeAudio({
-      fps,
-      frame,
-      audioData,
-      numberOfSamples: 64,
-    }).slice(0, BAR_COUNT);
-  } else {
-    // procedural pseudo-FFT — deterministic per frame, looks alive
-    levels = Array.from({ length: BAR_COUNT }, (_, i) => {
-      const offset = (i / BAR_COUNT) * Math.PI * 2;
-      const v = Math.sin(frame / 6 + offset) * 0.5 + 0.5;
-      const noise = ((frame * 13 + i * 7) % 100) / 600;
-      return Math.max(0.05, v * 0.7 + noise);
-    });
+  if (!audioData) {
+    return <WaveformBarsProcedural accent={accent} />;
   }
+  const levels = visualizeAudio({
+    fps,
+    frame,
+    audioData,
+    numberOfSamples: 64,
+  }).slice(0, BAR_COUNT);
+  return <Bars accent={accent} levels={levels} />;
+};
 
+const WaveformBars: React.FC<{ accent: string; audioSrc: string | null }> = ({ accent, audioSrc }) =>
+  audioSrc ? <WaveformBarsFromAudio accent={accent} audioSrc={audioSrc} /> : <WaveformBarsProcedural accent={accent} />;
+
+const Bars: React.FC<{ accent: string; levels: number[] }> = ({ accent, levels }) => {
   return (
     <div
       style={{

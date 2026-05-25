@@ -34,6 +34,12 @@ export const RenderModal = ({ draft, open, onClose, onRendered }: Props) => {
 
   useEffect(() => {
     if (!open) return;
+    // Reset per-draft state — otherwise picking a different draft from the list
+    // shows the previous draft's template/render/voice carry-over.
+    setTemplate(null);
+    setRenderId(null);
+    setFinalRender(null);
+    setError(null);
     let cancelled = false;
     listVoices().then((r) => {
       if (cancelled) return;
