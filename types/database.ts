@@ -203,3 +203,46 @@ export interface ContentDraft {
   created_at: string;
   updated_at: string;
 }
+
+// ============================================================
+// Content renders (MP4 pipeline)
+// ============================================================
+
+export type RenderStatus =
+  | 'queued'
+  | 'tts'
+  | 'rendering'
+  | 'uploading'
+  | 'rendered'
+  | 'error'
+  | 'cancelled';
+
+export type RenderQuality = 'preview' | 'final';
+
+export interface RenderAudioClip {
+  beat_index: number;
+  url: string;
+  duration_s: number;
+}
+
+export interface ContentRender {
+  id: string;
+  draft_id: string;
+  user_id: string;
+  status: RenderStatus;
+  voice_id: string | null;
+  quality: RenderQuality | string;
+  mp4_url: string | null;
+  audio_urls: RenderAudioClip[];
+  duration_s: number | null;
+  size_bytes: number | null;
+  progress: number;
+  stage: string | null;
+  error: string | null;
+  retry_count: number;
+  started_at: string | null;
+  ended_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
