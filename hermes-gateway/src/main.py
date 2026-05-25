@@ -408,3 +408,96 @@ async def render_status(
     if not (res and res.data):
         raise HTTPException(status_code=404, detail="render not found")
     return res.data
+
+
+# --------------------------------------------------------------------- missions ---
+
+
+class MissionPlanRequest(BaseModel):
+    brief: str = Field(..., min_length=4)
+    session_id: str | None = None
+
+
+@app.post("/v1/missions/plan")
+async def missions_plan(
+    payload: MissionPlanRequest,
+    identity: AuthIdentity = Depends(_auth),
+):
+    """Plans a mission via the plan_mission tool (Gemini structured outputs).
+    Returns mission_id + plan; mission stays 'draft' until /execute."""
+    from .tools.mission_tools import _plan_mission  # type: ignore[attr-defined]
+
+    return await _plan_mission(
+        user_id=identity.user_id,
+        brief=payload.brief,
+        session_id=payload.session_id,
+    )
+
+
+@app.post("/v1/missions/{mission_id}/execute")
+async def missions_execute(
+    mission_id: str,
+    background: BackgroundTasks,
+    identity: AuthIdentity = Depends(_auth),
+):
+    """Triggers asynchronous execution of all pending steps. Returns immediately;
+    UI subscribes to Supabase Realtime on hermes_missions/hermes_mission_steps
+    for live progress."""
+    from .connectors.supabase_client import supabase_admin
+    from .missions import executor
+
+    sb = supabase_admin()
+    res = (
+        sb.table("hermes_missions")
+        .select("id, status, user_id")
+        .eq("id", mission_id)
+        .eq("user_id", identity.user_id)
+        .maybe_single()
+        .execute()
+    )
+    if not (res and res.data):
+        raise HTTPException(status_code=404, detail="mission not found")
+    if res.data["status"] == "running":
+        return {"mission_id": mission_id, "status": "running", "note": "already running"}
+
+    background.add_task(executor.run_mission, mission_id)
+    return {"mission_id": mission_id, "status": "queued"}
+
+
+@app.get("/v1/missions/{mission_id}")
+async def missions_get(
+    mission_id: str,
+    identity: AuthIdentity = Depends(_auth),
+):
+    from .connectors.supabase_client import supabase_admin
+
+    sb = supabase_admin()
+    m = (
+        sb.table("hermes_missions")
+        .select("*")
+        .eq("id", mission_id)
+        .eq("user_id", identity.user_id)
+        .maybe_single()
+        .execute()
+    )
+    if not (m and m.data):
+        raise HTTPException(status_code=404, detail="mission not found")
+    steps = (
+        sb.table("hermes_mission_steps")
+        .select("*")
+        .eq("mission_id", mission_id)
+        .order("step_index")
+        .execute()
+    )
+    return {"mission": m.data, "steps": steps.data or []}
+
+
+@app.get("/v1/missions")
+async def missions_list(
+    status: str | None = None,
+    limit: int = 30,
+    identity: AuthIdentity = Depends(_auth),
+):
+    from .tools.mission_tools import _list_missions  # type: ignore[attr-defined]
+
+    return await _list_missions(user_id=identity.user_id, status=status, limit=limit)
