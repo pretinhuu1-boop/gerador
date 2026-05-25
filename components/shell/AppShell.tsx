@@ -2,6 +2,7 @@ import { Suspense, lazy, type ReactNode } from 'react';
 import { useAppStore } from '../../stores/appStore';
 import { Sidebar } from './Sidebar';
 import { MobileMenuButton } from './MobileMenuButton';
+import { StatusStrip } from './StatusStrip';
 import { Spinner } from '../ui/Spinner';
 
 const ImageStudio = lazy(() => import('../ImageStudio'));
@@ -39,13 +40,18 @@ export const AppShell = ({
     }
   };
 
+  const isChannelOS = surface === 'channel-os';
+
   return (
     <div className="h-screen w-screen flex bg-bg-base overflow-hidden">
       <Sidebar />
       <MobileMenuButton />
-      <main className="flex-1 min-w-0 ambient-bg overflow-hidden">
-        <Suspense fallback={<StudioFallback />}>{render()}</Suspense>
-      </main>
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <main className="flex-1 min-h-0 overflow-hidden">
+          <Suspense fallback={<StudioFallback />}>{render()}</Suspense>
+        </main>
+        {isChannelOS && <StatusStrip />}
+      </div>
     </div>
   );
 };

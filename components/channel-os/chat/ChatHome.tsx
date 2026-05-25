@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
@@ -6,8 +6,6 @@ import {
   Wand2,
   Megaphone,
   Brain,
-  AlertCircle,
-  CheckCircle2,
   History,
   Plus,
 } from 'lucide-react';
@@ -25,9 +23,11 @@ import {
   renameSession,
 } from '../../../services/channelOS/sessionsService';
 import type { HermesSession, ToolCall } from '../../../types/database';
-import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
-import { Card } from '../../ui/Card';
+import { SegmentedControl } from '../../ui/SegmentedControl';
+import { StatusChip } from '../../ui/StatusChip';
+import { TopAppBar } from '../../shell/TopAppBar';
+import { AgentStatusInspector } from './AgentStatusInspector';
 import { ChatComposer } from './ChatComposer';
 import { ChatStream } from './ChatStream';
 import { SessionsDrawer } from './SessionsDrawer';
@@ -393,128 +393,154 @@ export const ChatHome = () => {
   const empty = messages.length === 0;
   const greeting = (user?.displayName ?? user?.email?.split('@')[0] ?? 'criador').split(' ')[0];
 
+  const activeSessionTitle = useMemo(
+    () => sessions?.find((s) => s.id === sessionId)?.title ?? undefined,
+    [sessions, sessionId],
+  );
+
+  const viewOptions = useMemo(
+    () => [
+      { value: 'atual' as const, label: 'Atual' },
+      { value: 'sessoes' as const, label: 'Sessões', count: sessions?.length ?? 0 },
+    ],
+    [sessions?.length],
+  );
+
   return (
-    <div className="h-full flex flex-col">
-      <header className="h-14 shrink-0 flex items-center justify-between gap-3 pl-14 pr-6 md:pl-6 border-b border-border-subtle/50 backdrop-blur bg-bg-base/60">
-        <div className="flex items-center gap-2 min-w-0">
-          <Sparkles className="h-4 w-4 text-brand shrink-0" />
-          <h2 className="font-display font-semibold text-sm truncate">
-            {sessions?.find((s) => s.id === sessionId)?.title ?? 'Hermes'}
-          </h2>
-          <Badge variant="brand" size="sm" className="ml-1 font-mono shrink-0">
-            chat
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-2 text-xs text-fg-muted">
-            {gatewayOk === null ? (
-              <span className="opacity-60">checando gateway…</span>
-            ) : gatewayOk ? (
-              <span className="inline-flex items-center gap-1 text-success">
-                <CheckCircle2 className="h-3 w-3" /> gateway online
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-warn">
-                <AlertCircle className="h-3 w-3" /> gateway offline
-              </span>
-            )}
-          </div>
-          {sessionId && (
-            <Button variant="ghost" size="sm" onClick={startNewSession}>
-              <Plus className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Nova</span>
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={() => setDrawerOpen(true)}>
-            <History className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Sessões</span>
-          </Button>
-        </div>
-      </header>
-
-      <div className="flex-1 min-h-0 flex flex-col">
-        {empty ? (
-          <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto py-12">
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-              className="w-full max-w-2xl text-center"
-            >
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand/15 border border-brand/30 shadow-glow-brand mb-5">
-                <Sparkles className="h-6 w-6 text-brand" />
-              </div>
-              <h1 className="font-display text-3xl font-bold tracking-tight">
-                Oi, {greeting}. <span className="text-gradient-brand">O que vamos atacar hoje?</span>
-              </h1>
-              <p className="text-fg-secondary text-sm mt-2 max-w-lg mx-auto">
-                Hermes é seu chefe de operações de canal. Pede pra ele caçar nicho, analisar
-                concorrência, roteirizar, e ele invoca o subagente certo.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8 text-left">
-                {SUGGESTIONS.map((s) => (
-                  <Card
-                    key={s.label}
-                    interactive
-                    onClick={() => {
-                      if (s.label.includes('canal') || s.label.includes('nichos')) {
-                        setActiveWorkspace('scout');
-                      } else {
-                        send(s.prompt);
-                      }
-                    }}
-                    className="group hover:border-brand/40 hover:shadow-glow-brand"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`h-9 w-9 shrink-0 rounded-lg flex items-center justify-center border ${
-                          s.tone === 'brand'
-                            ? 'bg-brand/15 border-brand/30 text-brand'
-                            : s.tone === 'accent'
-                              ? 'bg-accent/15 border-accent/30 text-accent'
-                              : s.tone === 'info'
-                                ? 'bg-info/15 border-info/30 text-info'
-                                : 'bg-warn/15 border-warn/30 text-warn'
-                        }`}
-                      >
-                        <s.icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold">{s.label}</div>
-                        <div className="text-xs text-fg-muted line-clamp-2 mt-1">{s.prompt}</div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        ) : (
-          <ChatStream messages={messages} />
-        )}
-
-        <div className="shrink-0 border-t border-border-subtle/50 bg-bg-base/80 backdrop-blur px-4 sm:px-8 py-4">
-          <div className="mx-auto max-w-3xl">
-            <ChatComposer
-              disabled={false}
-              streaming={streaming}
-              onCancel={cancel}
-              placeholder={
-                gatewayOk === false
-                  ? 'Gateway offline — você pode digitar, vou responder com stub.'
-                  : 'Pede pro Hermes... ex: "achar 5 canais de mistério com até 50k subs"'
-              }
-              onSubmit={send}
+    <div className="h-full flex">
+      <div className="flex-1 min-w-0 flex flex-col">
+        <TopAppBar
+          extraCrumb={activeSessionTitle}
+          center={
+            <SegmentedControl
+              value={drawerOpen ? 'sessoes' : 'atual'}
+              onChange={(v) => setDrawerOpen(v === 'sessoes')}
+              options={viewOptions}
             />
-            <p className="mt-2 text-center text-[11px] text-fg-muted">
-              {gatewayOk
-                ? 'Hermes Orchestrator (Hermes 4.3-36B) · subagentes Hermes 4-14B via OpenRouter'
-                : 'streaming desativado · scout workspace funciona standalone'}
-            </p>
+          }
+          right={
+            <>
+              {gatewayOk === null ? (
+                <StatusChip>checando…</StatusChip>
+              ) : gatewayOk ? (
+                <StatusChip tone="online" dot>
+                  online
+                </StatusChip>
+              ) : (
+                <StatusChip tone="pending" dot>
+                  offline
+                </StatusChip>
+              )}
+              {sessionId && (
+                <Button variant="ghost" size="sm" onClick={startNewSession}>
+                  <Plus className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Nova</span>
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => setDrawerOpen(true)}>
+                <History className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Sessões</span>
+              </Button>
+            </>
+          }
+        />
+
+        <div className="flex-1 min-h-0 flex flex-col canvas-grid">
+          {empty ? (
+            <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto py-12">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="w-full max-w-2xl text-center"
+              >
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand/15 border border-brand/30 shadow-glow-brand mb-5">
+                  <Sparkles className="h-6 w-6 text-brand-light" />
+                </div>
+                <h1 className="font-display text-3xl font-bold tracking-tight text-fg-primary">
+                  Oi, {greeting}.{' '}
+                  <span className="text-gradient-brand">O que vamos atacar hoje?</span>
+                </h1>
+                <p className="text-fg-secondary text-sm mt-2 max-w-lg mx-auto">
+                  Selecione uma ação ou comece a digitar.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8 text-left">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s.label}
+                      onClick={() => {
+                        if (s.label.includes('canal') || s.label.includes('nichos')) {
+                          setActiveWorkspace('scout');
+                        } else {
+                          send(s.prompt);
+                        }
+                      }}
+                      className="group text-left bg-bg-panel border border-border-subtle hover:border-brand/40 hover:bg-bg-elevated/50 rounded-lg p-3.5 transition-colors"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`h-8 w-8 shrink-0 rounded-md flex items-center justify-center border ${
+                            s.tone === 'brand'
+                              ? 'bg-brand/15 border-brand/30 text-brand-light'
+                              : s.tone === 'accent'
+                                ? 'bg-accent/15 border-accent/30 text-accent'
+                                : s.tone === 'info'
+                                  ? 'bg-info/15 border-info/30 text-info'
+                                  : 'bg-tertiary/15 border-tertiary/30 text-tertiary'
+                          }`}
+                        >
+                          <s.icon className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] font-semibold text-fg-primary">{s.label}</div>
+                          <div className="text-[11px] text-fg-muted line-clamp-2 mt-0.5 leading-snug">
+                            {s.prompt}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          ) : (
+            <ChatStream messages={messages} />
+          )}
+
+          <div className="shrink-0 border-t border-border-subtle bg-bg-panel/80 backdrop-blur px-4 sm:px-8 py-4">
+            <div className="mx-auto max-w-3xl">
+              <ChatComposer
+                disabled={false}
+                streaming={streaming}
+                onCancel={cancel}
+                placeholder={
+                  gatewayOk === false
+                    ? 'Gateway offline — você pode digitar, vou responder com stub.'
+                    : 'Pede pro Hermes... ex: "achar 5 canais de mistério com até 50k subs"'
+                }
+                onSubmit={send}
+              />
+              <div className="mt-2 flex items-center justify-between text-[10px] font-mono text-fg-muted">
+                <div className="flex items-center gap-1.5">
+                  <span>/scout</span>
+                  <span>·</span>
+                  <span>/content</span>
+                  <span>·</span>
+                  <span>/memory</span>
+                  <span>·</span>
+                  <span>/skill</span>
+                </div>
+                <span className="hidden sm:inline">
+                  Hermes 4.3-36B → 4-14B · custo médio R$0.08/conversa
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      <AgentStatusInspector />
 
       <SessionsDrawer
         open={drawerOpen}
