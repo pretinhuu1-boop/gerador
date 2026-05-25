@@ -9,7 +9,8 @@ export const RenderedVideo = ({ render }: { render: ContentRender }) => {
     <div className="space-y-2">
       <div className="text-[10px] font-mono uppercase tracking-wider text-fg-muted flex items-center gap-1.5">
         <Film className="h-3 w-3" />
-        MP4 renderizado · {render.duration_s ?? '?'}s · {sizeMb} MB
+        MP4 renderizado · {render.template_id ?? 'StoriesVertical'} · {render.duration_s ?? '?'}s ·{' '}
+        {sizeMb} MB
       </div>
       <div className="rounded-xl overflow-hidden border border-border-subtle bg-bg-overlay aspect-[9/16] max-h-[60vh] mx-auto">
         <video

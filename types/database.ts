@@ -200,6 +200,7 @@ export interface ContentDraft {
   generated_by: string | null;
   model: string | null;
   notes: string | null;
+  template_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -243,6 +244,7 @@ export interface ContentRender {
   started_at: string | null;
   ended_at: string | null;
   metadata: Record<string, unknown>;
+  template_id: string;
   created_at: string;
   updated_at: string;
 }

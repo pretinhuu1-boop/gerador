@@ -12,7 +12,7 @@ import type { ContentDraft, ContentRender, RenderQuality } from '../../../types/
 import { RenderProgress } from './RenderProgress';
 import { RenderedVideo } from './RenderedVideo';
 import { TemplatePicker } from './TemplatePicker';
-import type { VideoTemplate } from '../../../services/channelOS/templatesService';
+import { fetchTemplates, type VideoTemplate } from '../../../services/channelOS/templatesService';
 
 interface Props {
   draft: ContentDraft;
@@ -51,6 +51,17 @@ export const RenderModal = ({ draft, open, onClose, onRendered }: Props) => {
         }
       })
       .catch(() => undefined);
+    // Preselect the template the user last picked for this draft (or last render).
+    const savedTemplateId = draft.template_id ?? null;
+    if (savedTemplateId) {
+      fetchTemplates()
+        .then((r) => {
+          if (cancelled) return;
+          const match = r.templates.find((t) => t.id === savedTemplateId);
+          if (match) setTemplate((prev) => prev ?? match);
+        })
+        .catch(() => undefined);
+    }
     return () => {
       cancelled = true;
     };
@@ -61,7 +72,12 @@ export const RenderModal = ({ draft, open, onClose, onRendered }: Props) => {
     setError(null);
     setFinalRender(null);
     try {
-      const { render_id } = await createRender({ draftId: draft.id, voiceId, quality });
+      const { render_id } = await createRender({
+        draftId: draft.id,
+        voiceId,
+        quality,
+        templateId: template?.id,
+      });
       setRenderId(render_id);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -138,8 +154,9 @@ export const RenderModal = ({ draft, open, onClose, onRendered }: Props) => {
                         brief={`${draft.title ?? ''} ${draft.format ?? ''}`}
                       />
                       <div className="mt-1.5 text-[11px] text-fg-muted">
-                        Por enquanto o backend renderiza StoriesVertical — picker aqui é UX preview
-                        do próximo passo (render por template).
+                        {template
+                          ? `Vai renderizar como ${template.label} (${template.aspect_ratio}, ${template.default_duration_seconds}s, ${template.fps}fps).`
+                          : 'Sem template escolhido — backend cai pro último escolhido no draft (default StoriesVertical).'}
                       </div>
                     </div>
                     <label className="block">

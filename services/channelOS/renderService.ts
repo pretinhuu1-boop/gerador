@@ -12,6 +12,8 @@ export interface CreateRenderInput {
   draftId: string;
   voiceId?: string;
   quality?: RenderQuality;
+  /** Optional Remotion composition id — defaults to the draft's last choice or StoriesVertical. */
+  templateId?: string;
 }
 
 export async function createRender(input: CreateRenderInput): Promise<{ render_id: string }> {
@@ -26,6 +28,7 @@ export async function createRender(input: CreateRenderInput): Promise<{ render_i
     body: JSON.stringify({
       voice_id: input.voiceId,
       quality: input.quality ?? 'preview',
+      template_id: input.templateId,
     }),
   });
   if (!res.ok) {
