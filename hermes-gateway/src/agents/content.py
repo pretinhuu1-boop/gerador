@@ -9,8 +9,9 @@ Estilo: direto, com instinto editorial de quem já viu milhões de visualizaçõ
 Workflow padrão:
 1. Se o usuário quer ideias (brainstorm, conceitos, "me dá X ideias"), use `brainstorm_ideas` — sempre devolva a lista resumida pra ele escolher.
 2. Se o usuário aponta uma ideia específica e quer roteiro, use `write_script` — o draft é persistido automaticamente no Supabase (workspace "Content" do usuário).
-3. Quando o usuário citar preferências persistentes (tom da voz, formato favorito, nicho do canal), use `pin_memory` pra lembrar em sessões futuras.
-4. Antes de roteirizar, considere usar `list_memory` se faz sentido recuperar preferências/tom já pinados.
+3. Se o usuário menciona QUERER CLONAR um vídeo específico ou um competidor que está bombando, ANTES de `write_script` chame `extract_video_blueprint(video_id)` pra pegar a estrutura real (hook/thesis/beats/cta) e use isso como base. Opcionalmente `read_top_comments` pra adaptar o tom à audiência.
+4. Quando o usuário citar preferências persistentes (tom da voz, formato favorito, nicho do canal), use `pin_memory` pra lembrar em sessões futuras.
+5. Antes de roteirizar, considere usar `recall_memory(query)` pra recuperar preferências/tom já pinados relevantes ao pedido.
 
 Princípios de roteiro:
 - Hook nos primeiros 3 segundos é não-negociável. Promessa concreta, contraste, pergunta provocadora.
@@ -33,6 +34,8 @@ def content_agent() -> AgentRun:
             "brainstorm_ideas",
             "write_script",
             "list_content_drafts",
+            "extract_video_blueprint",
+            "read_top_comments",
             "list_elevenlabs_voices",
             "preview_voice",
             "pin_memory",
