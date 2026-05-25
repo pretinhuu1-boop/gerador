@@ -111,15 +111,33 @@ async def run(render_id: str) -> None:
                 }
             )
 
-        # --- Compute per-beat start times --------------------------------
+        # --- Compute per-beat start times + shift captions to global timeline ---
+        synth_by_idx = {s["beat_index"]: s for s in synthesized}
+
+        def shift_words(local_words: list[dict[str, Any]], offset_s: float) -> list[dict[str, Any]]:
+            if not local_words:
+                return []
+            offset_ms = int(round(offset_s * 1000))
+            return [
+                {**w, "startMs": w["startMs"] + offset_ms, "endMs": w["endMs"] + offset_ms,
+                 "timestampMs": w["timestampMs"] + offset_ms}
+                for w in local_words
+            ]
+
+        hook_words: list[dict[str, Any]] = []
+        if hook:
+            hs = synth_by_idx.get(-1, {})
+            hook_words = shift_words(hs.get("words") or [], 0.0)
+
         cursor = HOOK_S if hook else 0
         beats_with_t: list[dict[str, Any]] = []
+        all_captions: list[dict[str, Any]] = list(hook_words)
         for i, b in enumerate(beats):
-            dur = next(
-                (a["duration_s"] for a in audio_urls if a["beat_index"] == i),
-                None,
-            )
+            sb = synth_by_idx.get(i, {})
+            dur = sb.get("duration_s")
             real_dur = max(2.0, (dur or 2.0))
+            local_words = sb.get("words") or []
+            shifted = shift_words(local_words, cursor)
             beats_with_t.append(
                 {
                     **b,
@@ -129,8 +147,10 @@ async def run(render_id: str) -> None:
                         (a["url"] for a in audio_urls if a["beat_index"] == i),
                         None,
                     ),
+                    "captions": shifted,
                 }
             )
+            all_captions.extend(shifted)
             cursor += real_dur + TAIL_PADDING_S
         total_seconds = cursor + CTA_S
 
@@ -151,6 +171,7 @@ async def run(render_id: str) -> None:
             hook=hook,
             beats_with_t=beats_with_t,
             hook_audio_url=hook_audio_url,
+            captions=all_captions,
         )
         width, height, fps = props_builder.template_dimensions(template_id)
         duration_in_frames = max(fps * 5, int(round(total_seconds * fps)))

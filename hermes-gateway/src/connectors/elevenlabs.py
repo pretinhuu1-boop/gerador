@@ -90,6 +90,57 @@ async def synthesize(
     return r.content
 
 
+async def synthesize_with_alignment(
+    text: str,
+    voice_id: str | None = None,
+    model_id: str | None = None,
+    stability: float = 0.45,
+    similarity_boost: float = 0.75,
+    style: float = 0.0,
+    speaker_boost: bool = True,
+) -> dict[str, Any]:
+    """TTS with character-level timestamps (for caption sync).
+
+    Returns: {audio: bytes, alignment: {characters, character_start_times_seconds, character_end_times_seconds}}.
+    Slightly slower than `synthesize` (JSON envelope + base64 audio), but the
+    alignment data is essential for word-level captions in renders.
+    """
+    import base64
+
+    s = get_settings()
+    voice = voice_id or s.elevenlabs_default_voice
+    model = model_id or s.elevenlabs_model
+    headers = _headers()
+    headers["Accept"] = "application/json"
+
+    payload = {
+        "text": text,
+        "model_id": model,
+        "voice_settings": {
+            "stability": stability,
+            "similarity_boost": similarity_boost,
+            "style": style,
+            "use_speaker_boost": speaker_boost,
+        },
+    }
+    async with httpx.AsyncClient(timeout=90.0) as client:
+        r = await client.post(
+            f"{BASE_URL}/text-to-speech/{voice}/with-timestamps",
+            headers=headers,
+            json=payload,
+        )
+    if r.status_code >= 400:
+        raise ElevenLabsError(f"ElevenLabs (timestamps) {r.status_code}: {r.text[:300]}")
+    data = r.json()
+    audio_b64 = data.get("audio_base64") or ""
+    if not audio_b64:
+        raise ElevenLabsError("ElevenLabs returned no audio_base64")
+    return {
+        "audio": base64.b64decode(audio_b64),
+        "alignment": data.get("normalized_alignment") or data.get("alignment") or {},
+    }
+
+
 async def stream(
     text: str,
     voice_id: str | None = None,

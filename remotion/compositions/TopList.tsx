@@ -14,6 +14,7 @@ import {
   spring,
 } from 'remotion';
 import type { ContentBeat } from '../../types/database';
+import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
 
 export interface TopListProps {
   title: string;
@@ -23,6 +24,7 @@ export interface TopListProps {
   brand?: string;
   accentColor?: string;
   countdownDirection?: 'desc' | 'asc';
+  captions?: CaptionWord[];
 }
 
 const FPS = 30;
@@ -41,6 +43,7 @@ export const TopList: React.FC<TopListProps> = ({
   brand,
   accentColor = DEFAULT_ACCENT,
   countdownDirection = 'desc',
+  captions,
 }) => {
   const { durationInFrames } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
@@ -76,6 +79,10 @@ export const TopList: React.FC<TopListProps> = ({
       <Sequence from={titleFrames + total * perItem} durationInFrames={ctaFrames}>
         <CtaPanel text={cta ?? 'Qual te surpreendeu?'} brand={brand ?? 'channel os'} accent={accentColor} />
       </Sequence>
+
+      {captions && captions.length > 0 && (
+        <CaptionOverlay words={captions} accent={accentColor} />
+      )}
     </AbsoluteFill>
   );
 };

@@ -1,5 +1,6 @@
 import { AbsoluteFill, Sequence, interpolate, useCurrentFrame, useVideoConfig, Easing } from 'remotion';
 import type { ContentBeat } from '../../types/database';
+import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
 
 export interface StoriesVerticalProps {
   title: string;
@@ -8,6 +9,7 @@ export interface StoriesVerticalProps {
   cta?: string | null;
   brand?: string;
   accentColor?: string;
+  captions?: CaptionWord[];
 }
 
 const FPS = 30;
@@ -37,6 +39,7 @@ export const StoriesVertical: React.FC<StoriesVerticalProps> = ({
   cta,
   brand,
   accentColor = ACCENT_DEFAULT,
+  captions,
 }) => {
   const { durationInFrames } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
@@ -73,6 +76,10 @@ export const StoriesVertical: React.FC<StoriesVerticalProps> = ({
       <Sequence from={cursor} durationInFrames={ctaFrames}>
         <CtaPanel text={cta ?? 'Segue pro próximo'} brand={brand ?? 'channel os'} accent={accentColor} />
       </Sequence>
+
+      {captions && captions.length > 0 && (
+        <CaptionOverlay words={captions} accent={accentColor} />
+      )}
     </AbsoluteFill>
   );
 };

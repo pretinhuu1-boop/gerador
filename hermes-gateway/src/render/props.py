@@ -41,6 +41,7 @@ def _base_props(
     beats_with_t: list[dict[str, Any]],
     hook_audio_url: str | None,
     accent: str,
+    captions: list[dict[str, Any]] | None,
 ) -> dict[str, Any]:
     return {
         "title": draft.get("title") or "Untitled",
@@ -50,6 +51,9 @@ def _base_props(
         "cta": draft.get("cta"),
         "brand": "channel os",
         "accentColor": accent,
+        # Global word-level caption track (timestamps in ms, relative to frame 0).
+        # All compositions render this as an overlay if non-empty.
+        "captions": captions or [],
     }
 
 
@@ -60,6 +64,7 @@ def build_props(
     hook: str,
     beats_with_t: list[dict[str, Any]],
     hook_audio_url: str | None,
+    captions: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Returns the inputProps dict for `npx remotion render` given a template."""
     t = get_template(template_id)
@@ -70,6 +75,7 @@ def build_props(
         beats_with_t=beats_with_t,
         hook_audio_url=hook_audio_url,
         accent=accent,
+        captions=captions,
     )
     extras = _template_props(draft)
 

@@ -15,6 +15,7 @@ import {
 } from 'remotion';
 import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import type { ContentBeat } from '../../types/database';
+import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
 
 export interface AudiogramProps {
   title: string;
@@ -25,6 +26,7 @@ export interface AudiogramProps {
   accentColor?: string;
   audioSrc?: string | null;
   speakerLabel?: string;
+  captions?: CaptionWord[];
 }
 
 const FPS = 30;
@@ -45,6 +47,7 @@ export const Audiogram: React.FC<AudiogramProps> = ({
   accentColor = DEFAULT_ACCENT,
   audioSrc,
   speakerLabel,
+  captions,
 }) => {
   const { durationInFrames } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
@@ -89,6 +92,10 @@ export const Audiogram: React.FC<AudiogramProps> = ({
       <Sequence from={cursor} durationInFrames={ctaFrames}>
         <CtaPanel text={cta ?? 'Ouve até o fim'} brand={brand ?? 'channel os'} accent={accentColor} />
       </Sequence>
+
+      {captions && captions.length > 0 && (
+        <CaptionOverlay words={captions} accent={accentColor} bottomOffset={180} />
+      )}
     </AbsoluteFill>
   );
 };

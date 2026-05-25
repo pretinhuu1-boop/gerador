@@ -14,6 +14,7 @@ import {
   Easing,
 } from 'remotion';
 import type { ContentBeat } from '../../types/database';
+import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
 
 export interface RedditStoriesProps {
   title: string;
@@ -26,6 +27,7 @@ export interface RedditStoriesProps {
   author?: string;
   upvotes?: number;
   commentCount?: number;
+  captions?: CaptionWord[];
 }
 
 const FPS = 30;
@@ -53,6 +55,7 @@ export const RedditStories: React.FC<RedditStoriesProps> = ({
   author = 'u/throwaway_2026',
   upvotes = 12400,
   commentCount = 387,
+  captions,
 }) => {
   const { durationInFrames } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
@@ -98,6 +101,10 @@ export const RedditStories: React.FC<RedditStoriesProps> = ({
       <Sequence from={cursor} durationInFrames={ctaFrames}>
         <CtaPanel text={cta ?? 'Comenta o que faria'} brand={brand ?? 'channel os'} accent={accentColor} />
       </Sequence>
+
+      {captions && captions.length > 0 && (
+        <CaptionOverlay words={captions} accent={accentColor} />
+      )}
     </AbsoluteFill>
   );
 };
