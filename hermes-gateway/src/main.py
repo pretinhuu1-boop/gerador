@@ -328,6 +328,22 @@ async def list_agents(_identity: AuthIdentity = Depends(_auth)):
     }
 
 
+# ------------------------------------------------------------------ templates ---
+
+
+@app.get("/v1/templates")
+async def list_templates(_identity: AuthIdentity = Depends(_auth)):
+    """Returns the Remotion composition registry — same source as the
+    list_video_templates tool. Used by the Content workspace to render
+    a picker before the user (or agent) writes a draft."""
+    from .templates import REGISTRY as TEMPLATES
+
+    return {
+        "templates": [t.to_dict() for t in TEMPLATES],
+        "count": len(TEMPLATES),
+    }
+
+
 # --------------------------------------------------------------------- render ---
 
 
