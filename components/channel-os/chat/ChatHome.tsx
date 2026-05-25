@@ -22,6 +22,7 @@ import {
   touchSession,
   renameSession,
 } from '../../../services/channelOS/sessionsService';
+import { planMission } from '../../../services/channelOS/missionsService';
 import type { HermesSession, ToolCall } from '../../../types/database';
 import { Button } from '../../ui/Button';
 import { SegmentedControl } from '../../ui/SegmentedControl';
@@ -180,6 +181,58 @@ export const ChatHome = () => {
       // Persist user message in memory immediately
       const userMsg = newMessage({ role: 'user', content: text });
       setMessages((prev) => [...prev, userMsg]);
+
+      // /mission shortcut — bypass orchestrator, call plan endpoint directly.
+      // Same behavior as Hermes invoking plan_mission via tool calling, but
+      // skips the SSE round-trip so the MissionCard appears ~1s faster.
+      const missionMatch = text.match(/^\s*\/mission\s+([\s\S]+)/i);
+      if (missionMatch && accessToken && gatewayOk !== false) {
+        const brief = missionMatch[1].trim();
+        setStreaming(true);
+        try {
+          const plan = await planMission(brief, sessionId);
+          if (plan.error) {
+            setMessages((prev) => [
+              ...prev,
+              newMessage({
+                role: 'assistant',
+                agent: 'mission-planner',
+                content: `Não consegui planejar essa missão: ${plan.error}`,
+                error: plan.error,
+              }),
+            ]);
+          } else {
+            setMessages((prev) => [
+              ...prev,
+              newMessage({
+                role: 'mission',
+                missionId: plan.mission_id,
+                missionTitle: plan.title,
+              }),
+              newMessage({
+                role: 'assistant',
+                agent: 'hermes',
+                content:
+                  (plan.summary ?? '') +
+                  '\n\nPlano gerado. Revisa as etapas acima e clica em **Aprovar e rodar** quando quiser que eu execute.',
+              }),
+            ]);
+          }
+        } catch (e) {
+          setMessages((prev) => [
+            ...prev,
+            newMessage({
+              role: 'assistant',
+              agent: 'mission-planner',
+              content: `Falha planejando missão: ${e instanceof Error ? e.message : String(e)}`,
+              error: e instanceof Error ? e.message : String(e),
+            }),
+          ]);
+        } finally {
+          setStreaming(false);
+        }
+        return;
+      }
 
       if (gatewayOk === false || !accessToken) {
         const stubMsg = newMessage({

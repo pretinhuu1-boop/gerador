@@ -4,6 +4,7 @@ import { Avatar } from '../../ui/Avatar';
 import { Badge } from '../../ui/Badge';
 import { cn } from '../../../lib/cn';
 import { Markdown } from './Markdown';
+import { MissionCard } from './MissionCard';
 import type { ChatMessage } from './types';
 
 const AGENT_LABELS: Record<string, string> = {
@@ -27,6 +28,13 @@ export const MessageBubble = ({
   message: ChatMessage;
   userInitials: string;
 }) => {
+  if (message.role === 'mission' && message.missionId) {
+    return (
+      <div className="animate-fade-in pl-11">
+        <MissionCard missionId={message.missionId} initialTitle={message.missionTitle} />
+      </div>
+    );
+  }
   if (message.role === 'tool') return <ToolResultBubble message={message} />;
   if (message.role === 'system') return <SystemNotice message={message} />;
 
