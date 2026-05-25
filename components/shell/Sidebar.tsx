@@ -13,6 +13,7 @@ import {
   PanelLeftOpen,
   X,
   PencilLine,
+  Bot,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
@@ -111,6 +112,17 @@ export const Sidebar = () => {
         setActiveWorkspace('memory');
       },
       active: isChannelOS && activeWorkspace === 'memory',
+    },
+    {
+      id: 'agents',
+      label: 'Agentes',
+      icon: Bot,
+      group: 'primary',
+      onClick: () => {
+        setSurface('channel-os');
+        setActiveWorkspace('agents');
+      },
+      active: isChannelOS && activeWorkspace === 'agents',
     },
     {
       id: 'image',

@@ -17,6 +17,7 @@ const WORKSPACE_LABEL: Record<string, string> = {
   content: 'Conteúdo',
   channels: 'Canais',
   memory: 'Memória',
+  agents: 'Agentes',
 };
 
 interface Props {
