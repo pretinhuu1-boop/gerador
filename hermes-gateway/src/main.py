@@ -240,6 +240,23 @@ async def scout_run(
     return await _scout_youtube_channel(user_id=identity.user_id, query=payload.query)
 
 
+class ImproverRequest(BaseModel):
+    days: int = 7
+
+
+@app.post("/v1/improver/run")
+async def improver_run(
+    payload: ImproverRequest,
+    identity: AuthIdentity = Depends(_auth),
+):
+    """Direct call to the Improver tool — analyzes recent activity + generates
+    proposals (persisted as hermes_memory rows with metadata.proposal=true).
+    Used by the Memory workspace 'Propostas' tab to trigger on-demand."""
+    from .tools.improver_tools import _propose_improvements  # type: ignore[attr-defined]
+
+    return await _propose_improvements(user_id=identity.user_id, days=payload.days)
+
+
 class TrendingRequest(BaseModel):
     region: str = "BR"
     category_id: str | None = None
