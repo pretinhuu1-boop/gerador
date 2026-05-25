@@ -453,6 +453,15 @@ async def publish_youtube(
 # ----------------------------------------------------------------- improver ---
 
 
+@app.get("/v1/external/status")
+async def external_status(_identity: AuthIdentity = Depends(_auth)):
+    """Which external pipeline containers are configured (URL set in env).
+    Frontend shows green/grey dots in Channels workspace."""
+    from .connectors import external_pipelines
+
+    return external_pipelines.configured()
+
+
 class ImproverRequest(BaseModel):
     days: int = 7
 

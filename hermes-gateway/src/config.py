@@ -42,6 +42,19 @@ class Settings(BaseSettings):
         alias="OAUTH_SUCCESS_REDIRECT",
     )
 
+    # External pipelines (Phase 3) — opt-in HTTP services the user runs separately.
+    # Tools `assemble_video`, `extract_clips`, `generate_talking_head` only register
+    # when these URLs are non-empty.
+    external_video_assembler_url: str = Field(
+        default="", alias="EXTERNAL_VIDEO_ASSEMBLER_URL"
+    )
+    external_clip_extractor_url: str = Field(
+        default="", alias="EXTERNAL_CLIP_EXTRACTOR_URL"
+    )
+    external_talking_head_url: str = Field(
+        default="", alias="EXTERNAL_TALKING_HEAD_URL"
+    )
+
     # ElevenLabs (TTS)
     elevenlabs_api_key: str = Field(default="", alias="ELEVENLABS_API_KEY")
     elevenlabs_default_voice: str = Field(

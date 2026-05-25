@@ -10,6 +10,7 @@ import { ChannelCard } from '../scout/ChannelCard';
 import { ChannelDetail } from '../scout/ChannelDetail';
 import { ErrorState, LoadingGrid, SupabaseOfflineHint } from '../WorkspaceState';
 import { OAuthConnections } from './OAuthConnections';
+import { ExternalPipelinesStatus } from './ExternalPipelinesStatus';
 
 export const ChannelsWorkspace = () => {
   const { user } = useAuth();
@@ -35,6 +36,7 @@ export const ChannelsWorkspace = () => {
 
       <div className="flex-1 overflow-y-auto p-6 space-y-5">
         <OAuthConnections />
+        <ExternalPipelinesStatus />
 
         {loading ? (
           <LoadingGrid count={3} />
