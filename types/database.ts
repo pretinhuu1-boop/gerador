@@ -180,6 +180,11 @@ export interface ContentBeat {
   b_roll?: string | null;
   caption?: string | null;
   voice?: string | null;
+  /** Optional SFX prompt — pipeline generates via ElevenLabs Sound Effects
+   * and attaches the resulting URL as `sfx_url` for the composition to mix. */
+  sfx_prompt?: string | null;
+  /** Optional duration hint for the SFX (0.5-22s). */
+  sfx_duration_s?: number | null;
 }
 
 export interface ContentDraft {

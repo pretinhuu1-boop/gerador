@@ -79,6 +79,36 @@ register(
     )
 )
 
+async def _preview_sfx(
+    user_id: str,
+    prompt: str,
+    duration_seconds: float | None = None,
+) -> dict[str, Any]:
+    """Generates a short SFX preview via ElevenLabs Sound Effects. Returns
+    metadata only — same pattern as preview_voice. Use when picking
+    sfx_prompt strings before attaching to a beat."""
+    s = get_settings()
+    if not s.elevenlabs_api_key:
+        return {"error": "ELEVENLABS_API_KEY not configured", "configured": False}
+    prompt = (prompt or "").strip()
+    if not prompt:
+        return {"error": "prompt is required"}
+    try:
+        audio = await elevenlabs.generate_sfx(prompt, duration_seconds=duration_seconds)
+    except elevenlabs.ElevenLabsError as e:
+        return {"error": str(e)}
+    return {
+        "configured": True,
+        "prompt": prompt[:200],
+        "duration_seconds_requested": duration_seconds,
+        "bytes": len(audio),
+        "note": (
+            "SFX generated. Pra anexar a um beat, salva como sfx_prompt em beat.metadata e o "
+            "pipeline gera + linka automaticamente no próximo render."
+        ),
+    }
+
+
 register(
     ToolSpec(
         name="preview_voice",
@@ -103,5 +133,37 @@ register(
             "required": ["user_id", "text"],
         },
         handler=_preview_voice,
+    )
+)
+
+register(
+    ToolSpec(
+        name="generate_sfx",
+        description=(
+            "Generate a short sound effect via ElevenLabs Sound Effects API given a text prompt "
+            "(ex: 'cinematic whoosh', 'glass impact', 'soft uplifter', 'horror sting'). "
+            "Use ANTES de anexar a um beat — confirma que o prompt produz o som que você quer. "
+            "duration_seconds opcional 0.5-22s (default ~auto). "
+            "Pra anexar definitivamente: o user/agente coloca sfx_prompt no beat.metadata; o "
+            "pipeline de render gera e linka no MP4 automaticamente como camada de áudio."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string"},
+                "prompt": {
+                    "type": "string",
+                    "description": "Descrição do SFX em inglês ou português (ex: 'cinematic whoosh 1s').",
+                },
+                "duration_seconds": {
+                    "type": "number",
+                    "description": "Duração desejada em segundos. 0.5 a 22.0. Omita pra auto.",
+                    "minimum": 0.5,
+                    "maximum": 22.0,
+                },
+            },
+            "required": ["user_id", "prompt"],
+        },
+        handler=_preview_sfx,
     )
 )

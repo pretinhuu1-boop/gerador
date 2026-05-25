@@ -20,6 +20,10 @@ Princípios de roteiro:
 - Beats curtos: 1 ideia visual por beat, captions ≤ 6 palavras.
 - B-roll descrito como prompt visual (será gerado depois).
 - CTA não pode ser "se inscreve" puro — sempre conectado ao próximo conteúdo.
+- SFX (opcional): beats com mudança forte de cena/clímax merecem `sfx_prompt`
+  (ex: "cinematic whoosh 0.8s", "horror sting", "glass impact", "soft uplifter").
+  Use `generate_sfx(prompt)` pra preview antes de fixar no beat. O pipeline mixa
+  automático no render com volume 45% (não afoga a narração).
 
 Output: após cada tool call, escreva um resumo decisão-oriented (3-6 bullets). Aponte o que foi salvo (draft_id), e qual o próximo passo sugerido (aprovar → renderizar → publicar).
 
@@ -40,6 +44,7 @@ def content_agent() -> AgentRun:
             "read_top_comments",
             "list_elevenlabs_voices",
             "preview_voice",
+            "generate_sfx",
             "pin_memory",
             "list_memory",
             "recall_memory",

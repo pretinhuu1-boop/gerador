@@ -6,7 +6,6 @@
  */
 import {
   AbsoluteFill,
-  Audio,
   Sequence,
   interpolate,
   useCurrentFrame,
@@ -16,6 +15,7 @@ import {
 import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import type { ContentBeat } from '../../types/database';
 import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
+import { BeatAudioTrack, type BeatAudioBeat } from '../components/BeatAudioTrack';
 
 export interface AudiogramProps {
   title: string;
@@ -27,6 +27,7 @@ export interface AudiogramProps {
   audioSrc?: string | null;
   speakerLabel?: string;
   captions?: CaptionWord[];
+  hookAudioUrl?: string | null;
 }
 
 const FPS = 30;
@@ -48,6 +49,7 @@ export const Audiogram: React.FC<AudiogramProps> = ({
   audioSrc,
   speakerLabel,
   captions,
+  hookAudioUrl,
 }) => {
   const { durationInFrames } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
@@ -73,10 +75,8 @@ export const Audiogram: React.FC<AudiogramProps> = ({
     <AbsoluteFill style={{ background: BG, color: '#f5f5fa', fontFamily: 'Inter, sans-serif' }}>
       <GradientOrb accent={accentColor} />
 
-      {audioSrc ? <Audio src={audioSrc} /> : null}
-
       <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <WaveformBars accent={accentColor} audioSrc={audioSrc ?? null} />
+        <WaveformBars accent={accentColor} audioSrc={audioSrc ?? hookAudioUrl ?? null} />
       </AbsoluteFill>
 
       <Sequence from={0} durationInFrames={hookFrames}>
@@ -92,6 +92,11 @@ export const Audiogram: React.FC<AudiogramProps> = ({
       <Sequence from={cursor} durationInFrames={ctaFrames}>
         <CtaPanel text={cta ?? 'Ouve até o fim'} brand={brand ?? 'channel os'} accent={accentColor} />
       </Sequence>
+
+      <BeatAudioTrack
+        beats={cleanBeats as BeatAudioBeat[]}
+        hookAudioUrl={hookAudioUrl ?? audioSrc ?? null}
+      />
 
       {captions && captions.length > 0 && (
         <CaptionOverlay words={captions} accent={accentColor} bottomOffset={180} />

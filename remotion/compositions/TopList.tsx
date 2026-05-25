@@ -15,6 +15,7 @@ import {
 } from 'remotion';
 import type { ContentBeat } from '../../types/database';
 import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
+import { BeatAudioTrack, type BeatAudioBeat } from '../components/BeatAudioTrack';
 
 export interface TopListProps {
   title: string;
@@ -25,6 +26,7 @@ export interface TopListProps {
   accentColor?: string;
   countdownDirection?: 'desc' | 'asc';
   captions?: CaptionWord[];
+  hookAudioUrl?: string | null;
 }
 
 const FPS = 30;
@@ -44,6 +46,7 @@ export const TopList: React.FC<TopListProps> = ({
   accentColor = DEFAULT_ACCENT,
   countdownDirection = 'desc',
   captions,
+  hookAudioUrl,
 }) => {
   const { durationInFrames } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
@@ -79,6 +82,8 @@ export const TopList: React.FC<TopListProps> = ({
       <Sequence from={titleFrames + total * perItem} durationInFrames={ctaFrames}>
         <CtaPanel text={cta ?? 'Qual te surpreendeu?'} brand={brand ?? 'channel os'} accent={accentColor} />
       </Sequence>
+
+      <BeatAudioTrack beats={cleanBeats as BeatAudioBeat[]} hookAudioUrl={hookAudioUrl} />
 
       {captions && captions.length > 0 && (
         <CaptionOverlay words={captions} accent={accentColor} />

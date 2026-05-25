@@ -15,6 +15,7 @@ import {
 } from 'remotion';
 import type { ContentBeat } from '../../types/database';
 import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
+import { BeatAudioTrack, type BeatAudioBeat } from '../components/BeatAudioTrack';
 
 export interface RedditStoriesProps {
   title: string;
@@ -28,6 +29,7 @@ export interface RedditStoriesProps {
   upvotes?: number;
   commentCount?: number;
   captions?: CaptionWord[];
+  hookAudioUrl?: string | null;
 }
 
 const FPS = 30;
@@ -56,6 +58,7 @@ export const RedditStories: React.FC<RedditStoriesProps> = ({
   upvotes = 12400,
   commentCount = 387,
   captions,
+  hookAudioUrl,
 }) => {
   const { durationInFrames } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
@@ -101,6 +104,8 @@ export const RedditStories: React.FC<RedditStoriesProps> = ({
       <Sequence from={cursor} durationInFrames={ctaFrames}>
         <CtaPanel text={cta ?? 'Comenta o que faria'} brand={brand ?? 'channel os'} accent={accentColor} />
       </Sequence>
+
+      <BeatAudioTrack beats={cleanBeats as BeatAudioBeat[]} hookAudioUrl={hookAudioUrl} />
 
       {captions && captions.length > 0 && (
         <CaptionOverlay words={captions} accent={accentColor} />

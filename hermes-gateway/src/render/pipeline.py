@@ -94,6 +94,47 @@ async def run(render_id: str) -> None:
 
         synthesized = await tts_batch.synthesize_beats(tts_items, voice_id, workdir / "audio")
 
+        # --- SFX (per-beat sound effects, best-effort) -----------------
+        # When a beat has metadata.sfx_prompt OR top-level sfx_prompt, generate
+        # a short SFX in parallel. Failures are logged + skipped — SFX is
+        # decoration, not blocking.
+        sfx_items: list[tuple[int, str, float | None]] = []
+        for i, b in enumerate(beats):
+            meta = b.get("metadata") if isinstance(b.get("metadata"), dict) else {}
+            prompt = (b.get("sfx_prompt") or (meta or {}).get("sfx_prompt") or "").strip()
+            if not prompt:
+                continue
+            dur_hint = b.get("sfx_duration_s") or (meta or {}).get("sfx_duration_s")
+            sfx_items.append((i, prompt, float(dur_hint) if dur_hint else None))
+
+        sfx_urls: dict[int, str] = {}
+        if sfx_items:
+            from ..connectors import elevenlabs as el
+
+            sfx_dir = workdir / "sfx"
+            sfx_dir.mkdir(parents=True, exist_ok=True)
+            progress.update_render(render_id, stage=f"generating {len(sfx_items)} sfx", progress=30)
+
+            async def _gen(idx: int, prompt: str, dur: float | None) -> tuple[int, Path] | None:
+                try:
+                    audio_bytes = await el.generate_sfx(prompt, duration_seconds=dur)
+                    p = sfx_dir / f"{idx:03d}.mp3"
+                    p.write_bytes(audio_bytes)
+                    return idx, p
+                except Exception as e:  # noqa: BLE001
+                    log.warning("sfx beat %s failed (%r): %s", idx, prompt[:40], e)
+                    return None
+
+            import asyncio
+
+            results = await asyncio.gather(*[_gen(i, p, d) for i, p, d in sfx_items])
+            for r in results:
+                if not r:
+                    continue
+                idx, path = r
+                dest = f"{user_id}/{render_id}/sfx/{idx + 1:03d}.mp3"
+                sfx_urls[idx] = storage.upload_file(path, dest, content_type="audio/mpeg")
+
         # --- Upload audio clips ----------------------------------------
         progress.update_render(render_id, stage="uploading audio", progress=40)
         audio_urls: list[dict[str, Any]] = []
@@ -147,6 +188,7 @@ async def run(render_id: str) -> None:
                         (a["url"] for a in audio_urls if a["beat_index"] == i),
                         None,
                     ),
+                    "sfx_url": sfx_urls.get(i),
                     "captions": shifted,
                 }
             )

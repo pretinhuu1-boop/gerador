@@ -141,6 +141,37 @@ async def synthesize_with_alignment(
     }
 
 
+async def generate_sfx(
+    prompt: str,
+    duration_seconds: float | None = None,
+    prompt_influence: float = 0.5,
+) -> bytes:
+    """ElevenLabs Sound Effects (https://elevenlabs.io/docs/api-reference/sound-generation).
+
+    Returns MP3 bytes of an SFX matching the prompt. `duration_seconds` capped
+    to 22s (API limit). `prompt_influence` 0..1: higher = follows prompt
+    literally, lower = more creative.
+    """
+    s = get_settings()
+    headers = _headers()
+    headers["Accept"] = "audio/mpeg"
+    payload: dict[str, Any] = {
+        "text": prompt,
+        "prompt_influence": max(0.0, min(1.0, prompt_influence)),
+    }
+    if duration_seconds is not None:
+        payload["duration_seconds"] = max(0.5, min(22.0, float(duration_seconds)))
+    async with httpx.AsyncClient(timeout=90.0) as client:
+        r = await client.post(
+            f"{BASE_URL}/sound-generation",
+            headers=headers,
+            json=payload,
+        )
+    if r.status_code >= 400:
+        raise ElevenLabsError(f"ElevenLabs SFX {r.status_code}: {r.text[:300]}")
+    return r.content
+
+
 async def stream(
     text: str,
     voice_id: str | None = None,
