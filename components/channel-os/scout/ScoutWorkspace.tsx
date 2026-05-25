@@ -12,6 +12,8 @@ import {
 import type { Channel } from '../../../types/database';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
+import { StatusChip } from '../../ui/StatusChip';
+import { TopAppBar } from '../../shell/TopAppBar';
 import { ErrorState, LoadingGrid, SupabaseOfflineHint } from '../WorkspaceState';
 import { ChannelCard } from './ChannelCard';
 import { ChannelDetail } from './ChannelDetail';
@@ -58,18 +60,16 @@ export const ScoutWorkspace = () => {
     }
   };
 
+  const count = channels?.length ?? 0;
   return (
-    <div className="h-full flex flex-col">
-      <header className="h-14 shrink-0 flex items-center gap-3 pl-14 pr-6 md:pl-6 border-b border-border-subtle/50 bg-bg-base/60 backdrop-blur">
-        <Telescope className="h-4 w-4 text-brand" />
-        <h2 className="font-display font-semibold text-sm">Scout</h2>
-        <span className="text-xs text-fg-muted ml-1 hidden sm:inline">
-          escanear canais · scoring heurístico
-        </span>
-        <div className="ml-auto text-xs font-mono text-fg-muted">
-          {channels?.length ?? 0} rastreado{(channels?.length ?? 0) === 1 ? '' : 's'}
-        </div>
-      </header>
+    <div className="h-full flex flex-col canvas-grid">
+      <TopAppBar
+        right={
+          <StatusChip tone={count > 0 ? 'brand' : 'default'}>
+            {count} rastreado{count === 1 ? '' : 's'}
+          </StatusChip>
+        }
+      />
 
       <div className="px-6 pt-6">
         <div className="surface-elevated p-4 rounded-2xl">

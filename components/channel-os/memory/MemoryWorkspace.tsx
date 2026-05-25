@@ -3,9 +3,10 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import { supabase } from '../../../services/supabase';
 import type { HermesMemory } from '../../../types/database';
-import { Badge } from '../../ui/Badge';
 import { Card } from '../../ui/Card';
 import { Skeleton } from '../../ui/Skeleton';
+import { StatusChip } from '../../ui/StatusChip';
+import { TopAppBar } from '../../shell/TopAppBar';
 import { ErrorState, SupabaseOfflineHint } from '../WorkspaceState';
 
 const KIND_LABEL: Record<HermesMemory['kind'], string> = {
@@ -14,6 +15,14 @@ const KIND_LABEL: Record<HermesMemory['kind'], string> = {
   goal: 'Meta',
   channel_pin: 'Canal pin',
   rule: 'Regra',
+};
+
+const KIND_TONE: Record<HermesMemory['kind'], 'brand' | 'info' | 'pending' | 'online' | 'default'> = {
+  preference: 'brand',
+  fact: 'info',
+  goal: 'online',
+  channel_pin: 'brand',
+  rule: 'pending',
 };
 
 async function loadMemories(userId: string): Promise<HermesMemory[]> {
@@ -35,14 +44,17 @@ export const MemoryWorkspace = () => {
     { enabled: Boolean(user), timeoutMs: 6000 },
   );
 
+  const count = memories?.length ?? 0;
+
   return (
-    <div className="h-full flex flex-col">
-      <header className="h-14 shrink-0 flex items-center gap-3 pl-14 pr-6 md:pl-6 border-b border-border-subtle/50 bg-bg-base/60 backdrop-blur">
-        <Brain className="h-4 w-4 text-brand" />
-        <h2 className="font-display font-semibold text-sm">Memória do Hermes</h2>
-        <span className="text-xs text-fg-muted ml-1">o que ele sabe sobre você</span>
-        <div className="ml-auto text-xs font-mono text-fg-muted">{memories?.length ?? 0} pins</div>
-      </header>
+    <div className="h-full flex flex-col canvas-grid">
+      <TopAppBar
+        right={
+          <StatusChip tone={count > 0 ? 'brand' : 'default'}>
+            {count} {count === 1 ? 'pin' : 'pins'}
+          </StatusChip>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto p-6 space-y-2">
         {loading ? (
@@ -65,18 +77,16 @@ export const MemoryWorkspace = () => {
           memories.map((m) => (
             <Card key={m.id} className="flex items-start gap-3 p-4">
               <div className="h-8 w-8 shrink-0 rounded-lg bg-brand/15 border border-brand/30 flex items-center justify-center">
-                <Pin className="h-4 w-4 text-brand" />
+                <Pin className="h-4 w-4 text-brand-light" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="brand" size="sm">
-                    {KIND_LABEL[m.kind]}
-                  </Badge>
-                  <span className="text-[10px] font-mono text-fg-muted">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <StatusChip tone={KIND_TONE[m.kind]}>{KIND_LABEL[m.kind]}</StatusChip>
+                  <span className="text-[10px] font-mono text-fg-muted tabular-nums">
                     importância {m.importance}/5
                   </span>
                 </div>
-                <p className="text-sm">{m.content}</p>
+                <p className="text-sm leading-relaxed">{m.content}</p>
               </div>
             </Card>
           ))

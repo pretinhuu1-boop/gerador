@@ -10,6 +10,8 @@ import {
 } from '../../../services/channelOS/contentService';
 import type { ContentDraft } from '../../../types/database';
 import { Button } from '../../ui/Button';
+import { StatusChip } from '../../ui/StatusChip';
+import { TopAppBar } from '../../shell/TopAppBar';
 import { ErrorState, LoadingGrid, SupabaseOfflineHint } from '../WorkspaceState';
 import { DraftCard } from './DraftCard';
 import { DraftDetail } from './DraftDetail';
@@ -55,24 +57,22 @@ export const ContentWorkspace = () => {
     refresh();
   };
 
+  const count = drafts?.length ?? 0;
   return (
-    <div className="h-full flex flex-col">
-      <header className="h-14 shrink-0 flex items-center gap-3 pl-14 pr-6 md:pl-6 border-b border-border-subtle/50 bg-bg-base/60 backdrop-blur">
-        <PencilLine className="h-4 w-4 text-brand" />
-        <h2 className="font-display font-semibold text-sm">Content</h2>
-        <span className="text-xs text-fg-muted ml-1 hidden sm:inline">
-          roteiros · drafts gerados pelo Hermes
-        </span>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="text-xs font-mono text-fg-muted hidden sm:block">
-            {drafts?.length ?? 0} draft{(drafts?.length ?? 0) === 1 ? '' : 's'}
-          </div>
-          <Button variant="primary" size="sm" loading={creating} onClick={onCreateBlank}>
-            <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Novo rascunho</span>
-          </Button>
-        </div>
-      </header>
+    <div className="h-full flex flex-col canvas-grid">
+      <TopAppBar
+        right={
+          <>
+            <StatusChip tone={count > 0 ? 'brand' : 'default'}>
+              {count} draft{count === 1 ? '' : 's'}
+            </StatusChip>
+            <Button variant="primary" size="sm" loading={creating} onClick={onCreateBlank}>
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Novo rascunho</span>
+            </Button>
+          </>
+        }
+      />
 
       <div className="flex-1 min-h-0 overflow-y-auto p-6">
         {loading ? (

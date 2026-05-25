@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Tv } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import { listTrackedChannels } from '../../../services/channelOS/scoutService';
 import type { Channel } from '../../../types/database';
+import { StatusChip } from '../../ui/StatusChip';
+import { TopAppBar } from '../../shell/TopAppBar';
 import { ChannelCard } from '../scout/ChannelCard';
 import { ChannelDetail } from '../scout/ChannelDetail';
 import { ErrorState, LoadingGrid, SupabaseOfflineHint } from '../WorkspaceState';
@@ -19,13 +20,17 @@ export const ChannelsWorkspace = () => {
     { enabled: Boolean(user), timeoutMs: 6000 },
   );
 
+  const count = channels?.length ?? 0;
+
   return (
-    <div className="h-full flex flex-col">
-      <header className="h-14 shrink-0 flex items-center gap-3 pl-14 pr-6 md:pl-6 border-b border-border-subtle/50 bg-bg-base/60 backdrop-blur">
-        <Tv className="h-4 w-4 text-brand" />
-        <h2 className="font-display font-semibold text-sm">Canais rastreados</h2>
-        <div className="ml-auto text-xs font-mono text-fg-muted">{channels?.length ?? 0}</div>
-      </header>
+    <div className="h-full flex flex-col canvas-grid">
+      <TopAppBar
+        right={
+          <StatusChip tone={count > 0 ? 'brand' : 'default'}>
+            {count} rastreado{count === 1 ? '' : 's'}
+          </StatusChip>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto p-6">
         {loading ? (
