@@ -23,7 +23,7 @@ from typing import Any
 
 from ..config import get_settings
 from ..connectors.supabase_client import supabase_admin
-from . import progress, remotion, storage, tts_batch
+from . import progress, props as props_builder, remotion, storage, tts_batch
 
 log = logging.getLogger(__name__)
 
@@ -74,6 +74,10 @@ async def run(render_id: str) -> None:
     beats = (draft.get("beats") or [])
     beats = [b for b in beats if (b.get("text") or "").strip()]
     hook = (draft.get("hook") or "").strip()
+    template_id = render_row.get("template_id") or "StoriesVertical"
+    if template_id not in props_builder.known_template_ids():
+        log.warning("unknown template_id %r — falling back to StoriesVertical", template_id)
+        template_id = "StoriesVertical"
 
     progress.mark_started(render_id)
 
@@ -133,29 +137,31 @@ async def run(render_id: str) -> None:
         progress.update_render(
             render_id,
             status="rendering",
-            stage=f"rendering {round(total_seconds, 1)}s",
+            stage=f"rendering {round(total_seconds, 1)}s via {template_id}",
             progress=60,
         )
         hook_audio_url = next(
             (a["url"] for a in audio_urls if a["beat_index"] == -1),
             None,
         )
-        props = {
-            "title": draft.get("title") or "Untitled",
-            "hook": hook or None,
-            "hookAudioUrl": hook_audio_url,
-            "beats": beats_with_t,
-            "cta": draft.get("cta"),
-            "brand": "channel os",
-            "accentColor": "#a855f7",
-        }
-        duration_in_frames = max(FPS * 5, int(round(total_seconds * FPS)))
+        props = props_builder.build_props(
+            template_id,
+            draft=draft,
+            hook=hook,
+            beats_with_t=beats_with_t,
+            hook_audio_url=hook_audio_url,
+        )
+        width, height, fps = props_builder.template_dimensions(template_id)
+        duration_in_frames = max(fps * 5, int(round(total_seconds * fps)))
         mp4_local = workdir / "out.mp4"
         await remotion.render(
-            composition_id="StoriesVertical",
+            composition_id=template_id,
             props=props,
             out_path=mp4_local,
             duration_in_frames=duration_in_frames,
+            width=width,
+            height=height,
+            fps=fps,
         )
 
         # --- Upload MP4 -------------------------------------------------

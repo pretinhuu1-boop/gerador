@@ -350,6 +350,7 @@ async def list_templates(_identity: AuthIdentity = Depends(_auth)):
 class RenderRequest(BaseModel):
     voice_id: str | None = None
     quality: str = Field(default="preview", pattern="^(preview|final)$")
+    template_id: str | None = None  # validated against templates registry; defaults to draft's saved choice or StoriesVertical
 
 
 @app.post("/v1/render/draft/{draft_id}")
@@ -374,7 +375,7 @@ async def render_draft(
     sb = supabase_admin()
     draft_check = (
         sb.table("content_drafts")
-        .select("id, user_id, status")
+        .select("id, user_id, status, template_id")
         .eq("id", draft_id)
         .eq("user_id", identity.user_id)
         .maybe_single()
@@ -382,6 +383,26 @@ async def render_draft(
     )
     if not (draft_check and draft_check.data):
         raise HTTPException(status_code=404, detail="draft not found")
+
+    from .templates import REGISTRY as TEMPLATES_REGISTRY
+
+    known = {t.id for t in TEMPLATES_REGISTRY}
+    template_id = (
+        payload.template_id
+        or (draft_check.data.get("template_id") if isinstance(draft_check.data, dict) else None)
+        or "StoriesVertical"
+    )
+    if template_id not in known:
+        raise HTTPException(
+            status_code=400,
+            detail=f"unknown template_id {template_id!r}; known: {sorted(known)}",
+        )
+
+    # Cache the user's choice on the draft so the next render defaults to it.
+    if payload.template_id and payload.template_id != draft_check.data.get("template_id"):
+        sb.table("content_drafts").update({"template_id": payload.template_id}).eq(
+            "id", draft_id
+        ).execute()
 
     inserted = (
         sb.table("content_renders")
@@ -391,6 +412,7 @@ async def render_draft(
                 "user_id": identity.user_id,
                 "voice_id": payload.voice_id,
                 "quality": payload.quality,
+                "template_id": template_id,
                 "status": "queued",
                 "stage": "queued",
             }
