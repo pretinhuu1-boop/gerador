@@ -11,6 +11,9 @@ from typing import Callable
 
 from .base import AgentRun
 from .content import content_agent
+from .editor import editor_agent
+from .improver import improver_agent
+from .publisher import publisher_agent
 from .scout import scout_agent
 
 
@@ -40,7 +43,7 @@ REGISTRY: list[AgentDescriptor] = [
             "consolida o resultado."
         ),
         is_main=True,
-        factory=lambda: None,  # orchestrator factory lives in orchestrator.py; placeholder
+        factory=lambda: None,  # orchestrator factory lives in orchestrator.py
     ),
     AgentDescriptor(
         key="scout",
@@ -67,6 +70,45 @@ REGISTRY: list[AgentDescriptor] = [
         ),
         is_main=False,
         factory=content_agent,
+    ),
+    AgentDescriptor(
+        key="editor",
+        name="Editor",
+        badge="EDT",
+        badge_color="#60a5fa",
+        role="Refinamento",
+        description=(
+            "Refina drafts existentes — ajusta tom, regenera beats fracos, "
+            "aprova/arquiva. Não escreve do zero."
+        ),
+        is_main=False,
+        factory=editor_agent,
+    ),
+    AgentDescriptor(
+        key="publisher",
+        name="Publisher",
+        badge="PUB",
+        badge_color="#f87171",
+        role="Agendamento",
+        description=(
+            "Agenda posts pra YouTube/TikTok/Instagram com horário ideal por "
+            "plataforma. Upload OAuth virá na Phase 7."
+        ),
+        is_main=False,
+        factory=publisher_agent,
+    ),
+    AgentDescriptor(
+        key="improver",
+        name="Improver",
+        badge="IMP",
+        badge_color="#fb923c",
+        role="Auto-aprimoramento",
+        description=(
+            "Meta-agente: analisa atividade recente e propõe skills, "
+            "automations, memory pins e mission templates pra você aprovar."
+        ),
+        is_main=False,
+        factory=improver_agent,
     ),
 ]
 
