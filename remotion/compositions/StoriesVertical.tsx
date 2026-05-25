@@ -2,6 +2,7 @@ import { AbsoluteFill, Sequence, interpolate, useCurrentFrame, useVideoConfig, E
 import type { ContentBeat } from '../../types/database';
 import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
 import { BeatAudioTrack, type BeatAudioBeat } from '../components/BeatAudioTrack';
+import { computeBeatRanges, endOfBeats } from '../components/beatRanges';
 
 export interface StoriesVerticalProps {
   title: string;
@@ -44,23 +45,19 @@ export const StoriesVertical: React.FC<StoriesVerticalProps> = ({
   captions,
   hookAudioUrl,
 }) => {
-  const { durationInFrames } = useVideoConfig();
+  const { durationInFrames, fps } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
 
-  // Distribute remaining frames across beats based on text length.
-  const hookFrames = Math.round(HOOK_SECONDS * FPS);
-  const ctaFrames = Math.round(CTA_SECONDS * FPS);
-  const beatBudget = Math.max(FPS, durationInFrames - hookFrames - ctaFrames);
-  const totalChars = cleanBeats.reduce((s, b) => s + Math.max(20, (b.text || '').length), 0) || 1;
-
-  let cursor = hookFrames;
-  const beatRanges = cleanBeats.map((b) => {
-    const chars = Math.max(20, (b.text || '').length);
-    const frames = Math.max(Math.round(DEFAULT_BEAT_SECONDS * FPS) / 2, Math.round((chars / totalChars) * beatBudget));
-    const start = cursor;
-    cursor += frames;
-    return { start, duration: frames };
+  const hookFrames = Math.round(HOOK_SECONDS * fps);
+  const ctaFrames = Math.round(CTA_SECONDS * fps);
+  const beatRanges = computeBeatRanges(cleanBeats, {
+    totalFrames: durationInFrames,
+    leadingFrames: hookFrames,
+    trailingFrames: ctaFrames,
+    fps,
+    fallbackMinSeconds: DEFAULT_BEAT_SECONDS,
   });
+  const cursor = endOfBeats(beatRanges, hookFrames);
 
   return (
     <AbsoluteFill style={{ background: BG, color: '#f5f5fa', fontFamily: 'Inter, sans-serif' }}>

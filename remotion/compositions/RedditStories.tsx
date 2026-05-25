@@ -16,6 +16,7 @@ import {
 import type { ContentBeat } from '../../types/database';
 import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
 import { BeatAudioTrack, type BeatAudioBeat } from '../components/BeatAudioTrack';
+import { computeBeatRanges, endOfBeats } from '../components/beatRanges';
 
 export interface RedditStoriesProps {
   title: string;
@@ -60,25 +61,19 @@ export const RedditStories: React.FC<RedditStoriesProps> = ({
   captions,
   hookAudioUrl,
 }) => {
-  const { durationInFrames } = useVideoConfig();
+  const { durationInFrames, fps } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
 
-  const headerFrames = Math.round(HEADER_SECONDS * FPS);
-  const ctaFrames = Math.round(CTA_SECONDS * FPS);
-  const beatBudget = Math.max(FPS, durationInFrames - headerFrames - ctaFrames);
-  const totalChars = cleanBeats.reduce((s, b) => s + Math.max(20, (b.text ?? '').length), 0) || 1;
-
-  let cursor = headerFrames;
-  const ranges = cleanBeats.map((b) => {
-    const chars = Math.max(20, (b.text ?? '').length);
-    const frames = Math.max(
-      Math.round((DEFAULT_BEAT_SECONDS * FPS) / 2),
-      Math.round((chars / totalChars) * beatBudget),
-    );
-    const start = cursor;
-    cursor += frames;
-    return { start, duration: frames };
+  const headerFrames = Math.round(HEADER_SECONDS * fps);
+  const ctaFrames = Math.round(CTA_SECONDS * fps);
+  const ranges = computeBeatRanges(cleanBeats, {
+    totalFrames: durationInFrames,
+    leadingFrames: headerFrames,
+    trailingFrames: ctaFrames,
+    fps,
+    fallbackMinSeconds: DEFAULT_BEAT_SECONDS,
   });
+  const cursor = endOfBeats(ranges, headerFrames);
 
   return (
     <AbsoluteFill style={{ background: BG, color: '#f5f5fa', fontFamily: 'Inter, sans-serif' }}>

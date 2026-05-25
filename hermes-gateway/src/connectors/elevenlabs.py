@@ -6,6 +6,7 @@ upcoming render pipeline).
 """
 from __future__ import annotations
 
+import base64
 import logging
 from collections.abc import AsyncIterator
 from typing import Any
@@ -105,8 +106,6 @@ async def synthesize_with_alignment(
     Slightly slower than `synthesize` (JSON envelope + base64 audio), but the
     alignment data is essential for word-level captions in renders.
     """
-    import base64
-
     s = get_settings()
     voice = voice_id or s.elevenlabs_default_voice
     model = model_id or s.elevenlabs_model

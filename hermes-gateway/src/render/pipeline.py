@@ -12,16 +12,15 @@ Flow:
 """
 from __future__ import annotations
 
+import asyncio
 import logging
-import os
 import shutil
 import tempfile
-import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from ..config import get_settings
+from ..connectors import elevenlabs as el
 from ..connectors.supabase_client import supabase_admin
 from . import progress, props as props_builder, remotion, storage, tts_batch
 
@@ -109,8 +108,6 @@ async def run(render_id: str) -> None:
 
         sfx_urls: dict[int, str] = {}
         if sfx_items:
-            from ..connectors import elevenlabs as el
-
             sfx_dir = workdir / "sfx"
             sfx_dir.mkdir(parents=True, exist_ok=True)
             progress.update_render(render_id, stage=f"generating {len(sfx_items)} sfx", progress=30)
@@ -124,8 +121,6 @@ async def run(render_id: str) -> None:
                 except Exception as e:  # noqa: BLE001
                     log.warning("sfx beat %s failed (%r): %s", idx, prompt[:40], e)
                     return None
-
-            import asyncio
 
             results = await asyncio.gather(*[_gen(i, p, d) for i, p, d in sfx_items])
             for r in results:

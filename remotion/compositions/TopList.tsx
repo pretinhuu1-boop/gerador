@@ -16,6 +16,7 @@ import {
 import type { ContentBeat } from '../../types/database';
 import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
 import { BeatAudioTrack, type BeatAudioBeat } from '../components/BeatAudioTrack';
+import { computeBeatRanges, endOfBeats } from '../components/beatRanges';
 
 export interface TopListProps {
   title: string;
@@ -48,14 +49,19 @@ export const TopList: React.FC<TopListProps> = ({
   captions,
   hookAudioUrl,
 }) => {
-  const { durationInFrames } = useVideoConfig();
+  const { durationInFrames, fps } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
 
-  const titleFrames = Math.round(TITLE_SECONDS * FPS);
-  const ctaFrames = Math.round(CTA_SECONDS * FPS);
-  const itemBudget = Math.max(FPS, durationInFrames - titleFrames - ctaFrames);
-  const perItem = Math.max(Math.round(ITEM_SECONDS * FPS) / 2, Math.floor(itemBudget / Math.max(1, cleanBeats.length)));
-
+  const titleFrames = Math.round(TITLE_SECONDS * fps);
+  const ctaFrames = Math.round(CTA_SECONDS * fps);
+  const ranges = computeBeatRanges(cleanBeats, {
+    totalFrames: durationInFrames,
+    leadingFrames: titleFrames,
+    trailingFrames: ctaFrames,
+    fps,
+    fallbackMinSeconds: ITEM_SECONDS,
+  });
+  const endFrame = endOfBeats(ranges, titleFrames);
   const total = cleanBeats.length;
 
   return (
@@ -71,15 +77,15 @@ export const TopList: React.FC<TopListProps> = ({
         return (
           <Sequence
             key={i}
-            from={titleFrames + i * perItem}
-            durationInFrames={perItem}
+            from={ranges[i].start}
+            durationInFrames={ranges[i].duration}
           >
             <ItemPanel beat={beat} rank={rank} total={total} accent={accentColor} />
           </Sequence>
         );
       })}
 
-      <Sequence from={titleFrames + total * perItem} durationInFrames={ctaFrames}>
+      <Sequence from={endFrame} durationInFrames={ctaFrames}>
         <CtaPanel text={cta ?? 'Qual te surpreendeu?'} brand={brand ?? 'channel os'} accent={accentColor} />
       </Sequence>
 

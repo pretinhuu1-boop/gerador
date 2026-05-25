@@ -16,6 +16,7 @@ import { useAudioData, visualizeAudio } from '@remotion/media-utils';
 import type { ContentBeat } from '../../types/database';
 import { CaptionOverlay, type CaptionWord } from '../components/CaptionOverlay';
 import { BeatAudioTrack, type BeatAudioBeat } from '../components/BeatAudioTrack';
+import { computeBeatRanges, endOfBeats } from '../components/beatRanges';
 
 export interface AudiogramProps {
   title: string;
@@ -51,25 +52,19 @@ export const Audiogram: React.FC<AudiogramProps> = ({
   captions,
   hookAudioUrl,
 }) => {
-  const { durationInFrames } = useVideoConfig();
+  const { durationInFrames, fps } = useVideoConfig();
   const cleanBeats = beats.filter((b) => (b.text ?? '').trim().length > 0);
 
-  const hookFrames = Math.round(HOOK_SECONDS * FPS);
-  const ctaFrames = Math.round(CTA_SECONDS * FPS);
-  const beatBudget = Math.max(FPS, durationInFrames - hookFrames - ctaFrames);
-  const totalChars = cleanBeats.reduce((s, b) => s + Math.max(20, (b.text ?? '').length), 0) || 1;
-
-  let cursor = hookFrames;
-  const ranges = cleanBeats.map((b) => {
-    const chars = Math.max(20, (b.text ?? '').length);
-    const frames = Math.max(
-      Math.round((DEFAULT_BEAT_SECONDS * FPS) / 2),
-      Math.round((chars / totalChars) * beatBudget),
-    );
-    const start = cursor;
-    cursor += frames;
-    return { start, duration: frames };
+  const hookFrames = Math.round(HOOK_SECONDS * fps);
+  const ctaFrames = Math.round(CTA_SECONDS * fps);
+  const ranges = computeBeatRanges(cleanBeats, {
+    totalFrames: durationInFrames,
+    leadingFrames: hookFrames,
+    trailingFrames: ctaFrames,
+    fps,
+    fallbackMinSeconds: DEFAULT_BEAT_SECONDS,
   });
+  const cursor = endOfBeats(ranges, hookFrames);
 
   return (
     <AbsoluteFill style={{ background: BG, color: '#f5f5fa', fontFamily: 'Inter, sans-serif' }}>
