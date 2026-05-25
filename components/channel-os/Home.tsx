@@ -5,6 +5,7 @@ import { ContentWorkspace } from './content/ContentWorkspace';
 import { ChannelsWorkspace } from './channels/ChannelsWorkspace';
 import { MemoryWorkspace } from './memory/MemoryWorkspace';
 import { AgentsWorkspace } from './agents/AgentsWorkspace';
+import { TemplatesWorkspace } from './templates/TemplatesWorkspace';
 
 const ChannelOSHome = () => {
   const workspace = useAppStore((s) => s.activeWorkspace);
@@ -20,6 +21,8 @@ const ChannelOSHome = () => {
       return <MemoryWorkspace />;
     case 'agents':
       return <AgentsWorkspace />;
+    case 'templates':
+      return <TemplatesWorkspace />;
     default:
       return <ChatHome />;
   }

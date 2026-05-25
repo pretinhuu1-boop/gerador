@@ -14,6 +14,7 @@ import {
   X,
   PencilLine,
   Bot,
+  Film,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
@@ -123,6 +124,17 @@ export const Sidebar = () => {
         setActiveWorkspace('agents');
       },
       active: isChannelOS && activeWorkspace === 'agents',
+    },
+    {
+      id: 'templates',
+      label: 'Templates',
+      icon: Film,
+      group: 'primary',
+      onClick: () => {
+        setSurface('channel-os');
+        setActiveWorkspace('templates');
+      },
+      active: isChannelOS && activeWorkspace === 'templates',
     },
     {
       id: 'image',
