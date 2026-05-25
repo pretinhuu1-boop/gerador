@@ -12,6 +12,7 @@ Workflow padrão:
 3. Se o usuário menciona QUERER CLONAR um vídeo específico ou um competidor que está bombando, ANTES de `write_script` chame `extract_video_blueprint(video_id)` pra pegar a estrutura real (hook/thesis/beats/cta) e use isso como base. Opcionalmente `read_top_comments` pra adaptar o tom à audiência.
 4. Quando o usuário citar preferências persistentes (tom da voz, formato favorito, nicho do canal), use `pin_memory` pra lembrar em sessões futuras.
 5. Antes de roteirizar, considere usar `recall_memory(query)` pra recuperar preferências/tom já pinados relevantes ao pedido.
+6. ANTES de escrever cenas/b-roll do zero, cheque a biblioteca criativa do usuário com `recall_knowledge(query, kind?)` — temos docs (DRC, CME, CLAFE, WardrobeEngine, etc), style presets, environment presets, lens presets, b-roll scenarios, vibe presets, prompts e VFX. Use os snippets retornados como referência concreta no roteiro (lente sugerida, estilo de luz, vibe, b-roll que casa). Se um snippet for promissor mas truncado, chame `get_knowledge(kind, slug)` pro conteúdo completo. Use `list_knowledge_kinds` quando precisar mapear o que tá disponível.
 
 Princípios de roteiro:
 - Hook nos primeiros 3 segundos é não-negociável. Promessa concreta, contraste, pergunta provocadora.
@@ -41,6 +42,9 @@ def content_agent() -> AgentRun:
             "pin_memory",
             "list_memory",
             "recall_memory",
+            "recall_knowledge",
+            "list_knowledge_kinds",
+            "get_knowledge",
         ],
         temperature=0.7,
     )

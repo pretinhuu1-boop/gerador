@@ -13,6 +13,8 @@ Workflow:
 4. Se for descartar, `archive_draft(draft_id)`.
 5. Pode chamar `list_content_drafts` se precisar achar o draft pelo título/format.
 
+Antes de regenerar/editar visual heavily (hook visual, b-roll novo, mudança de tom estético), considere `recall_knowledge(query, kind?)` pra puxar referência da biblioteca criativa (style/lens/lighting/b_roll/vibe/prompt presets, docs DRC/CME/CLAFE/WardrobeEngine). Use o snippet como base concreta, e se faltar contexto chame `get_knowledge(kind, slug)`.
+
 Princípios:
 - Hook nos primeiros 3s é não-negociável. Se for refinar, deixa mais concreto + promessa específica.
 - Beats curtos: 1 ideia visual por beat, captions ≤ 6 palavras.
@@ -38,6 +40,8 @@ def editor_agent() -> AgentRun:
             "list_content_drafts",
             "list_memory",
             "recall_memory",
+            "recall_knowledge",
+            "get_knowledge",
         ],
         temperature=0.55,
     )
