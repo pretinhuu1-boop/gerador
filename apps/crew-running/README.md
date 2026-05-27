@@ -32,6 +32,17 @@ Abre em `http://localhost:3100`. Cole sua Gemini API key (gratuita em
 - `services/storage.ts` — wrappers de localStorage.
 - `components/*` — UI desacoplada por seção.
 
+## Deploy na Vercel (projeto separado)
+
+Esse app tem o próprio `vercel.json`. Pra publicar como projeto Vercel
+independente do gerador de flyer:
+
+1. No dashboard da Vercel: **Add New → Project → Import** este repo.
+2. Em **Root Directory**, clique **Edit** e selecione `apps/crew-running`.
+3. Framework Preset = **Vite** (auto-detectado).
+4. Build Command, Output Directory e Install Command já vêm do `vercel.json`.
+5. Deploy. O preview por PR vai apontar pra este app a partir daí.
+
 ## Por que 2×2 numa chamada só?
 
 Gemini 2.5 Flash Image entrega 1 imagem por requisição. Pedir um "character
