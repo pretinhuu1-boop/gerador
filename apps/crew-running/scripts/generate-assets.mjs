@@ -1,45 +1,20 @@
-# Crew Running - Asset Prompts
+import OpenAI from 'openai';
+import sharp from 'sharp';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
-Prompts for generating the MVP asset pack for **The Crew Running - Customize**.
-The direction is based on the provided mobile UI references: dark runner-crew
-game screens, rough chalk/graffiti typography, gritty map overlays, inventory
-tiles, and adult athletic comic characters.
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const ROOT = path.resolve('public');
 
-Use these with `gpt-image-1` or `gemini-2.5-flash-image`. Keep the **EXPERT
-STACK**, **STYLE LOCK**, and **NEGATIVE LOCK** identical in every call so the
-pack stays visually coherent.
-
----
-
-## 0. Direction Diagnosis
-
-The visual target is **not** cute mascot, glossy 3D, playful chibi, or generic
-cartoon. The correct look is:
-
-- dark mobile game UI / sports crew app
-- black and charcoal canvas with faint graffiti and street-map linework
-- cream distressed uppercase type, tall condensed headings, brush tags only as
-  accents
-- limited orange/red/teal/lime accents used like game UI badges and selection
-  states
-- adult/semi-realistic athletic character proportions, bold ink shadows, gritty
-  paper/screen-print texture
-- wardrobe icons should look like inventory tiles from the customization screen,
-  not toy stickers
-
----
-
-## 1. Shared Blocks
-
-Paste these three blocks at the top of every image-generation prompt.
-
-```text
+const EXPERT_STACK = `
 EXPERT STACK:
 Act as a senior mobile game art director, a street-running brand designer, a
 graffiti lettering specialist, a comic character concept artist, and a UI
 inventory icon artist. Prioritize product-ready game assets for a dark
 runner-crew mobile app, not standalone poster art.
+`.trim();
 
+const STYLE_LOCK = `
 STYLE LOCK - "The Crew Running":
 Gritty dark mobile game UI aesthetic inspired by urban running crews, territory
 maps, challenge screens, and streetwear customization menus. Matte black and
@@ -52,31 +27,27 @@ distressed cream brush lettering, legible, worn, chalky. Palette: dirty cream
 #e8e2d2, off-white #f5f0df, safety orange #e86f1c, deep red #c8282f, muted
 teal #1d8f98, lime green #86d66b, steel blue #315d86, charcoal black. Use color
 sparingly against the dark canvas.
+`.trim();
 
+const NEGATIVE_LOCK = `
 NEGATIVE LOCK:
 No cute kiddie mascot, no toy sticker pack, no bubbly proportions, no generic
 cartoon, no photorealism, no 3D render, no glossy gradients, no neon cyberpunk,
 no pastel palette, no oversized white sticker border, no clean corporate SaaS
 UI, no random readable text except the exact requested brand words.
-```
+`.trim();
 
----
-
-## 2. Logo - `brand/logo.png`
-
-**Use:** splash, gate, header.
-**Output:** PNG 1024x1024.
-
-```text
-[EXPERT STACK]
-[STYLE LOCK]
-[NEGATIVE LOCK]
-
-Create a centered brand logo for "THE CREW RUNNING".
+const jobs = [
+  {
+    name: 'logo',
+    size: '1024x1024',
+    outFiles: ['brand/logo.png'],
+    slice: false,
+    prompt: `Create a centered brand logo for "THE CREW RUNNING".
 
 Composition:
 - main words "THE CREW" in large distressed cream brush lettering, stacked,
-  rough hand-painted edges, black drop shadow like the reference title screens
+  rough hand-painted edges, black drop shadow like a dark mobile game title
 - smaller word "RUNNING" below in condensed athletic uppercase, safety orange,
   stamped/painted, slightly imperfect
 - optional underline stroke under "CREW", rough chalk/paint texture
@@ -86,24 +57,14 @@ Composition:
 
 Art direction:
 This should feel like a premium dark sports-game logo painted on a gritty
-runner-crew app screen. Strong readability at small UI sizes.
-```
-
-Save as `/public/brand/logo.png`.
-
----
-
-## 3. Splash Mascot - `brand/splash.png`
-
-**Use:** app splash / gate illustration.
-**Output:** PNG 1024x1536 vertical mobile poster.
-
-```text
-[EXPERT STACK]
-[STYLE LOCK]
-[NEGATIVE LOCK]
-
-Create a vertical mobile splash poster for "THE CREW RUNNING".
+runner-crew app screen. Strong readability at small UI sizes.`,
+  },
+  {
+    name: 'splash',
+    size: '1024x1536',
+    outFiles: ['brand/splash.png'],
+    slice: false,
+    prompt: `Create a vertical mobile splash poster for "THE CREW RUNNING".
 
 Subject:
 - one full-body young adult urban runner, athletic build, confident but serious
@@ -112,8 +73,8 @@ Subject:
   black performance sneakers with worn white soles
 - one hand holds a spray can down at the side; stance is grounded, not dancing,
   not cute
-- proportions should match mature comic/mobile game character art, similar to
-  the provided profile/customize references
+- proportions should match mature comic/mobile game character art, similar to a
+  premium profile/customize game screen
 
 Background:
 - dark street-map grid covering the whole vertical frame
@@ -123,26 +84,21 @@ Background:
 - large cream "THE CREW" at top and cream "MVP" near bottom, both distressed and
   readable
 
-Do not make a toy-like mascot. Make it feel like a gritty game splash screen.
-```
-
-Save as `/public/brand/splash.png`.
-
----
-
-## 4. Hair Sheet - 4 Icons
-
-**Use:** Hairstyle slot icons.
-**Output:** one 1024x1024 2x2 sheet, then slice to 512x512 cells.
-
-```text
-[EXPERT STACK]
-[STYLE LOCK]
-[NEGATIVE LOCK]
-
-Create a 2x2 UI inventory icon sheet for hairstyle choices. Each cell is a dark
-square customization tile like the reference Customize screens. Thin charcoal
-separators, no text labels.
+Do not make a toy-like mascot. Make it feel like a gritty game splash screen.`,
+  },
+  {
+    name: 'hair',
+    size: '1024x1024',
+    outFiles: [
+      'wardrobe/hair/hair_pony_teal.png',
+      'wardrobe/hair/hair_dreads.png',
+      'wardrobe/hair/hair_cap_curls.png',
+      'wardrobe/hair/hair_buzz_blonde.png',
+    ],
+    slice: true,
+    prompt: `Create a 2x2 UI inventory icon sheet for hairstyle choices. Each
+cell is a dark square customization tile like a gritty mobile game equipment
+menu. Thin charcoal separators, no text labels.
 
 Global tile treatment:
 - each cell has matte black/charcoal tile background, subtle scratches and faint
@@ -165,31 +121,21 @@ curly black hair, streetwear attitude.
 
 BOTTOM-RIGHT:
 Adult runner, olive/brown skin, short buzz cut with bleached blonde top,
-serious confident face.
-```
-
-Slice and save:
-
-- `/public/wardrobe/hair/hair_pony_teal.png`
-- `/public/wardrobe/hair/hair_dreads.png`
-- `/public/wardrobe/hair/hair_cap_curls.png`
-- `/public/wardrobe/hair/hair_buzz_blonde.png`
-
----
-
-## 5. Tops Sheet - 4 Icons
-
-**Use:** Tops slot icons.
-**Output:** one 1024x1024 2x2 sheet, then slice to 512x512 cells.
-
-```text
-[EXPERT STACK]
-[STYLE LOCK]
-[NEGATIVE LOCK]
-
-Create a 2x2 UI inventory icon sheet for upper-body wardrobe choices. Each cell
-is a dark square customization tile like a gritty mobile game equipment menu.
-Thin charcoal separators, no text labels.
+serious confident face.`,
+  },
+  {
+    name: 'top',
+    size: '1024x1024',
+    outFiles: [
+      'wardrobe/top/top_hoodie_graf.png',
+      'wardrobe/top/top_tank_black.png',
+      'wardrobe/top/top_hoodie_red.png',
+      'wardrobe/top/top_jersey_teal.png',
+    ],
+    slice: true,
+    prompt: `Create a 2x2 UI inventory icon sheet for upper-body wardrobe
+choices. Each cell is a dark square customization tile like a gritty mobile
+game equipment menu. Thin charcoal separators, no text labels.
 
 Global tile treatment:
 - clothing-only inventory icons, centered, ghost-mannequin presentation
@@ -212,30 +158,21 @@ folds, gritty screen-print shading.
 
 BOTTOM-RIGHT:
 Sleeveless muted teal running jersey with bold cream "CREW" lettering across
-the chest, athletic cut, dark side panels.
-```
-
-Slice and save:
-
-- `/public/wardrobe/top/top_hoodie_graf.png`
-- `/public/wardrobe/top/top_tank_black.png`
-- `/public/wardrobe/top/top_hoodie_red.png`
-- `/public/wardrobe/top/top_jersey_teal.png`
-
----
-
-## 6. Bottoms Sheet - 4 Icons
-
-**Use:** Legs slot icons.
-**Output:** one 1024x1024 2x2 sheet, then slice to 512x512 cells.
-
-```text
-[EXPERT STACK]
-[STYLE LOCK]
-[NEGATIVE LOCK]
-
-Create a 2x2 UI inventory icon sheet for lower-body wardrobe choices. Each cell
-is a dark square customization tile. Thin charcoal separators, no text labels.
+the chest, athletic cut, dark side panels.`,
+  },
+  {
+    name: 'bottom',
+    size: '1024x1024',
+    outFiles: [
+      'wardrobe/bottom/bot_shorts_maroon.png',
+      'wardrobe/bottom/bot_leggings_blk.png',
+      'wardrobe/bottom/bot_jogger_grey.png',
+      'wardrobe/bottom/bot_shorts_teal.png',
+    ],
+    slice: true,
+    prompt: `Create a 2x2 UI inventory icon sheet for lower-body wardrobe
+choices. Each cell is a dark square customization tile. Thin charcoal
+separators, no text labels.
 
 Global tile treatment:
 - clothing-only inventory icons, centered, ghost-mannequin style
@@ -257,30 +194,20 @@ running look, heavy folds.
 
 BOTTOM-RIGHT:
 Muted teal running shorts with off-white piping along hem and side seams,
-minimal athletic design.
-```
-
-Slice and save:
-
-- `/public/wardrobe/bottom/bot_shorts_maroon.png`
-- `/public/wardrobe/bottom/bot_leggings_blk.png`
-- `/public/wardrobe/bottom/bot_jogger_grey.png`
-- `/public/wardrobe/bottom/bot_shorts_teal.png`
-
----
-
-## 7. Shoes Sheet - 4 Icons
-
-**Use:** Shoes slot icons.
-**Output:** one 1024x1024 2x2 sheet, then slice to 512x512 cells.
-
-```text
-[EXPERT STACK]
-[STYLE LOCK]
-[NEGATIVE LOCK]
-
-Create a 2x2 UI inventory icon sheet for running shoes. Each cell is a dark
-square customization tile. Thin charcoal separators, no text labels.
+minimal athletic design.`,
+  },
+  {
+    name: 'shoes',
+    size: '1024x1024',
+    outFiles: [
+      'wardrobe/shoes/sho_runners_teal.png',
+      'wardrobe/shoes/sho_sneak_red.png',
+      'wardrobe/shoes/sho_sneak_white.png',
+      'wardrobe/shoes/sho_runners_blk.png',
+    ],
+    slice: true,
+    prompt: `Create a 2x2 UI inventory icon sheet for running shoes. Each cell
+is a dark square customization tile. Thin charcoal separators, no text labels.
 
 Global tile treatment:
 - one pair of sneakers per cell, 3/4 side view, floating centered
@@ -302,32 +229,22 @@ sole, hand-inked edges.
 
 BOTTOM-RIGHT:
 All-black trail running shoes with reflective grey details, aggressive tread,
-dark tactical runner feel.
-```
-
-Slice and save:
-
-- `/public/wardrobe/shoes/sho_runners_teal.png`
-- `/public/wardrobe/shoes/sho_sneak_red.png`
-- `/public/wardrobe/shoes/sho_sneak_white.png`
-- `/public/wardrobe/shoes/sho_runners_blk.png`
-
----
-
-## 8. Style Chips Sheet - 4 Thumbnails
-
-**Use:** StylePicker preview thumbnails.
-**Output:** one 1024x1024 2x2 sheet, then slice to 512x512 cells.
-
-```text
-[EXPERT STACK]
-[STYLE LOCK]
-[NEGATIVE LOCK]
-
-Create a 2x2 style preview sheet. Each cell shows the SAME adult street runner
-character as a 3/4 bust on a dark mobile game tile background. Same pose and
-wardrobe in all four cells: warm brown skin, dark teal ponytail, dark hoodie
-with orange runner accent. No text labels.
+dark tactical runner feel.`,
+  },
+  {
+    name: 'styles',
+    size: '1024x1024',
+    outFiles: [
+      'styles/street_comic.png',
+      'styles/graffiti_poster.png',
+      'styles/anime_runner.png',
+      'styles/mascot_bold.png',
+    ],
+    slice: true,
+    prompt: `Create a 2x2 style preview sheet. Each cell shows the SAME adult
+street runner character as a 3/4 bust on a dark mobile game tile background.
+Same pose and wardrobe in all four cells: warm brown skin, dark teal ponytail,
+dark hoodie with orange runner accent. No text labels.
 
 The differences should be style-treatment differences only, not different
 characters.
@@ -347,29 +264,15 @@ background.
 
 BOTTOM-RIGHT - Bold Mascot:
 Slightly simplified bold avatar treatment for a profile badge, not chibi.
-Thicker outlines, flatter colors, serious confident expression.
-```
-
-Slice and save:
-
-- `/public/styles/street_comic.png`
-- `/public/styles/graffiti_poster.png`
-- `/public/styles/anime_runner.png`
-- `/public/styles/mascot_bold.png`
-
----
-
-## 9. Board Texture - `textures/board.png`
-
-**Use:** board/panel background.
-**Output:** PNG 1024x1024, seamless if possible.
-
-```text
-[EXPERT STACK]
-[STYLE LOCK]
-[NEGATIVE LOCK]
-
-Create a seamless tileable 1024x1024 dark mobile game background texture.
+Thicker outlines, flatter colors, serious confident expression.`,
+  },
+  {
+    name: 'texture',
+    size: '1024x1024',
+    outFiles: ['textures/board.png'],
+    slice: false,
+    prompt: `Create a seamless tileable 1024x1024 dark mobile game background
+texture.
 
 Texture:
 - matte black/deep charcoal base
@@ -379,41 +282,60 @@ Texture:
 - a few extremely subtle muted teal/orange marks, no bright decoration
 - no words, no icons, no characters
 
-It must work behind UI cards without stealing attention.
-```
+It must work behind UI cards without stealing attention.`,
+  },
+];
 
-Save as `/public/textures/board.png`.
+async function ensureDir(p) {
+  await fs.mkdir(path.dirname(p), { recursive: true });
+}
 
----
+async function generate(job) {
+  console.log(`-> ${job.name}`);
+  const res = await client.images.generate({
+    model: 'gpt-image-1',
+    prompt: `${EXPERT_STACK}\n\n${STYLE_LOCK}\n\n${NEGATIVE_LOCK}\n\n${job.prompt}`,
+    size: job.size,
+    n: 1,
+  });
+  const b64 = res.data[0].b64_json;
+  const buf = Buffer.from(b64, 'base64');
 
-## 10. Slicing
+  if (!job.slice) {
+    const out = path.join(ROOT, job.outFiles[0]);
+    await ensureDir(out);
+    await fs.writeFile(out, buf);
+    console.log(`   ok ${job.outFiles[0]}`);
+    return;
+  }
 
-The generator script slices 2x2 sheets automatically. If slicing manually:
+  const meta = await sharp(buf).metadata();
+  const w = Math.floor(meta.width / 2);
+  const h = Math.floor(meta.height / 2);
+  const cells = [
+    { left: 0, top: 0 },
+    { left: w, top: 0 },
+    { left: 0, top: h },
+    { left: w, top: h },
+  ];
 
-```bash
-magick sheet.png -crop 2x2@ +repage +adjoin slice_%d.png
-```
+  for (let i = 0; i < 4; i++) {
+    const out = path.join(ROOT, job.outFiles[i]);
+    await ensureDir(out);
+    await sharp(buf)
+      .extract({ width: w, height: h, ...cells[i] })
+      .png()
+      .toFile(out);
+    console.log(`   ok ${job.outFiles[i]}`);
+  }
+}
 
-Order:
+for (const job of jobs) {
+  try {
+    await generate(job);
+  } catch (e) {
+    console.error(`   FAIL ${job.name}: ${e.message}`);
+  }
+}
 
-- `slice_0.png` = top-left
-- `slice_1.png` = top-right
-- `slice_2.png` = bottom-left
-- `slice_3.png` = bottom-right
-
----
-
-## 11. MVP Checklist
-
-- [ ] `brand/logo.png`
-- [ ] `brand/splash.png`
-- [ ] 4 hair icons
-- [ ] 4 top icons
-- [ ] 4 bottom icons
-- [ ] 4 shoes icons
-- [ ] 4 style thumbnails
-- [ ] `textures/board.png`
-
-Total expected output: **23 PNGs**.
-
-Breakdown: 2 brand + 16 wardrobe + 4 styles + 1 texture.
+console.log('done');
