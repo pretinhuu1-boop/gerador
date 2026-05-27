@@ -7,51 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root {
-      --bg: #0f1012;
-      --panel: #181a1d;
-      --panel-2: #22252a;
-      --accent: #ff7a1a;
-      --accent-2: #18b6b6;
-      --text: #f5f1e8;
-      --muted: rgba(245,241,232,0.6);
-      --border: rgba(255,255,255,0.08);
-    }
-    html, body, #root { height: 100%; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
-    .display-font { font-family: 'Bangers', cursive; letter-spacing: 0.04em; }
-    .slot-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      transition: all .15s ease;
-    }
-    .slot-card.selected {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(255,122,26,0.25);
-    }
-    .slot-card:hover { background: var(--panel-2); }
-    .btn-primary {
-      background: var(--accent);
-      color: #1a0e00;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-    }
-    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-  </style>
 </head>
 <body>
   <div id="root"></div>
