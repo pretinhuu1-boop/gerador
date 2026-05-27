@@ -81,7 +81,7 @@ body::before {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.06;
+  opacity: 0.13;
   mix-blend-mode: screen;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'><g stroke='%23ffffff' stroke-width='1.5' fill='none' opacity='0.6' stroke-linecap='round'><path d='M50,120 Q90,100 130,130 T210,120'/><path d='M280,90 Q320,70 360,100 T440,90'/><path d='M180,200 L220,210 L200,240'/><path d='M500,150 Q540,130 580,160 T660,150'/><path d='M100,300 Q150,280 200,310 T300,300'/><path d='M450,280 L490,300 L470,330 L510,340'/><path d='M600,250 Q640,230 680,260'/><path d='M80,420 Q120,400 160,430 T240,420'/><path d='M350,400 L390,420 L370,450'/><path d='M540,400 Q580,380 620,410 T700,400'/><path d='M120,540 Q160,520 200,550'/><path d='M400,520 L440,540 L420,570 L460,580'/><path d='M580,540 Q620,520 660,550 T740,540'/><path d='M150,660 Q190,640 230,670 T310,660'/><path d='M450,650 L490,670 L470,700'/><path d='M620,680 Q660,660 700,690'/><path d='M70,750 L110,770 L90,790'/><text x='250' y='160' font-family='cursive' font-size='24' fill='%23ffffff'>★</text><text x='520' y='320' font-family='cursive' font-size='18' fill='%23ffffff'>x</text><text x='380' y='620' font-family='cursive' font-size='20' fill='%23ffffff'>★</text></g></svg>");
   background-size: 600px 600px;
@@ -122,19 +122,7 @@ body::after {
   text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.85);
   position: relative;
   display: inline-block;
-}
-.title-customize::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: -8px;
-  bottom: -10px;
-  height: 5px;
-  background: linear-gradient(90deg, var(--white) 0%, var(--white) 92%, transparent 100%);
-  border-radius: 3px;
   transform: rotate(-1deg);
-  opacity: 0.85;
-  filter: blur(0.3px);
 }
 
 /* Logo stamp THE CREW + RUNNING */
@@ -169,26 +157,59 @@ body::after {
 /* ===== SLOTS (wardrobe / style / hair tiles) ===== */
 .tile {
   background: var(--char);
-  border: 2px solid transparent;
-  border-radius: 6px;
+  border-radius: 4px;
   position: relative;
-  transition: transform 0.12s ease, border-color 0.12s ease;
+  transition: transform 0.18s ease;
   overflow: hidden;
   cursor: pointer;
 }
+/* Border é um pseudo-element separado pra aplicar filter sem warpar o conteudo */
+.tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  border: 2px solid rgba(240, 235, 224, 0.16);
+  filter: url(#rough-soft);
+  pointer-events: none;
+  transition: border-color 0.15s ease, border-width 0.15s ease;
+}
+.tile:hover::after {
+  border-color: rgba(240, 235, 224, 0.45);
+}
+
 .tile:hover {
-  transform: translateY(-1px);
-  border-color: var(--gray-line);
+  transform: rotate(0deg) translateY(-2px) !important;
 }
-/* Selected — thick marker-orange border with hand-drawn feel */
-.tile.is-selected {
+
+/* Selected — marker-orange border + sticker offset shadow */
+.tile.is-selected::after {
   border-color: var(--spray-orange-bright);
-  border-width: 3px;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.6),
-    inset 0 0 0 1px rgba(255, 107, 53, 0.4);
-  transform: rotate(-0.4deg);
+  border-width: 4px;
+  filter: url(#rough-mid);
 }
+.tile.is-selected::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px solid var(--spray-orange-bright);
+  border-radius: 6px;
+  filter: url(#rough-strong);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: -1;
+}
+.tile.is-selected {
+  transform: rotate(-1.6deg) !important;
+  z-index: 2;
+  box-shadow: 3px 3px 0 rgba(232, 93, 44, 0.35);
+}
+
+/* Variação maior pra parecer manualmente colado */
+.tile-row > *:nth-child(4n+1) { transform: rotate(-1.1deg); }
+.tile-row > *:nth-child(4n+2) { transform: rotate(0.8deg); }
+.tile-row > *:nth-child(4n+3) { transform: rotate(-0.4deg); }
+.tile-row > *:nth-child(4n+4) { transform: rotate(1.3deg); }
 
 /* Placeholder hatch when no iconUrl yet */
 .tile-placeholder {
@@ -205,17 +226,25 @@ body::after {
   letter-spacing: 0.04em;
   color: var(--white);
   background: transparent;
-  border: 3px solid var(--white);
   border-radius: 6px;
-  padding: 14px 20px;
+  padding: 16px 22px;
   text-transform: uppercase;
   position: relative;
   transition: transform 0.12s ease, background 0.12s ease;
   cursor: pointer;
 }
+.btn-chalk::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--white);
+  border-radius: 6px;
+  filter: url(#rough-mid);
+  pointer-events: none;
+}
 .btn-chalk:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.06);
-  transform: translate(-1px, -1px);
+  transform: translate(-1px, -1px) rotate(-0.5deg);
 }
 .btn-chalk:disabled { opacity: 0.35; cursor: not-allowed; }
 
@@ -226,16 +255,25 @@ body::after {
   letter-spacing: 0.06em;
   color: #1a0a00;
   background: var(--spray-orange-bright);
-  border: 3px solid #000;
   border-radius: 6px;
-  padding: 14px 28px;
+  padding: 16px 30px;
   text-transform: uppercase;
   box-shadow: 4px 4px 0 #000;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   cursor: pointer;
+  position: relative;
+}
+.btn-solid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px solid #000;
+  border-radius: 6px;
+  filter: url(#rough-mid);
+  pointer-events: none;
 }
 .btn-solid:hover:not(:disabled) {
-  transform: translate(-2px, -2px);
+  transform: translate(-2px, -2px) rotate(-0.4deg);
   box-shadow: 6px 6px 0 #000;
 }
 .btn-solid:disabled {
@@ -261,13 +299,30 @@ body::after {
 /* Inputs on black */
 .input-board {
   background: var(--char);
-  border: 2px solid var(--gray-soft);
+  border: none;
   border-radius: 6px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   color: var(--bone);
   font-family: var(--mono);
   letter-spacing: 0.04em;
   width: 100%;
+  position: relative;
+}
+.input-wrap {
+  position: relative;
+}
+.input-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--gray-soft);
+  border-radius: 6px;
+  filter: url(#rough-soft);
+  pointer-events: none;
+  transition: border-color 0.15s ease;
+}
+.input-wrap:focus-within::before {
+  border-color: var(--spray-orange-bright);
 }
 .input-board::placeholder {
   color: var(--gray-text);
@@ -276,5 +331,28 @@ body::after {
 }
 .input-board:focus {
   outline: none;
+}
+
+/* Hand-drawn dashed upload box */
+.upload-zone {
+  background: var(--char);
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.upload-zone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px dashed rgba(240, 235, 224, 0.35);
+  border-radius: 4px;
+  filter: url(#rough-soft);
+  pointer-events: none;
+}
+.upload-zone:hover {
+  transform: rotate(-0.3deg);
+}
+.upload-zone:hover::after {
   border-color: var(--spray-orange-bright);
 }

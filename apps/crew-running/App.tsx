@@ -20,6 +20,7 @@ import { PhotoUpload } from './components/PhotoUpload';
 import { StylePicker } from './components/StylePicker';
 import { WardrobePicker } from './components/WardrobePicker';
 import { SheetPreview } from './components/SheetPreview';
+import { SvgDefs, HandUnderline } from './components/SvgDefs';
 
 type Photo = PhotoInput & { previewUrl: string };
 
@@ -38,7 +39,12 @@ export const App: React.FC = () => {
   }, [apiKey]);
 
   if (!apiKey) {
-    return <ApiKeyGate onReady={setApiKeyState} />;
+    return (
+      <>
+        <SvgDefs />
+        <ApiKeyGate onReady={setApiKeyState} />
+      </>
+    );
   }
 
   const handleToggle = (slot: SlotKey, itemId: string) => {
@@ -99,12 +105,14 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-shell min-h-screen">
+      <SvgDefs />
       <div className="max-w-7xl mx-auto px-5 md:px-8 py-6 md:py-10">
         <header className="flex items-start justify-between mb-6">
           <div>
             <div className="brand-the-crew">THE CREW</div>
             <div className="brand-running">RUNNING</div>
             <h1 className="title-customize mt-3">CUSTOMIZE</h1>
+            <HandUnderline width={420} thickness={6} className="mt-2" />
           </div>
           <button onClick={handleSignOut} className="btn-link">
             TROCAR API KEY

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { WARDROBE, SLOT_LABELS, SlotKey, WardrobeItem } from '../data/wardrobe';
 import { SlotSelection } from '../services/crewService';
+import { HandUnderline } from './SvgDefs';
 
 type Props = {
   locked: SlotSelection;
@@ -27,11 +28,11 @@ const ItemTile: React.FC<{
         <img
           src={item.iconUrl}
           alt={item.label}
-          className="w-full h-full object-contain p-1"
+          className="w-full h-full object-contain p-1 relative z-10"
           onError={() => setImgFailed(true)}
         />
       ) : (
-        <div className="tile-placeholder w-full h-full flex items-center justify-center px-1">
+        <div className="tile-placeholder w-full h-full flex items-center justify-center px-1 relative z-10">
           <span className="t-brush text-[11px] leading-tight text-[var(--bone)]">
             {item.label}
           </span>
@@ -46,19 +47,20 @@ export const WardrobePicker: React.FC<Props> = ({ locked, onToggle }) => {
 
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-3">
+      <div className="flex items-end justify-between mb-1">
         <h3 className="section-label">GUARDA-ROUPA</h3>
         <span className="t-brush text-[11px] text-[var(--gray-text)]">
           trave o que quiser fixar
         </span>
       </div>
-      <div className="space-y-4">
+      <HandUnderline width={180} className="mb-4 mt-1" />
+      <div className="space-y-5">
         {slots.map((slot) => (
           <div key={slot}>
-            <div className="t-anton text-sm text-[var(--bone-soft)] mb-2">
+            <div className="t-anton text-sm text-[var(--bone-soft)] mb-2 tracking-widest">
               {SLOT_LABELS[slot]}
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-3 tile-row">
               {WARDROBE[slot].map((item) => (
                 <ItemTile
                   key={item.id}

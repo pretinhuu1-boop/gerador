@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { PhotoInput } from '../services/crewService';
+import { HandUnderline } from './SvgDefs';
 
 type Props = {
   photo: (PhotoInput & { previewUrl: string }) | null;
@@ -21,7 +22,7 @@ export const PhotoUpload: React.FC<Props> = ({ photo, onChange }) => {
 
   return (
     <div>
-      <div className="flex items-end justify-between mb-3">
+      <div className="flex items-end justify-between mb-1">
         <h3 className="section-label">SUA FOTO</h3>
         {photo && (
           <button onClick={() => onChange(null)} className="btn-link">
@@ -29,17 +30,28 @@ export const PhotoUpload: React.FC<Props> = ({ photo, onChange }) => {
           </button>
         )}
       </div>
+      <HandUnderline width={110} className="mb-3 mt-1" />
       {photo ? (
-        <img
-          src={photo.previewUrl}
-          alt="upload"
-          className="w-full aspect-square object-cover rounded-md border-[3px] border-[var(--white)]"
-        />
+        <div className="relative">
+          <img
+            src={photo.previewUrl}
+            alt="upload"
+            className="w-full aspect-square object-cover rounded-md"
+            style={{ transform: 'rotate(-0.8deg)' }}
+          />
+          <div
+            className="absolute inset-0 rounded-md pointer-events-none"
+            style={{
+              border: '3px solid #fff',
+              filter: 'url(#rough-mid)',
+              transform: 'rotate(-0.8deg)',
+            }}
+          />
+        </div>
       ) : (
         <button
           onClick={() => inputRef.current?.click()}
-          className="tile w-full aspect-square flex flex-col items-center justify-center text-[var(--bone-soft)]"
-          style={{ borderStyle: 'dashed', borderWidth: 3, borderColor: 'var(--gray-line)' }}
+          className="upload-zone w-full aspect-square flex flex-col items-center justify-center"
         >
           <span className="text-5xl mb-2 t-bowlby text-[var(--white)]">+</span>
           <span className="t-brush text-sm tracking-widest text-[var(--bone-soft)]">
