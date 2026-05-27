@@ -20,15 +20,15 @@ export const PhotoUpload: React.FC<Props> = ({ photo, onChange }) => {
   };
 
   return (
-    <div className="slot-card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="display-font text-xl tracking-wider text-[var(--accent)]">SUA FOTO</h3>
+    <div>
+      <div className="flex items-baseline justify-between mb-2">
+        <h3 className="brush text-2xl chalk-underline">SUA FOTO</h3>
         {photo && (
           <button
             onClick={() => onChange(null)}
-            className="text-xs text-[var(--muted)] hover:text-white"
+            className="chalk text-xs text-[var(--cream-dim)] hover:text-[var(--cream)] tracking-widest"
           >
-            remover
+            REMOVER
           </button>
         )}
       </div>
@@ -36,15 +36,15 @@ export const PhotoUpload: React.FC<Props> = ({ photo, onChange }) => {
         <img
           src={photo.previewUrl}
           alt="upload"
-          className="w-full aspect-square object-cover rounded-md"
+          className="w-full aspect-square object-cover rounded-md border-2 border-[var(--line-strong)]"
         />
       ) : (
         <button
           onClick={() => inputRef.current?.click()}
-          className="w-full aspect-square rounded-md border-2 border-dashed border-[var(--border)] flex flex-col items-center justify-center text-[var(--muted)] hover:border-[var(--accent)] hover:text-white transition"
+          className="w-full aspect-square rounded-md border-2 border-dashed border-[var(--line)] flex flex-col items-center justify-center text-[var(--cream-dim)] hover:border-[var(--accent)] hover:text-[var(--cream)] transition"
         >
-          <span className="text-3xl mb-2">+</span>
-          <span className="text-sm">enviar selfie</span>
+          <span className="text-4xl mb-1">+</span>
+          <span className="chalk text-xs tracking-widest">ENVIAR SELFIE</span>
         </button>
       )}
       <input

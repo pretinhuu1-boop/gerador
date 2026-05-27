@@ -12,28 +12,34 @@ export const ApiKeyGate: React.FC<{ onReady: (key: string) => void }> = ({ onRea
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="max-w-md w-full slot-card p-6 space-y-4">
-        <h1 className="display-font text-3xl text-white">THE CREW RUNNING</h1>
-        <p className="text-sm text-[var(--muted)]">
-          Cole sua Gemini API key pra começar. Ela fica salva só no seu navegador (localStorage).
+    <div className="min-h-screen flex items-center justify-center px-6 bg-board">
+      <div className="max-w-md w-full bg-paper rounded-lg p-8 space-y-5 border-2 border-[var(--line)]">
+        <div>
+          <h1 className="logo-stamp text-5xl text-[var(--cream)]">
+            THE CREW <span className="logo-running">RUNNING</span>
+          </h1>
+          <p className="chalk text-sm text-[var(--cream-dim)] mt-2 tracking-widest">
+            — CUSTOMIZE
+          </p>
+        </div>
+        <p className="text-sm text-[var(--cream-dim)] leading-relaxed">
+          Cole sua Gemini API key pra começar. Ela fica salva só no seu navegador
+          (localStorage).
         </p>
         <input
           type="password"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="AIza..."
-          className="w-full bg-[var(--panel-2)] border border-[var(--border)] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[var(--accent)]"
+          onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+          className="board-input w-full"
         />
-        <button
-          onClick={handleSave}
-          disabled={!value.trim()}
-          className="btn-primary w-full py-2 rounded-md"
-        >
+        <button onClick={handleSave} disabled={!value.trim()} className="solid-btn w-full">
           ENTRAR
         </button>
-        <p className="text-xs text-[var(--muted)]">
-          Pegue uma key grátis em <span className="underline">aistudio.google.com/apikey</span>
+        <p className="text-xs text-[var(--cream-dim)]">
+          Pegue uma key grátis em{' '}
+          <span className="underline">aistudio.google.com/apikey</span>
         </p>
       </div>
     </div>

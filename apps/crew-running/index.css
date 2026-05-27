@@ -3,14 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0f1012;
-  --panel: #181a1d;
-  --panel-2: #22252a;
+  --bg: #14110f;
+  --board: #1c1916;
+  --board-2: #252119;
+  --cream: #f5ecd6;
+  --cream-dim: rgba(245, 236, 214, 0.55);
   --accent: #ff7a1a;
   --accent-2: #18b6b6;
-  --text: #f5f1e8;
-  --muted: rgba(245, 241, 232, 0.6);
-  --border: rgba(255, 255, 255, 0.08);
+  --rust: #8c2b3a;
+  --line: rgba(245, 236, 214, 0.18);
+  --line-strong: rgba(245, 236, 214, 0.4);
 }
 
 html,
@@ -21,47 +23,171 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background-color: var(--bg);
+  color: var(--cream);
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-.display-font {
+/* Chalkboard / gritty paper background: layered noise + radial gradient */
+.bg-board {
+  background-color: var(--board);
+  background-image:
+    radial-gradient(circle at 30% 0%, rgba(255, 122, 26, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 80% 100%, rgba(24, 182, 182, 0.06) 0%, transparent 45%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.96 0 0 0 0 0.93 0 0 0 0 0.84 0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-blend-mode: normal, normal, overlay;
+}
+
+.bg-paper {
+  background-color: var(--board-2);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.96 0 0 0 0 0.93 0 0 0 0 0.84 0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>");
+}
+
+.brush {
   font-family: 'Bangers', 'Impact', 'Arial Black', sans-serif;
   letter-spacing: 0.04em;
+  font-weight: 400;
 }
 
-.slot-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  transition: all 0.15s ease;
+.chalk {
+  font-family: 'Permanent Marker', 'Bangers', 'Impact', sans-serif;
+  letter-spacing: 0.02em;
 }
 
-.slot-card.selected {
+/* Hand-drawn underline used under section labels */
+.chalk-underline {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 6px;
+}
+.chalk-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background:
+    linear-gradient(90deg, transparent 0%, var(--cream) 5%, var(--cream) 95%, transparent 100%);
+  opacity: 0.7;
+  border-radius: 2px;
+  filter: blur(0.4px);
+}
+
+/* Sticker-cut slot card: thick cream border, slight inner shadow */
+.slot {
+  background: rgba(0, 0, 0, 0.35);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  position: relative;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  overflow: hidden;
+}
+.slot:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+.slot.selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(255, 122, 26, 0.25);
+  box-shadow:
+    0 0 0 2px rgba(255, 122, 26, 0.45),
+    inset 0 0 0 1px rgba(255, 122, 26, 0.3);
+}
+.slot.selected::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgba(255, 122, 26, 0.5);
+  border-radius: 4px;
+  pointer-events: none;
 }
 
-.slot-card:hover {
-  background: var(--panel-2);
+/* Chalk-style action button (RANDOM, SAVE, BACK) */
+.chalk-btn {
+  font-family: 'Permanent Marker', 'Bangers', sans-serif;
+  letter-spacing: 0.12em;
+  background: transparent;
+  border: 2px solid var(--cream);
+  color: var(--cream);
+  padding: 14px 22px;
+  border-radius: 8px;
+  font-size: 18px;
+  transition: all 0.12s ease;
+  position: relative;
 }
-
-.btn-primary {
-  background: var(--accent);
-  color: #1a0e00;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+.chalk-btn:hover:not(:disabled) {
+  background: rgba(245, 236, 214, 0.06);
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 rgba(245, 236, 214, 0.15);
 }
-
-.btn-primary:disabled {
-  opacity: 0.4;
+.chalk-btn:disabled {
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
-.btn-ghost {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
+/* Solid primary button (EQUIP, GERAR) */
+.solid-btn {
+  font-family: 'Bangers', 'Impact', sans-serif;
+  letter-spacing: 0.14em;
+  background: var(--accent);
+  color: #1a0e00;
+  border: 2px solid #1a0e00;
+  border-radius: 8px;
+  padding: 16px 28px;
+  font-size: 22px;
+  transition: all 0.12s ease;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+}
+.solid-btn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.45);
+}
+.solid-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+  transform: none;
+}
+
+/* Logo stamp: bold brush, slight rotation, dropshadow */
+.logo-stamp {
+  font-family: 'Bangers', 'Impact', sans-serif;
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  text-shadow:
+    3px 3px 0 rgba(0, 0, 0, 0.55),
+    -1px -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.logo-running {
+  color: var(--accent);
+  display: inline-block;
+  transform: rotate(-2deg);
+}
+
+/* Form input on dark board */
+.board-input {
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  padding: 12px 14px;
+  color: var(--cream);
+  font-family: 'Inter', sans-serif;
+}
+.board-input::placeholder {
+  color: var(--cream-dim);
+  font-family: 'Permanent Marker', sans-serif;
+  letter-spacing: 0.05em;
+}
+.board-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Placeholder icon background (used when iconUrl is missing) */
+.icon-placeholder {
+  background:
+    repeating-linear-gradient(45deg, rgba(245, 236, 214, 0.04) 0 6px, transparent 6px 12px);
 }

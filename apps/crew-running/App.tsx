@@ -50,13 +50,11 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleRandom = () => {
-    setLocked({});
-  };
+  const handleRandom = () => setLocked({});
 
   const handleGenerate = async () => {
     if (!photo) {
-      setError('Envie uma foto primeiro.');
+      setError('Envie uma selfie primeiro.');
       return;
     }
     setLoading(true);
@@ -100,73 +98,83 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 max-w-7xl mx-auto">
-      <header className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="display-font text-3xl md:text-4xl tracking-wider">
-            THE CREW <span className="text-[var(--accent)]">RUNNING</span>
-          </h1>
-          <p className="text-xs text-[var(--muted)] uppercase tracking-widest">Customize</p>
-        </div>
-        <button onClick={handleSignOut} className="text-xs text-[var(--muted)] hover:text-white">
-          trocar API key
-        </button>
-      </header>
+    <div className="min-h-screen bg-board">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-5 md:py-8">
+        <header className="flex items-start justify-between mb-6 md:mb-8">
+          <div>
+            <h1 className="logo-stamp text-4xl md:text-6xl text-[var(--cream)] leading-none">
+              THE CREW <span className="logo-running">RUNNING</span>
+            </h1>
+            <p className="chalk text-sm text-[var(--cream-dim)] tracking-[0.35em] mt-2">
+              — CUSTOMIZE
+            </p>
+          </div>
+          <button
+            onClick={handleSignOut}
+            className="chalk text-xs text-[var(--cream-dim)] hover:text-[var(--cream)] tracking-widest"
+          >
+            TROCAR API KEY
+          </button>
+        </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-4">
-        <div className="space-y-4">
-          <PhotoUpload photo={photo} onChange={setPhoto} />
-          <StylePicker selected={style} onSelect={setStyle} />
-          <WardrobePicker locked={locked} onToggle={handleToggle} />
+        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-5">
+          {/* SIDEBAR ESQUERDO */}
+          <div className="bg-paper rounded-lg border-2 border-[var(--line)] p-5 space-y-5">
+            <PhotoUpload photo={photo} onChange={setPhoto} />
+            <StylePicker selected={style} onSelect={setStyle} />
+            <WardrobePicker locked={locked} onToggle={handleToggle} />
+          </div>
 
-          <div className="flex gap-2">
-            <button onClick={handleRandom} className="btn-ghost flex-1 py-3 rounded-md text-sm">
-              RANDOM
-            </button>
-            <button
-              onClick={handleGenerate}
-              disabled={loading || !photo}
-              className="btn-primary flex-[2] py-3 rounded-md"
-            >
-              {loading ? 'GERANDO…' : 'GERAR SHEET 2×2'}
-            </button>
+          {/* PREVIEW DIREITO */}
+          <div className="space-y-5">
+            <SheetPreview
+              result={result}
+              loading={loading}
+              error={error}
+              onSave={handleSaveVariant}
+            />
+
+            {saved && (
+              <div className="bg-paper rounded-lg border-2 border-[var(--line)] p-5">
+                <h3 className="brush text-2xl chalk-underline mb-4">SEU PERSONAGEM</h3>
+                <div className="flex gap-4">
+                  <img
+                    src={saved.imageDataUrl}
+                    alt="saved"
+                    className="w-28 h-28 object-cover rounded-md border-2 border-[var(--line-strong)]"
+                  />
+                  <div className="chalk text-xs tracking-wide space-y-1 text-[var(--cream)]">
+                    <div>
+                      <span className="text-[var(--cream-dim)]">ESTILO: </span>
+                      {STYLES.find((s) => s.id === saved.styleId)?.label}
+                    </div>
+                    {(Object.keys(saved.slots) as SlotKey[]).map((slot) => (
+                      <div key={slot}>
+                        <span className="text-[var(--cream-dim)]">
+                          {slot.toUpperCase()}:{' '}
+                        </span>
+                        {WARDROBE[slot].find((it) => it.id === saved.slots[slot])?.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="space-y-4">
-          <SheetPreview
-            result={result}
-            loading={loading}
-            error={error}
-            onSave={handleSaveVariant}
-          />
-
-          {saved && (
-            <div className="slot-card p-4">
-              <h3 className="display-font text-xl tracking-wider text-[var(--accent)] mb-3">
-                SEU PERSONAGEM
-              </h3>
-              <div className="flex gap-3">
-                <img
-                  src={saved.imageDataUrl}
-                  alt="saved"
-                  className="w-24 h-24 object-cover rounded-md"
-                />
-                <div className="text-xs space-y-1">
-                  <div>
-                    <span className="text-[var(--muted)]">estilo: </span>
-                    {STYLES.find((s) => s.id === saved.styleId)?.label}
-                  </div>
-                  {(Object.keys(saved.slots) as SlotKey[]).map((slot) => (
-                    <div key={slot}>
-                      <span className="text-[var(--muted)]">{slot}: </span>
-                      {WARDROBE[slot].find((it) => it.id === saved.slots[slot])?.label}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+        {/* BOTTOM ACTION BAR */}
+        <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <button onClick={handleRandom} className="chalk-btn flex-1">
+            RANDOM
+          </button>
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !photo}
+            className="solid-btn flex-[2]"
+          >
+            {loading ? 'GERANDO…' : 'GERAR SHEET 2×2'}
+          </button>
         </div>
       </div>
     </div>

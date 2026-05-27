@@ -17,24 +17,30 @@ const cellRect: Record<0 | 1 | 2 | 3, React.CSSProperties> = {
 
 export const SheetPreview: React.FC<Props> = ({ result, loading, error, onSave }) => {
   return (
-    <div className="slot-card p-4 h-full flex flex-col">
-      <h3 className="display-font text-xl tracking-wider text-[var(--accent)] mb-3">PREVIEW</h3>
+    <div className="bg-paper rounded-lg border-2 border-[var(--line)] p-5 h-full flex flex-col">
+      <h3 className="brush text-3xl chalk-underline mb-4">PREVIEW</h3>
 
       {loading && (
-        <div className="flex-1 flex items-center justify-center text-[var(--muted)]">
-          gerando sheet 2×2…
+        <div className="flex-1 flex items-center justify-center">
+          <div className="chalk text-lg text-[var(--cream-dim)] tracking-widest animate-pulse">
+            GERANDO SHEET 2×2…
+          </div>
         </div>
       )}
 
       {error && !loading && (
-        <div className="flex-1 flex items-center justify-center text-red-400 text-sm px-4 text-center">
-          {error}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="chalk text-base text-[var(--accent)] tracking-wide text-center px-4 max-w-md">
+            {error}
+          </div>
         </div>
       )}
 
       {!loading && !error && !result && (
-        <div className="flex-1 flex items-center justify-center text-[var(--muted)] text-sm text-center px-6">
-          envie sua foto, escolha o estilo e clique GERAR
+        <div className="flex-1 flex items-center justify-center text-center px-6">
+          <div className="chalk text-base text-[var(--cream-dim)] tracking-wide leading-relaxed">
+            envie sua foto, escolha o estilo<br />e clique <span className="text-[var(--accent)]">GERAR</span>
+          </div>
         </div>
       )}
 
@@ -44,7 +50,7 @@ export const SheetPreview: React.FC<Props> = ({ result, loading, error, onSave }
             <img
               src={result.imageDataUrl}
               alt="character sheet"
-              className="w-full h-full object-cover rounded-md"
+              className="w-full h-full object-cover rounded-md border-2 border-[var(--line-strong)]"
             />
             {result.variants.map((v) => (
               <button
@@ -52,17 +58,17 @@ export const SheetPreview: React.FC<Props> = ({ result, loading, error, onSave }
                 onClick={() => onSave(v)}
                 className="absolute w-1/2 h-1/2 group"
                 style={cellRect[v.index]}
-                title={`Salvar look ${v.index + 1}`}
+                title={`Equipar look ${v.index + 1}`}
               >
-                <div className="absolute inset-0 m-1 rounded-md border-2 border-transparent group-hover:border-[var(--accent)] transition" />
-                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 bg-[var(--accent)] text-black text-[10px] font-bold px-2 py-1 rounded transition">
-                  SALVAR
+                <div className="absolute inset-0 m-2 rounded-md border-2 border-transparent group-hover:border-[var(--accent)] transition" />
+                <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition">
+                  <span className="solid-btn text-xs px-3 py-2">EQUIP</span>
                 </div>
               </button>
             ))}
           </div>
-          <p className="text-xs text-[var(--muted)] text-center">
-            clique no look favorito pra salvar
+          <p className="chalk text-xs text-[var(--cream-dim)] text-center tracking-widest">
+            CLIQUE NO LOOK FAVORITO PRA SALVAR
           </p>
         </div>
       )}

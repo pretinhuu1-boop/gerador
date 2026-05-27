@@ -8,8 +8,8 @@ type Props = {
 
 export const StylePicker: React.FC<Props> = ({ selected, onSelect }) => {
   return (
-    <div className="slot-card p-4">
-      <h3 className="display-font text-xl tracking-wider text-[var(--accent)] mb-3">ESTILO</h3>
+    <div>
+      <h3 className="brush text-2xl chalk-underline mb-3">ESTILO</h3>
       <div className="grid grid-cols-2 gap-2">
         {STYLES.map((s) => {
           const isSel = s.id === selected.id;
@@ -17,10 +17,12 @@ export const StylePicker: React.FC<Props> = ({ selected, onSelect }) => {
             <button
               key={s.id}
               onClick={() => onSelect(s)}
-              className={`slot-card p-3 text-left ${isSel ? 'selected' : ''}`}
+              className={`slot p-3 text-left ${isSel ? 'selected' : ''}`}
             >
-              <div className="text-sm font-bold">{s.label}</div>
-              <div className="text-xs text-[var(--muted)] mt-1">{s.description}</div>
+              <div className="chalk text-sm tracking-wide">{s.label}</div>
+              <div className="text-[11px] text-[var(--cream-dim)] mt-1 leading-tight">
+                {s.description}
+              </div>
             </button>
           );
         })}
