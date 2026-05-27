@@ -17,61 +17,66 @@ const cellRect: Record<0 | 1 | 2 | 3, React.CSSProperties> = {
 
 export const SheetPreview: React.FC<Props> = ({ result, loading, error, onSave }) => {
   return (
-    <div className="bg-paper rounded-lg border-2 border-[var(--line)] p-5 h-full flex flex-col">
-      <h3 className="brush text-3xl chalk-underline mb-4">PREVIEW</h3>
+    <div className="h-full flex flex-col">
+      <h3 className="section-label mb-4">PREVIEW</h3>
 
-      {loading && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="chalk text-lg text-[var(--cream-dim)] tracking-widest animate-pulse">
-            GERANDO SHEET 2×2…
+      <div className="flex-1 tile p-3 min-h-[420px] flex flex-col">
+        {loading && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="t-brush text-xl text-[var(--bone-soft)] tracking-widest animate-pulse">
+              GERANDO SHEET 2×2…
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {error && !loading && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="chalk text-base text-[var(--accent)] tracking-wide text-center px-4 max-w-md">
-            {error}
+        {error && !loading && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="t-brush text-base text-[var(--spray-orange-bright)] text-center px-4 max-w-md">
+              {error}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {!loading && !error && !result && (
-        <div className="flex-1 flex items-center justify-center text-center px-6">
-          <div className="chalk text-base text-[var(--cream-dim)] tracking-wide leading-relaxed">
-            envie sua foto, escolha o estilo<br />e clique <span className="text-[var(--accent)]">GERAR</span>
+        {!loading && !error && !result && (
+          <div className="flex-1 flex items-center justify-center text-center px-6">
+            <div className="t-brush text-base text-[var(--bone-soft)] leading-relaxed">
+              envie sua foto, escolha o estilo<br />e clique{' '}
+              <span className="text-[var(--spray-orange-bright)]">GERAR</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {result && !loading && (
-        <div className="flex-1 flex flex-col gap-3">
-          <div className="relative w-full aspect-square">
-            <img
-              src={result.imageDataUrl}
-              alt="character sheet"
-              className="w-full h-full object-cover rounded-md border-2 border-[var(--line-strong)]"
-            />
-            {result.variants.map((v) => (
-              <button
-                key={v.index}
-                onClick={() => onSave(v)}
-                className="absolute w-1/2 h-1/2 group"
-                style={cellRect[v.index]}
-                title={`Equipar look ${v.index + 1}`}
-              >
-                <div className="absolute inset-0 m-2 rounded-md border-2 border-transparent group-hover:border-[var(--accent)] transition" />
-                <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition">
-                  <span className="solid-btn text-xs px-3 py-2">EQUIP</span>
-                </div>
-              </button>
-            ))}
+        {result && !loading && (
+          <div className="flex-1 flex flex-col gap-3">
+            <div className="relative w-full aspect-square">
+              <img
+                src={result.imageDataUrl}
+                alt="character sheet"
+                className="w-full h-full object-cover rounded-md border-[3px] border-[var(--white)]"
+              />
+              {result.variants.map((v) => (
+                <button
+                  key={v.index}
+                  onClick={() => onSave(v)}
+                  className="absolute w-1/2 h-1/2 group"
+                  style={cellRect[v.index]}
+                  title={`Equipar look ${v.index + 1}`}
+                >
+                  <div className="absolute inset-0 m-2 rounded-md border-[3px] border-transparent group-hover:border-[var(--spray-orange-bright)] transition" />
+                  <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition">
+                    <span className="btn-solid" style={{ fontSize: 14, padding: '8px 14px' }}>
+                      EQUIP
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <p className="t-brush text-xs text-[var(--bone-soft)] text-center tracking-widest">
+              clique no look favorito pra salvar
+            </p>
           </div>
-          <p className="chalk text-xs text-[var(--cream-dim)] text-center tracking-widest">
-            CLIQUE NO LOOK FAVORITO PRA SALVAR
-          </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

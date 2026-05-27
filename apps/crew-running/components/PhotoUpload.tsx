@@ -21,13 +21,10 @@ export const PhotoUpload: React.FC<Props> = ({ photo, onChange }) => {
 
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-2">
-        <h3 className="brush text-2xl chalk-underline">SUA FOTO</h3>
+      <div className="flex items-end justify-between mb-3">
+        <h3 className="section-label">SUA FOTO</h3>
         {photo && (
-          <button
-            onClick={() => onChange(null)}
-            className="chalk text-xs text-[var(--cream-dim)] hover:text-[var(--cream)] tracking-widest"
-          >
+          <button onClick={() => onChange(null)} className="btn-link">
             REMOVER
           </button>
         )}
@@ -36,15 +33,18 @@ export const PhotoUpload: React.FC<Props> = ({ photo, onChange }) => {
         <img
           src={photo.previewUrl}
           alt="upload"
-          className="w-full aspect-square object-cover rounded-md border-2 border-[var(--line-strong)]"
+          className="w-full aspect-square object-cover rounded-md border-[3px] border-[var(--white)]"
         />
       ) : (
         <button
           onClick={() => inputRef.current?.click()}
-          className="w-full aspect-square rounded-md border-2 border-dashed border-[var(--line)] flex flex-col items-center justify-center text-[var(--cream-dim)] hover:border-[var(--accent)] hover:text-[var(--cream)] transition"
+          className="tile w-full aspect-square flex flex-col items-center justify-center text-[var(--bone-soft)]"
+          style={{ borderStyle: 'dashed', borderWidth: 3, borderColor: 'var(--gray-line)' }}
         >
-          <span className="text-4xl mb-1">+</span>
-          <span className="chalk text-xs tracking-widest">ENVIAR SELFIE</span>
+          <span className="text-5xl mb-2 t-bowlby text-[var(--white)]">+</span>
+          <span className="t-brush text-sm tracking-widest text-[var(--bone-soft)]">
+            ENVIAR SELFIE
+          </span>
         </button>
       )}
       <input

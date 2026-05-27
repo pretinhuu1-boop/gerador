@@ -18,8 +18,8 @@ const ItemTile: React.FC<{
   return (
     <button
       onClick={onClick}
-      className={`slot aspect-square flex flex-col items-center justify-center text-center p-1 ${
-        isLocked ? 'selected' : ''
+      className={`tile aspect-square flex flex-col items-center justify-center text-center ${
+        isLocked ? 'is-selected' : ''
       }`}
       title={item.prompt}
     >
@@ -27,12 +27,12 @@ const ItemTile: React.FC<{
         <img
           src={item.iconUrl}
           alt={item.label}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain p-1"
           onError={() => setImgFailed(true)}
         />
       ) : (
-        <div className="icon-placeholder w-full h-full flex items-center justify-center px-1">
-          <span className="chalk text-[10px] leading-tight tracking-wide text-[var(--cream)]">
+        <div className="tile-placeholder w-full h-full flex items-center justify-center px-1">
+          <span className="t-brush text-[11px] leading-tight text-[var(--bone)]">
             {item.label}
           </span>
         </div>
@@ -47,15 +47,15 @@ export const WardrobePicker: React.FC<Props> = ({ locked, onToggle }) => {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-3">
-        <h3 className="brush text-2xl chalk-underline">GUARDA-ROUPA</h3>
-        <span className="text-[11px] text-[var(--cream-dim)] italic">
+        <h3 className="section-label">GUARDA-ROUPA</h3>
+        <span className="t-brush text-[11px] text-[var(--gray-text)]">
           trave o que quiser fixar
         </span>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {slots.map((slot) => (
           <div key={slot}>
-            <div className="chalk text-xs tracking-[0.2em] text-[var(--cream-dim)] mb-1 uppercase">
+            <div className="t-anton text-sm text-[var(--bone-soft)] mb-2">
               {SLOT_LABELS[slot]}
             </div>
             <div className="grid grid-cols-4 gap-2">

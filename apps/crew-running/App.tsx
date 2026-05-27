@@ -98,35 +98,29 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-board">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-5 md:py-8">
-        <header className="flex items-start justify-between mb-6 md:mb-8">
+    <div className="app-shell min-h-screen">
+      <div className="max-w-7xl mx-auto px-5 md:px-8 py-6 md:py-10">
+        <header className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="logo-stamp text-4xl md:text-6xl text-[var(--cream)] leading-none">
-              THE CREW <span className="logo-running">RUNNING</span>
-            </h1>
-            <p className="chalk text-sm text-[var(--cream-dim)] tracking-[0.35em] mt-2">
-              — CUSTOMIZE
-            </p>
+            <div className="brand-the-crew">THE CREW</div>
+            <div className="brand-running">RUNNING</div>
+            <h1 className="title-customize mt-3">CUSTOMIZE</h1>
           </div>
-          <button
-            onClick={handleSignOut}
-            className="chalk text-xs text-[var(--cream-dim)] hover:text-[var(--cream)] tracking-widest"
-          >
+          <button onClick={handleSignOut} className="btn-link">
             TROCAR API KEY
           </button>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-5">
-          {/* SIDEBAR ESQUERDO */}
-          <div className="bg-paper rounded-lg border-2 border-[var(--line)] p-5 space-y-5">
+        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 mt-8">
+          {/* LEFT — controls */}
+          <div className="space-y-7">
             <PhotoUpload photo={photo} onChange={setPhoto} />
             <StylePicker selected={style} onSelect={setStyle} />
             <WardrobePicker locked={locked} onToggle={handleToggle} />
           </div>
 
-          {/* PREVIEW DIREITO */}
-          <div className="space-y-5">
+          {/* RIGHT — preview */}
+          <div className="space-y-6">
             <SheetPreview
               result={result}
               loading={loading}
@@ -135,22 +129,22 @@ export const App: React.FC = () => {
             />
 
             {saved && (
-              <div className="bg-paper rounded-lg border-2 border-[var(--line)] p-5">
-                <h3 className="brush text-2xl chalk-underline mb-4">SEU PERSONAGEM</h3>
+              <div className="tile p-5">
+                <h3 className="section-label mb-4">SEU PERSONAGEM</h3>
                 <div className="flex gap-4">
                   <img
                     src={saved.imageDataUrl}
                     alt="saved"
-                    className="w-28 h-28 object-cover rounded-md border-2 border-[var(--line-strong)]"
+                    className="w-28 h-28 object-cover rounded-md border-[3px] border-[var(--white)]"
                   />
-                  <div className="chalk text-xs tracking-wide space-y-1 text-[var(--cream)]">
+                  <div className="t-brush text-sm space-y-1 text-[var(--bone)]">
                     <div>
-                      <span className="text-[var(--cream-dim)]">ESTILO: </span>
+                      <span className="text-[var(--gray-text)]">ESTILO: </span>
                       {STYLES.find((s) => s.id === saved.styleId)?.label}
                     </div>
                     {(Object.keys(saved.slots) as SlotKey[]).map((slot) => (
                       <div key={slot}>
-                        <span className="text-[var(--cream-dim)]">
+                        <span className="text-[var(--gray-text)]">
                           {slot.toUpperCase()}:{' '}
                         </span>
                         {WARDROBE[slot].find((it) => it.id === saved.slots[slot])?.label}
@@ -164,16 +158,16 @@ export const App: React.FC = () => {
         </div>
 
         {/* BOTTOM ACTION BAR */}
-        <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-          <button onClick={handleRandom} className="chalk-btn flex-1">
+        <div className="mt-8 flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <button onClick={handleRandom} className="btn-chalk flex-1">
             RANDOM
           </button>
           <button
             onClick={handleGenerate}
             disabled={loading || !photo}
-            className="solid-btn flex-[2]"
+            className="btn-solid flex-[2]"
           >
-            {loading ? 'GERANDO…' : 'GERAR SHEET 2×2'}
+            {loading ? 'GERANDO…' : 'GERAR'}
           </button>
         </div>
       </div>
