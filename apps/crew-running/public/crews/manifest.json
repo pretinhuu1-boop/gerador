@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-05-27T18:16:02.264Z",
+  "source": "Codex image generation, street-v2 prompts from vault",
+  "crews": [
+    {
+      "slug": "downtown-rush",
+      "name": "Downtown Rush",
+      "zone": "Centro",
+      "mission": "Rush Hour Run",
+      "accent": "#C9302C",
+      "secondary": "#F4A52C",
+      "base": "/crews/downtown-rush"
+    },
+    {
+      "slug": "north-breakers",
+      "name": "North Breakers",
+      "zone": "Norte",
+      "mission": "Break the Climb",
+      "accent": "#2EC4B6",
+      "secondary": "#7BE82C",
+      "base": "/crews/north-breakers"
+    },
+    {
+      "slug": "south-striders",
+      "name": "South Striders",
+      "zone": "Sul",
+      "mission": "South Long Run",
+      "accent": "#4DA3B5",
+      "secondary": "#7BE82C",
+      "base": "/crews/south-striders"
+    },
+    {
+      "slug": "east-burners",
+      "name": "East Burners",
+      "zone": "Leste",
+      "mission": "Heat the Block",
+      "accent": "#E85D2C",
+      "secondary": "#F4A52C",
+      "base": "/crews/east-burners"
+    },
+    {
+      "slug": "west-flow",
+      "name": "West Flow",
+      "zone": "Oeste",
+      "mission": "Open the Flow",
+      "accent": "#2EC4B6",
+      "secondary": "#F4A52C",
+      "base": "/crews/west-flow"
+    }
+  ]
+}
