@@ -7607,5 +7607,5 @@ button.map-stage-zone-title:hover {
 
 .badge-grid-hint {
   font-size: 11px;
-  opacity: 0.75;
+  color: var(--bone-soft);
 }

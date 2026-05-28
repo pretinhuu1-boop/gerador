@@ -8,6 +8,7 @@ import {
   breakdownRunXp,
   bumpStreak,
   isoWeekKey,
+  type BadgeId,
   type RunXpBreakdown,
   type RunnerProgress,
   type StreakBumpResult,
@@ -22,7 +23,7 @@ export interface PendingSummary {
   breakdown: RunXpBreakdown;
   streak: StreakBumpResult;
   nextProgress: RunnerProgress;
-  newlyUnlocked?: import('../data/gamification').BadgeId[];
+  newlyUnlocked?: BadgeId[];
 }
 
 export interface RunController {
@@ -106,7 +107,7 @@ export const useRunController = (
     const priorHistory = loadRunHistoryStats();
     const now = new Date();
     const newlyUnlocked = evaluateBadgeUnlocks({
-      progress: runnerProgress,
+      progress: streak.next,
       history: priorHistory,
       snapshot: snap,
       breakdown,
