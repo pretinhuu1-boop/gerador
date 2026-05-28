@@ -84,6 +84,13 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     return map;
   }, [friendNotes.notes]);
 
+  // Decay applied here is defensive cover for in-memory drift —
+  // runnerProgressStorage.getRunnerProgress already decays on read and resets
+  // inkUpdatedAt, so for hydrated progress the days delta is ~0 and the call
+  // is a no-op (handled by applyInkDecay's days===0 early return). The pass
+  // matters when progress arrives from a source that bypasses storage
+  // hydration: cloud sync, fixtures, or the in-memory copy held by
+  // useRunController during a long session.
   const ownershipByZone = useMemo(
     () =>
       computeOwnershipFromInk(
