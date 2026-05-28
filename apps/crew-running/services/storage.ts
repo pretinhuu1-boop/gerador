@@ -35,13 +35,19 @@ const readItem = (key: string): string | null => {
   }
 };
 
-const writeItem = (key: string, value: string): void => {
-  if (!canUseStorage()) return;
+const writeItem = (key: string, value: string): boolean => {
+  if (!canUseStorage()) return false;
 
   try {
     window.localStorage.setItem(key, value);
-  } catch {
-    // Some browsers block storage in private or restricted contexts.
+    return true;
+  } catch (err) {
+    // Surface quota / private mode failures so callers can detect lost writes.
+    // Common causes: private browsing, full storage, restricted contexts.
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn(`[storage] writeItem failed for ${key}:`, err);
+    }
+    return false;
   }
 };
 

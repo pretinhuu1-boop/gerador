@@ -27,8 +27,11 @@ export const FeedPost: React.FC<Props> = ({ event, savedCharacter }) => {
   } as React.CSSProperties;
   const runnerType = getRunnerTypeById(event.payload.runnerTypeId);
   const showLook = spec.showLookCard && savedCharacter?.imageDataUrl;
+  const ariaLabel = event.timestamp > 0
+    ? `${spec.headline} em ${dateFmt.format(event.timestamp)}`
+    : spec.headline;
   return (
-    <li className="voce-feed-post mission-ticket" style={style}>
+    <li className="voce-feed-post mission-ticket" style={style} aria-label={ariaLabel}>
       <span className="voce-feed-post__swatch" aria-hidden />
       <div className="voce-feed-post__head">
         <span className="voce-feed-post__headline">{spec.headline}</span>

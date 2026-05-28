@@ -60,7 +60,7 @@ export const RunnerPanel: React.FC<Props> = ({
     };
   }, [hasEvents, progress?.selectedCrewSlug]);
   return (
-    <div className="voce-panel">
+    <section className="voce-panel" aria-label="Aba VOCÊ — perfil e linha do tempo de identidade">
       <FeedHeader
         runnerName={runnerName}
         crew={crew}
@@ -84,6 +84,6 @@ export const RunnerPanel: React.FC<Props> = ({
       <div className="voce-panel__actions">
         <MapSocialHookButton />
       </div>
-    </div>
+    </section>
   );
 };
