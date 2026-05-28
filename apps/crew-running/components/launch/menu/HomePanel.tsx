@@ -16,6 +16,8 @@ type Props = {
   runnerStatusLabel: string;
   onShowRunnerPanel: () => void;
   onShowCrewsPanel: () => void;
+  onOpenWardrobe: () => void;
+  crewLocked?: boolean;
 };
 
 export const HomePanel: React.FC<Props> = ({
@@ -29,6 +31,8 @@ export const HomePanel: React.FC<Props> = ({
   runnerStatusLabel,
   onShowRunnerPanel,
   onShowCrewsPanel,
+  onOpenWardrobe,
+  crewLocked = false,
 }) => (
   <>
     <div className="main-menu__panel-head">
@@ -68,12 +72,18 @@ export const HomePanel: React.FC<Props> = ({
     <div className="main-menu__panel-actions main-menu__panel-actions--secondary">
       {runnerSaved && (
         <CartridgeButton variant="chalk" className="game-command" onClick={onShowRunnerPanel}>
-          VER RUNNER
+          VER VOCÊ
         </CartridgeButton>
       )}
-      <CartridgeButton variant="chalk" className="game-command" onClick={onShowCrewsPanel}>
-        TROCAR CREW
+      <CartridgeButton variant="chalk" className="game-command" onClick={onOpenWardrobe}>
+        GUARDA ROUPA
       </CartridgeButton>
+      <CartridgeButton variant="chalk" className="game-command" onClick={onShowCrewsPanel}>
+        CREWS PILOTO
+      </CartridgeButton>
+      {crewLocked && (
+        <span className="main-menu__lock-note">CREW BLOQUEADA NO MVP</span>
+      )}
     </div>
   </>
 );

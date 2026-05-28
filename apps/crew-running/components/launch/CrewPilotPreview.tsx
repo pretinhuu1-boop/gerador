@@ -6,15 +6,23 @@ import { CrewBadge } from '../CrewBadge';
 type Props = {
   activeSlug?: string;
   onSelect?: (slug: string) => void;
+  onOpenActive?: (slug: string) => void;
+  disabled?: boolean;
 };
 
-export const CrewPilotPreview: React.FC<Props> = ({ activeSlug, onSelect }) => {
+export const CrewPilotPreview: React.FC<Props> = ({
+  activeSlug,
+  onSelect,
+  onOpenActive,
+  disabled = false,
+}) => {
   const reducedMotion = useReducedMotion();
 
   return (
     <div className="crew-pilot-preview">
       {CREWS.map((crew, index) => {
         const active = crew.slug === activeSlug;
+        const itemDisabled = disabled && !active;
         const style = {
           '--crew-accent': crew.accent,
           '--crew-secondary': crew.secondary,
@@ -27,14 +35,23 @@ export const CrewPilotPreview: React.FC<Props> = ({ activeSlug, onSelect }) => {
             className={`crew-pilot-preview__item crew-patch ${active ? 'is-active' : ''}`}
             style={style}
             type="button"
-            aria-label={`${active ? 'Crew ativa' : 'Selecionar crew'} ${crew.zone} ${crew.name}`}
+            aria-label={`${itemDisabled ? 'Crew bloqueada' : active && disabled ? 'Abrir sede da crew' : active ? 'Crew ativa' : 'Selecionar crew'} ${crew.zone} ${crew.name}`}
             aria-pressed={active}
-            onClick={() => onSelect?.(crew.slug)}
+            aria-disabled={itemDisabled}
+            disabled={itemDisabled}
+            onClick={() => {
+              if (disabled && active) {
+                onOpenActive?.(crew.slug);
+                return;
+              }
+              if (disabled) return;
+              onSelect?.(crew.slug);
+            }}
             initial={reducedMotion ? false : { opacity: 0, x: 14 }}
             animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
             transition={{ duration: 0.22, delay: index * 0.035 }}
-            whileHover={reducedMotion ? undefined : { x: 5 }}
-            whileTap={reducedMotion ? undefined : { scale: 0.98 }}
+            whileHover={itemDisabled || reducedMotion ? undefined : { x: 5 }}
+            whileTap={itemDisabled || reducedMotion ? undefined : { scale: 0.98 }}
           >
             {active && (
               <motion.span

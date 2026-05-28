@@ -33,12 +33,15 @@ const memoryStorage = {
 
 // Import after shim so launchStorage uses our window stub.
 const {
+  clearCreatorDraft,
   clearActiveRun,
   getActiveRun,
+  getCreatorDraft,
   getCreatorTab,
   getMapLayerPrefs,
   getRunnerProgress,
   saveActiveRun,
+  saveCreatorDraft,
   saveMapLayerPrefs,
   saveRunnerProgress,
   setCreatorTab,
@@ -222,5 +225,76 @@ describe('Creator tab persistence', () => {
   it('ignores corrupt tab value', () => {
     window.localStorage.setItem('crewCreatorTab', 'garbage');
     expect(getCreatorTab()).toBeNull();
+  });
+});
+
+describe('Creator draft persistence', () => {
+  it('persists and restores a sanitized creator draft', () => {
+    saveCreatorDraft({
+      photo: {
+        base64: 'abc',
+        mimeType: 'image/jpeg',
+        previewUrl: 'data:image/jpeg;base64,abc',
+      },
+      profile: {
+        name: '  Nina QA  ',
+        sex: 'female',
+        heightCm: 171.4,
+        weightKg: 62.2,
+        personality: 'ritmo frio',
+      },
+      runnerTypeId: 'night-run',
+      locked: {
+        top: 'top_tank_black',
+        accessory: 'acc_blank_bib',
+      },
+    });
+
+    const draft = getCreatorDraft();
+    expect(draft?.photo?.mimeType).toBe('image/jpeg');
+    expect(draft?.profile.name).toBe('Nina QA');
+    expect(draft?.profile.heightCm).toBe(171);
+    expect(draft?.runnerTypeId).toBe('night-run');
+    expect(draft?.locked).toEqual({
+      top: 'top_tank_black',
+      accessory: 'acc_blank_bib',
+    });
+  });
+
+  it('drops invalid values from corrupt creator drafts', () => {
+    window.localStorage.setItem(
+      'crewCreatorDraft',
+      JSON.stringify({
+        photo: { base64: '', mimeType: 'text/html', previewUrl: 'javascript:bad' },
+        profile: { name: 'Runner', sex: 'invalid', heightCm: 999, weightKg: -1 },
+        runnerTypeId: 'bad-type',
+        locked: { hair: 'legacy', shoes: 'sho_runners_blk' },
+      }),
+    );
+
+    const draft = getCreatorDraft();
+    expect(draft?.photo).toBeNull();
+    expect(draft?.profile.sex).toBe('female');
+    expect(draft?.profile.heightCm).toBe(230);
+    expect(draft?.profile.weightKg).toBe(35);
+    expect(draft?.runnerTypeId).toBe('sprint');
+    expect(draft?.locked).toEqual({ shoes: 'sho_runners_blk' });
+  });
+
+  it('clears creator draft', () => {
+    saveCreatorDraft({
+      photo: null,
+      profile: {
+        name: 'Nina',
+        sex: 'female',
+        heightCm: 170,
+        weightKg: 70,
+        personality: '',
+      },
+      runnerTypeId: 'sprint',
+      locked: {},
+    });
+    clearCreatorDraft();
+    expect(getCreatorDraft()).toBeNull();
   });
 });

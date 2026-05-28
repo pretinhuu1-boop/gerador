@@ -13,7 +13,7 @@ type Props = {
   runnerType: RunnerType;
   runnerSaved: boolean;
   guideDone: boolean;
-  primaryAction: () => void;
+  onOpenGuide: () => void;
   onShowRunnerPanel: () => void;
   reducedMotion: boolean | null;
 };
@@ -26,7 +26,7 @@ export const Passport: React.FC<Props> = ({
   runnerType,
   runnerSaved,
   guideDone,
-  primaryAction,
+  onOpenGuide,
   onShowRunnerPanel,
   reducedMotion,
 }) => {
@@ -43,13 +43,13 @@ export const Passport: React.FC<Props> = ({
   const passportStatusLabel = runnerSaved
     ? 'IDENTIDADE SALVA'
     : guideDone
-      ? 'IDENTIDADE ABERTA'
-      : 'IDENTIDADE PENDENTE';
-  const passportTitle = runnerSaved ? runnerName : guideDone ? 'Monte seu runner' : 'Runner pendente';
+      ? 'MAPA LIBERADO'
+      : 'SINAL PENDENTE';
+  const passportTitle = runnerSaved ? runnerName : guideDone ? 'Entrar no mapa' : 'Runner pendente';
   const passportCopy = runnerSaved
     ? `Perfil ligado a ${passportCrew.name}. O QG da crew fica ao lado; aqui fica tua ficha individual.`
     : guideDone
-      ? `O QG de ${activeCrew.name} liberou teu slot. Monte look, selfie e equipamento para salvar a identidade.`
+      ? `O QG de ${activeCrew.name} ja liberou a gamificacao. A identidade individual fica como ajuste secundario.`
       : `${activeCrew.name} abriu o sinal. Complete o guia para liberar tua ficha de corredor.`;
   const passportStyle = {
     '--crew-accent': passportCrew.accent,
@@ -117,13 +117,15 @@ export const Passport: React.FC<Props> = ({
               <img key={member} src={member} alt="" />
             ))}
           </div>
-          <button
-            className="main-menu__passport-action game-command"
-            type="button"
-            onClick={runnerSaved ? onShowRunnerPanel : primaryAction}
-          >
-            {runnerSaved ? 'VER FICHA' : guideDone ? 'MONTAR' : 'ABRIR GUIA'}
-          </button>
+          {(runnerSaved || !guideDone) && (
+            <button
+              className="main-menu__passport-action game-command"
+              type="button"
+              onClick={runnerSaved ? onShowRunnerPanel : onOpenGuide}
+            >
+              {runnerSaved ? 'VER FICHA' : 'ABRIR GUIA'}
+            </button>
+          )}
         </div>
       </div>
     </div>

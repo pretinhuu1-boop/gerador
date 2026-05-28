@@ -24,7 +24,12 @@ export const LookTab: React.FC<Props> = ({
   mixCount, onRandomize,
   canCreate, loading, onCreate,
 }) => (
-  <section role="tabpanel" aria-labelledby="creator-tab-look" className="runner-tab__section">
+  <section
+    id="creator-panel-look"
+    role="tabpanel"
+    aria-labelledby="creator-tab-look"
+    className="runner-tab__section"
+  >
     <RunnerTypePicker selected={runnerType} onSelect={onSelectType} />
     <WardrobePicker locked={locked} onToggle={onToggleSlot} />
     <div className="runner-tab__action-bar" aria-label="Comandos do runner">
@@ -50,7 +55,7 @@ export const LookTab: React.FC<Props> = ({
         disabled={!canCreate}
         loading={loading}
       >
-        {loading ? 'CREW STUDIO...' : 'CRIAR RUNNER'}
+        {loading ? 'CRIANDO RUNNER...' : 'CRIAR RUNNER'}
       </CartridgeButton>
     </div>
   </section>

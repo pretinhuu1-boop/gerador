@@ -117,6 +117,11 @@ describe('MapStage', () => {
     });
     expect(screen.getByRole('alert')).toBeTruthy();
     expect(screen.getByRole('button', { name: /TENTAR DE NOVO/i })).toBeTruthy();
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'FECHAR' }));
+    });
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(runTracker.getSnapshot().permissionDenied).toBe(false);
   });
 
   it('MS8: discard summary closes modal and resets tracker', () => {

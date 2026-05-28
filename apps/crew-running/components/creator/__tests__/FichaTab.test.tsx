@@ -90,4 +90,43 @@ describe('FichaTab', () => {
     );
     expect(screen.getByText(/Escolhe teu look/i)).toBeInTheDocument();
   });
+
+  it('prioritizes a fresh generation result over an existing saved passport', () => {
+    const result: GenerateResult = {
+      imageDataUrl: 'data:image/png;base64,abc',
+      variants: [
+        { index: 0, slots: { top: { id: 'a', label: 'A', prompt: '', iconUrl: '' }, bottom: { id: 'b', label: 'B', prompt: '', iconUrl: '' }, shoes: { id: 'c', label: 'C', prompt: '', iconUrl: '' }, accessory: { id: 'd', label: 'D', prompt: '', iconUrl: '' } } },
+      ] as any,
+    };
+
+    render(
+      <FichaTab
+        crew={crew}
+        hasPhoto={true}
+        hasName={true}
+        runnerSaved={true}
+        savedCharacter={{
+          imageDataUrl: 'data:image/png;base64,iVBORw0KGgo=',
+          profile: { name: 'NINA', sex: 'female', heightCm: 170, weightKg: 70, personality: '' },
+          crewSlug: crew.slug,
+          runnerTypeId: 'sprint',
+          slots: { top: 'a', bottom: 'b', shoes: 'c', accessory: 'd' },
+          savedAt: Date.now(),
+        }}
+        savedAtLabel="28/05"
+        runnerName="NINA"
+        runnerTypeLabel="Sprint"
+        passportStyle={{}}
+        result={result}
+        loading={false}
+        error={null}
+        savingVariantIndex={null}
+        onSaveVariant={() => {}}
+        onAdjust={() => {}}
+      />
+    );
+
+    expect(screen.getByText(/Escolhe teu look/i)).toBeInTheDocument();
+    expect(screen.queryByText(/IDENTIDADE SALVA/)).not.toBeInTheDocument();
+  });
 });

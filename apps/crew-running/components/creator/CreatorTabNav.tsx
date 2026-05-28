@@ -36,9 +36,11 @@ export function CreatorTabNav<Id extends string>({ tabs, active, onSelect }: Pro
       {tabs.map((tab) => (
         <button
           key={tab.id}
+          id={`creator-tab-${tab.id}`}
           role="tab"
           type="button"
           aria-selected={tab.id === active}
+          aria-controls={`creator-panel-${tab.id}`}
           tabIndex={tab.id === active ? 0 : -1}
           className={`runner-tab__nav-item ${tab.id === active ? 'is-active' : ''}`}
           onClick={() => handleClick(tab.id)}

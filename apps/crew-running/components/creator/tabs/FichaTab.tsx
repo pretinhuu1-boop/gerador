@@ -33,9 +33,30 @@ export const FichaTab: React.FC<Props> = ({
   result, loading, error, savingVariantIndex, onSaveVariant,
   onAdjust,
 }) => {
+  if (result && !loading) {
+    return (
+      <section
+        id="creator-panel-ficha"
+        role="tabpanel"
+        aria-labelledby="creator-tab-ficha"
+        className="runner-tab__section"
+      >
+        <h3 className="section-label">Escolhe teu look</h3>
+        <SheetPreview
+          result={result}
+          loading={loading}
+          error={error}
+          savingVariantIndex={savingVariantIndex}
+          onSave={onSaveVariant}
+        />
+      </section>
+    );
+  }
+
   if (runnerSaved && savedCharacter) {
     return (
       <section
+        id="creator-panel-ficha"
         role="tabpanel"
         aria-labelledby="creator-tab-ficha"
         className="runner-tab__section runner-tab__passport"
@@ -54,31 +75,12 @@ export const FichaTab: React.FC<Props> = ({
         <div className="runner-tab__passport-grid">
           <span>CREW</span><strong>{crew.zone}</strong>
           <span>TIPO</span><strong>{runnerTypeLabel}</strong>
-          <span>LOOK</span><strong>READY</strong>
+          <span>LOOK</span><strong>SALVO</strong>
           <span>ID</span><strong>{savedAtLabel}</strong>
         </div>
         <CartridgeButton variant="chalk" className="game-command" onClick={onAdjust}>
           AJUSTAR RUNNER
         </CartridgeButton>
-      </section>
-    );
-  }
-
-  if (result && !loading) {
-    return (
-      <section
-        role="tabpanel"
-        aria-labelledby="creator-tab-ficha"
-        className="runner-tab__section"
-      >
-        <h3 className="section-label">Escolhe teu look</h3>
-        <SheetPreview
-          result={result}
-          loading={loading}
-          error={error}
-          savingVariantIndex={savingVariantIndex}
-          onSave={onSaveVariant}
-        />
       </section>
     );
   }
@@ -92,6 +94,7 @@ export const FichaTab: React.FC<Props> = ({
 
   return (
     <section
+      id="creator-panel-ficha"
       role="tabpanel"
       aria-labelledby="creator-tab-ficha"
       className="runner-tab__section runner-tab__checklist"

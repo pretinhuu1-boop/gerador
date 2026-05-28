@@ -10,7 +10,12 @@ type Props = {
 };
 
 export const FotoTab: React.FC<Props> = ({ photo, onChange }) => (
-  <section role="tabpanel" aria-labelledby="creator-tab-foto" className="runner-tab__section">
+  <section
+    id="creator-panel-foto"
+    role="tabpanel"
+    aria-labelledby="creator-tab-foto"
+    className="runner-tab__section"
+  >
     <PhotoUpload photo={photo} onChange={onChange} />
   </section>
 );

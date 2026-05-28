@@ -11,6 +11,19 @@
 //   - mapLayerStorage.ts (UI layer toggles)
 //   - activeRunStorage.ts (in-progress GPS run, with privacy note)
 import { canUseStorage } from './storageBase';
+import {
+  DEFAULT_RUNNER_PROFILE,
+  RUNNER_SEX_OPTIONS,
+  normalizeRunnerProfile,
+  type RunnerProfile,
+  type RunnerSex,
+} from '../data/runnerProfile';
+import {
+  DEFAULT_RUNNER_TYPE,
+  RUNNER_TYPES,
+  type RunnerTypeId,
+} from '../data/runnerTypes';
+import { SLOT_KEYS, type SlotKey } from '../data/wardrobe';
 
 export type LaunchProgress = {
   consoleBootSeen: boolean;
@@ -36,6 +49,7 @@ const STORAGE_KEYS = {
   onboardingComplete: 'crewOnboardingComplete',
   runnerCustomized: 'crewRunnerCustomized',
   creatorTab: 'crewCreatorTab',
+  creatorDraft: 'crewCreatorDraft',
 } as const;
 
 const LEGACY_BOOT_KEY = 'crewBootSeen';
@@ -71,6 +85,15 @@ const writeString = (key: string, value: string): void => {
   if (!canUseStorage()) return;
   try {
     window.localStorage.setItem(key, value);
+  } catch {
+    // Some browsers block storage in private or restricted contexts.
+  }
+};
+
+const removeKey = (key: string): void => {
+  if (!canUseStorage()) return;
+  try {
+    window.localStorage.removeItem(key);
   } catch {
     // Some browsers block storage in private or restricted contexts.
   }
@@ -180,6 +203,98 @@ export const getCreatorTab = (): CreatorTabId | null => {
 
 export const setCreatorTab = (tab: CreatorTabId): void =>
   writeString(STORAGE_KEYS.creatorTab, tab);
+
+export type CreatorDraftPhoto = {
+  base64: string;
+  mimeType: string;
+  previewUrl: string;
+};
+
+export type CreatorDraft = {
+  photo: CreatorDraftPhoto | null;
+  profile: RunnerProfile;
+  runnerTypeId: RunnerTypeId;
+  locked: Partial<Record<SlotKey, string>>;
+};
+
+const VALID_RUNNER_SEX = new Set<RunnerSex>(
+  RUNNER_SEX_OPTIONS.map((option) => option.value),
+);
+const VALID_RUNNER_TYPE_IDS = new Set<RunnerTypeId>(
+  RUNNER_TYPES.map((type) => type.id),
+);
+
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+
+const parseCreatorDraftPhoto = (value: unknown): CreatorDraftPhoto | null => {
+  if (!isObjectRecord(value)) return null;
+  const { base64, mimeType, previewUrl } = value;
+  if (typeof base64 !== 'string' || base64.length === 0) return null;
+  if (typeof mimeType !== 'string' || !mimeType.startsWith('image/')) return null;
+  if (typeof previewUrl !== 'string' || !previewUrl.startsWith('data:image/')) return null;
+  return { base64, mimeType, previewUrl };
+};
+
+const parseCreatorDraftProfile = (value: unknown): RunnerProfile => {
+  if (!isObjectRecord(value)) return DEFAULT_RUNNER_PROFILE;
+  const profile = value as Record<string, unknown>;
+  return normalizeRunnerProfile({
+    name: typeof profile.name === 'string' ? profile.name : DEFAULT_RUNNER_PROFILE.name,
+    sex: VALID_RUNNER_SEX.has(profile.sex as RunnerSex)
+      ? (profile.sex as RunnerSex)
+      : DEFAULT_RUNNER_PROFILE.sex,
+    heightCm: typeof profile.heightCm === 'number'
+      ? profile.heightCm
+      : DEFAULT_RUNNER_PROFILE.heightCm,
+    weightKg: typeof profile.weightKg === 'number'
+      ? profile.weightKg
+      : DEFAULT_RUNNER_PROFILE.weightKg,
+    personality: typeof profile.personality === 'string'
+      ? profile.personality
+      : DEFAULT_RUNNER_PROFILE.personality,
+  });
+};
+
+const parseCreatorDraftLocked = (value: unknown): Partial<Record<SlotKey, string>> => {
+  if (!isObjectRecord(value)) return {};
+  const locked: Partial<Record<SlotKey, string>> = {};
+  for (const slot of SLOT_KEYS) {
+    const itemId = value[slot];
+    if (typeof itemId === 'string' && itemId.length > 0) locked[slot] = itemId;
+  }
+  return locked;
+};
+
+const parseCreatorDraft = (value: unknown): CreatorDraft | null => {
+  if (!isObjectRecord(value)) return null;
+  const runnerTypeId = VALID_RUNNER_TYPE_IDS.has(value.runnerTypeId as RunnerTypeId)
+    ? (value.runnerTypeId as RunnerTypeId)
+    : DEFAULT_RUNNER_TYPE.id;
+
+  return {
+    photo: parseCreatorDraftPhoto(value.photo),
+    profile: parseCreatorDraftProfile(value.profile),
+    runnerTypeId,
+    locked: parseCreatorDraftLocked(value.locked),
+  };
+};
+
+export const getCreatorDraft = (): CreatorDraft | null => {
+  const raw = readString(STORAGE_KEYS.creatorDraft);
+  if (!raw) return null;
+  try {
+    return parseCreatorDraft(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+};
+
+export const saveCreatorDraft = (draft: CreatorDraft): void =>
+  writeString(STORAGE_KEYS.creatorDraft, JSON.stringify(draft));
+
+export const clearCreatorDraft = (): void =>
+  removeKey(STORAGE_KEYS.creatorDraft);
 
 // Back-compat re-exports so existing callers don't need to change imports
 // in this PR. New code should import from the dedicated modules.

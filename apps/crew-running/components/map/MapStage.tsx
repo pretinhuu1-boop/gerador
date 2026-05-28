@@ -42,6 +42,13 @@ const PROJECTION: ProjectionOpts = {
   padding: PADDING,
 };
 
+const CITY_SKELETON_ROUTES: SpZoneId[][] = [
+  ['oeste', 'centro', 'leste'],
+  ['norte', 'centro', 'sul'],
+  ['oeste', 'norte', 'leste'],
+  ['oeste', 'sul', 'leste'],
+];
+
 interface Props {
   runnerProgress: RunnerProgress;
   selectedCrewSlug?: string;
@@ -112,6 +119,17 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const userZone = userZoneId ? getZoneById(userZoneId) : undefined;
   const userPos = userZone ? projectLngLat(userZone.center, PROJECTION) : null;
   const signalPath = polylineToPath(SP_SIGNAL_ROUTE, PROJECTION);
+  const baseRoutePaths = useMemo(
+    () =>
+      CITY_SKELETON_ROUTES.map((route) => {
+        const centers = route.flatMap((zoneId) => {
+          const zone = getZoneById(zoneId);
+          return zone ? [zone.center] : [];
+        });
+        return polylineToPath(centers, PROJECTION);
+      }),
+    [],
+  );
   // Missions relevant to the current view, regardless of toggle state. The
   // toggle controls render visibility; this list drives chip availability so
   // the Missions chip stays clickable as long as data exists for this view.
@@ -137,6 +155,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   return (
     <section
       className={`map-stage map-stage--${view.zoom}${trackerActive ? ' is-tracking' : ''}`}
+      style={{ '--crew-accent': userCrew.accent } as React.CSSProperties}
       aria-label={`Mapa Crew Running - ${activeZone ? activeZone.label : 'cidade'}`}
     >
       <h2 className="sr-only">Mapa vivo da cidade</h2>
@@ -151,6 +170,26 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           role="img"
           aria-label={`Mapa de Sao Paulo - zoom ${view.zoom}`}
         >
+          <g className="map-base-layer" aria-hidden="true">
+            <rect x={PADDING} y={PADDING} width={VIEWBOX_W - PADDING * 2} height={VIEWBOX_H - PADDING * 2} className="map-base-bounds" />
+            {baseRoutePaths.map((path, index) => (
+              <path key={`base-route-${index}`} d={path} className="map-base-route" />
+            ))}
+            <path d={signalPath} className="map-base-signal" />
+            {SP_ZONE_MAP_FEATURES.map((zone) => {
+              const center = projectLngLat(zone.center, PROJECTION);
+              return (
+                <circle
+                  key={`base-node-${zone.id}`}
+                  cx={center.x}
+                  cy={center.y}
+                  r={4}
+                  className="map-base-node"
+                />
+              );
+            })}
+          </g>
+
           {layers.territory && (
             <ZoneLayer
               projection={PROJECTION}
@@ -187,7 +226,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
 
           {userPos && !trackerActive && (
             <g className="map-user-pin" transform={`translate(${userPos.x} ${userPos.y})`}>
-              <circle r={14} fill="white" stroke={userCrew.accent} strokeWidth={3} />
+              <circle r={14} fill="var(--bone)" stroke="var(--crew-accent)" strokeWidth={3} />
               <image href={userCrew.assets.badge} x={-10} y={-10} width={20} height={20} />
             </g>
           )}
@@ -197,14 +236,6 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           )}
         </svg>
       </div>
-
-      {!trackerActive && (
-        <CrewRadioOverlay
-          crewSlug={selectedCrewSlug}
-          selfUserId={selfUserId}
-          selfRunnerName={selfRunnerName}
-        />
-      )}
 
       {view.zoom !== 'city' && activeZone && !trackerActive && (
         <header className="map-stage-zone-banner">
@@ -222,6 +253,14 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           onToggle={handleToggleLayer}
           availability={layerAvailability}
           controlsId={svgDomId}
+        />
+      )}
+
+      {!trackerActive && (
+        <CrewRadioOverlay
+          crewSlug={selectedCrewSlug}
+          selfUserId={selfUserId}
+          selfRunnerName={selfRunnerName}
         />
       )}
 

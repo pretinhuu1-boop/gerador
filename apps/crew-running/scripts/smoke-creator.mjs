@@ -104,6 +104,8 @@ const seedLaunchStorage = async (context) => {
     window.localStorage.setItem('crewGuidedSetupComplete', 'true');
     window.localStorage.setItem('crewOnboardingComplete', 'true');
     window.localStorage.setItem('crewSelectedCrewSlug', slug);
+    window.localStorage.removeItem('crewCreatorTab');
+    window.localStorage.removeItem('crewCreatorDraft');
     window.localStorage.removeItem('crewRunnerCustomized');
     window.localStorage.removeItem('crew.saved_character');
   }, smokeCrewSlug);
@@ -127,19 +129,10 @@ const assertSavedCharacter = async (page, runnerName) => {
 };
 
 const openCreator = async (page) => {
-  await page.getByRole('button', { name: 'MONTAR RUNNER' }).click();
-
-  const creatorHeading = page.getByRole('heading', { name: 'CRIE SEU RUNNER' });
-  const creatorOpened = await creatorHeading
-    .waitFor({ timeout: 1200 })
-    .then(() => true)
-    .catch(() => false);
-
-  if (!creatorOpened) {
-    await page.getByRole('button', { name: /^MONTAR$/ }).click();
-  }
-
-  await creatorHeading.waitFor({ timeout: 10000 });
+  await page.getByRole('button', { name: 'VOCÊ' }).click();
+  await page.getByRole('button', { name: 'AJUSTAR' }).click();
+  await page.getByRole('tablist', { name: 'Etapas do criador' }).waitFor({ timeout: 10000 });
+  await page.getByRole('tab', { name: 'FOTO' }).click();
 };
 
 const runSmoke = async () => {
@@ -152,7 +145,7 @@ const runSmoke = async () => {
     ['vite', '--host', '127.0.0.1', '--port', String(port), '--strictPort'],
     {
       cwd: appRoot,
-      env: { ...process.env, BROWSER: 'none' },
+      env: { ...process.env, BROWSER: 'none', VITE_GEMINI_API_KEY: '' },
       stdio: ['ignore', 'pipe', 'pipe'],
     },
   );
@@ -184,11 +177,22 @@ const runSmoke = async () => {
       await openCreator(page);
 
       await page
-        .locator('input[type="file"][aria-label="Subir foto do rosto"]')
+        .locator('input[type="file"][aria-label="Subir foto do rosto pelo card"]')
         .setInputFiles(photoPath);
+      await page.getByText('TROCAR SELFIE').waitFor({ timeout: 10000 });
 
-      await page.locator('input[placeholder="nome do runner"]').fill(runnerName);
-      await page.getByRole('button', { name: 'Abrir ajuste do estúdio' }).click();
+      await page.getByRole('tab', { name: 'PERFIL' }).click();
+      await page.getByPlaceholder('nome do runner').fill(runnerName);
+      await page.getByRole('tab', { name: 'LOOK' }).click();
+      const createButton = page.getByRole('button', { name: 'CRIAR RUNNER' });
+      await createButton.waitFor({ state: 'visible', timeout: 10000 });
+      await page.waitForFunction(() =>
+        Array.from(document.querySelectorAll('button')).some(
+          (button) => button.textContent?.trim() === 'CRIAR RUNNER' && !button.disabled,
+        ),
+      );
+      await createButton.click();
+      await page.getByRole('dialog', { name: 'Ajuste do estúdio' }).waitFor({ timeout: 10000 });
       await page.getByRole('button', { name: 'TESTAR LOCAL' }).click();
 
       const equipButtons = page.getByRole('button', { name: /Equipar look/ });
@@ -196,7 +200,8 @@ const runSmoke = async () => {
       assertEqual(await equipButtons.count(), 4, `${runnerName} 2x2 sheet equip button count`);
 
       await page.getByRole('button', { name: 'Equipar look 1' }).click();
-      await page.getByRole('heading', { name: `${runnerName} pronto.` }).waitFor({ timeout: 10000 });
+      await page.waitForFunction(() => Boolean(window.localStorage.getItem('crew.saved_character')));
+      await page.getByText('LOOK SALVO').waitFor({ timeout: 10000 });
       await assertSavedCharacter(page, runnerName);
 
       await context.close();

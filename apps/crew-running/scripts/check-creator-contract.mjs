@@ -166,7 +166,7 @@ assertIncludes(packageJson.scripts?.validate ?? '', 'npm run smoke:creator', 'pa
 const smoke = read('scripts/smoke-creator.mjs');
 for (const requiredSmokeTerm of [
   'north-breakers',
-  'MONTAR RUNNER',
+  "name: 'VOCÊ'",
   'TESTAR LOCAL',
   'Equipar look 1',
   'crew.saved_character',

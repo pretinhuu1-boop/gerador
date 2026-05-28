@@ -121,7 +121,10 @@ export const useRunController = (
     }
   }, [selectedCrewSlug]);
 
-  const closePermissionToast = useCallback(() => setPermissionToastOpen(false), []);
+  const closePermissionToast = useCallback(() => {
+    setPermissionToastOpen(false);
+    runTracker.clearPermissionDenied();
+  }, []);
 
   const resumeStoredRun = useCallback(() => {
     setResumePromptOpen(false);

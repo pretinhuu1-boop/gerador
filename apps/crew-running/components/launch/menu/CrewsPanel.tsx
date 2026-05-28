@@ -8,7 +8,9 @@ type Props = {
   runnerSaved: boolean;
   guideDone: boolean;
   onSelectCrew: (slug: string) => void;
-  onPrimaryAction: () => void;
+  onOpenGuide: () => void;
+  onOpenCrewHome: () => void;
+  crewLocked?: boolean;
 };
 
 export const CrewsPanel: React.FC<Props> = ({
@@ -16,12 +18,20 @@ export const CrewsPanel: React.FC<Props> = ({
   runnerSaved,
   guideDone,
   onSelectCrew,
-  onPrimaryAction,
+  onOpenGuide,
+  onOpenCrewHome,
+  crewLocked = false,
 }) => (
   <>
     <span className="main-menu__eyebrow">CREWS PILOTO</span>
-    <h1>5 sinais no mapa</h1>
-    <CrewPilotPreview activeSlug={activeCrew.slug} onSelect={onSelectCrew} />
+    <h1>Crew travada</h1>
+    <p>A crew escolhida fica fixa neste MVP. As outras entradas aparecem como referencia de mapa.</p>
+    <CrewPilotPreview
+      activeSlug={activeCrew.slug}
+      onSelect={crewLocked ? undefined : onSelectCrew}
+      onOpenActive={onOpenCrewHome}
+      disabled={crewLocked}
+    />
     <div
       className="main-menu__crew-dossier"
       style={{
@@ -41,8 +51,12 @@ export const CrewsPanel: React.FC<Props> = ({
       </div>
     </div>
     <div className="main-menu__panel-actions">
-      <CartridgeButton variant="solid" className="game-command game-command--primary" onClick={onPrimaryAction}>
-        {runnerSaved ? 'AJUSTAR RUNNER' : guideDone ? 'MONTAR RUNNER' : 'ABRIR GUIA'}
+      <CartridgeButton
+        variant="solid"
+        className="game-command game-command--primary"
+        onClick={guideDone || runnerSaved ? onOpenCrewHome : onOpenGuide}
+      >
+        {guideDone || runnerSaved ? 'ENTRAR NA SEDE' : 'ABRIR GUIA'}
       </CartridgeButton>
     </div>
   </>

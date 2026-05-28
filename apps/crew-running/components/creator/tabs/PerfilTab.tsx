@@ -8,7 +8,12 @@ type Props = {
 };
 
 export const PerfilTab: React.FC<Props> = ({ profile, onChange }) => (
-  <section role="tabpanel" aria-labelledby="creator-tab-perfil" className="runner-tab__section">
+  <section
+    id="creator-panel-perfil"
+    role="tabpanel"
+    aria-labelledby="creator-tab-perfil"
+    className="runner-tab__section"
+  >
     <RunnerProfileForm profile={profile} onChange={onChange} />
   </section>
 );
