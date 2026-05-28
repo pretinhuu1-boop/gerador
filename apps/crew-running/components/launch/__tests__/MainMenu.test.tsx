@@ -117,4 +117,25 @@ describe('MainMenu runner panel integration', () => {
     expect(onStartGuidedSetup).toHaveBeenCalledTimes(1);
     expect(onOpenMap).not.toHaveBeenCalled();
   });
+
+  it('opens the sede when ENTRAR NA SEDE is clicked from the CREWS PILOTO panel', () => {
+    renderMenu();
+    fireEvent.click(screen.getByRole('button', { name: 'CREWS PILOTO' }));
+    fireEvent.click(screen.getByRole('button', { name: 'ENTRAR NA SEDE' }));
+    expect(screen.getByText(/VOLTAR/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /SPONSORS/ })).toBeInTheDocument();
+  });
+
+  it('opens the sede directly via the SEDE nav rail item', () => {
+    renderMenu();
+    fireEvent.click(screen.getByRole('button', { name: 'SEDE' }));
+    expect(screen.getByRole('button', { name: /MEDALHAS/ })).toBeInTheDocument();
+  });
+
+  it('returns from the sede to the home panel when VOLTAR is clicked', () => {
+    renderMenu();
+    fireEvent.click(screen.getByRole('button', { name: 'SEDE' }));
+    fireEvent.click(screen.getByRole('button', { name: 'VOLTAR' }));
+    expect(screen.getAllByText('GUARDA ROUPA').length).toBeGreaterThan(0);
+  });
 });

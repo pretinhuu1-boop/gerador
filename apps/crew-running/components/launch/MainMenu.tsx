@@ -12,9 +12,10 @@ import { HomePanel } from './menu/HomePanel';
 import { CrewsPanel } from './menu/CrewsPanel';
 import { ConfigPanel } from './menu/ConfigPanel';
 import { Passport } from './menu/Passport';
+import { SedeShell } from '../sede/SedeShell';
 import { audio, type CrewSlug } from '../../services/audio';
 
-type MenuPanel = 'home' | 'crews' | 'crewHome' | 'runner' | 'config';
+type MenuPanel = 'home' | 'crews' | 'crewHome' | 'sede' | 'runner' | 'config';
 type RunnerPanelMode = 'profile' | 'creator';
 
 type Props = {
@@ -150,6 +151,10 @@ export const MainMenu: React.FC<Props> = ({
     selectPanel('crewHome');
   };
 
+  const openSedePanel = () => {
+    selectPanel('sede');
+  };
+
   const panelButtonClass = (target: MenuPanel) =>
     `main-menu__nav-item ${panel === target ? 'is-active' : ''}`;
   const renderNavCursor = (target: MenuPanel) =>
@@ -254,6 +259,17 @@ export const MainMenu: React.FC<Props> = ({
             <span>CREWS PILOTO</span>
           </motion.button>
           <motion.button
+            className={panelButtonClass('sede')}
+            type="button"
+            aria-pressed={panel === 'sede'}
+            onClick={openSedePanel}
+            whileHover={reducedMotion ? undefined : { x: 5 }}
+            whileTap={reducedMotion ? undefined : { scale: 0.98 }}
+          >
+            {renderNavCursor('sede')}
+            <span>SEDE</span>
+          </motion.button>
+          <motion.button
             className={panelButtonClass('runner')}
             type="button"
             aria-pressed={panel === 'runner'}
@@ -280,7 +296,7 @@ export const MainMenu: React.FC<Props> = ({
           </button>
         </nav>
 
-        <div className={`main-menu__hero ${panel === 'home' || panel === 'runner' || panel === 'config' ? 'main-menu__hero--focused' : ''}`}>
+        <div className={`main-menu__hero ${panel === 'home' || panel === 'runner' || panel === 'config' || panel === 'sede' ? 'main-menu__hero--focused' : ''}`}>
           {(panel === 'crewHome' || panel === 'crews') && (
             <Passport
               activeCrew={activeCrew}
@@ -351,7 +367,7 @@ export const MainMenu: React.FC<Props> = ({
                   guideDone={guideDone}
                   onSelectCrew={handleSelectCrew}
                   onOpenGuide={onStartGuidedSetup}
-                  onOpenCrewHome={openCrewHomePanel}
+                  onOpenSede={openSedePanel}
                   crewLocked={crewLocked}
                 />
               )}
@@ -393,6 +409,15 @@ export const MainMenu: React.FC<Props> = ({
                   onReviewGuidedSetup={onReviewGuidedSetup}
                   onStartGuidedSetup={onStartGuidedSetup}
                   onPrimaryAction={primaryAction}
+                />
+              )}
+
+              {panel === 'sede' && (
+                <SedeShell
+                  crew={activeCrew}
+                  viewer={progress.selectedCrewSlug === activeCrew.slug ? 'member' : 'visitor'}
+                  onBack={() => selectPanel('home')}
+                  onSwitchCrew={() => selectPanel('crews')}
                 />
               )}
           </motion.div>

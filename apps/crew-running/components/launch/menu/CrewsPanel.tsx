@@ -9,7 +9,7 @@ type Props = {
   guideDone: boolean;
   onSelectCrew: (slug: string) => void;
   onOpenGuide: () => void;
-  onOpenCrewHome: () => void;
+  onOpenSede: () => void;
   crewLocked?: boolean;
 };
 
@@ -19,7 +19,7 @@ export const CrewsPanel: React.FC<Props> = ({
   guideDone,
   onSelectCrew,
   onOpenGuide,
-  onOpenCrewHome,
+  onOpenSede,
   crewLocked = false,
 }) => (
   <>
@@ -29,7 +29,7 @@ export const CrewsPanel: React.FC<Props> = ({
     <CrewPilotPreview
       activeSlug={activeCrew.slug}
       onSelect={crewLocked ? undefined : onSelectCrew}
-      onOpenActive={onOpenCrewHome}
+      onOpenActive={onOpenSede}
       disabled={crewLocked}
     />
     <div
@@ -54,7 +54,7 @@ export const CrewsPanel: React.FC<Props> = ({
       <CartridgeButton
         variant="solid"
         className="game-command game-command--primary"
-        onClick={guideDone || runnerSaved ? onOpenCrewHome : onOpenGuide}
+        onClick={guideDone || runnerSaved ? onOpenSede : onOpenGuide}
       >
         {guideDone || runnerSaved ? 'ENTRAR NA SEDE' : 'ABRIR GUIA'}
       </CartridgeButton>
