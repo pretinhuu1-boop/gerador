@@ -1550,6 +1550,10 @@ body::after {
   align-items: end;
 }
 
+.main-menu__hero--focused {
+  grid-template-columns: 1fr;
+}
+
 .main-menu__leader {
   position: relative;
   min-height: 520px;
@@ -5451,7 +5455,9 @@ body::after {
   flex-direction: column;
   gap: 6px;
   padding: 14px 16px;
-  background-color: rgba(0, 0, 0, 0.62);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0.62)),
+    rgba(0, 0, 0, 0.78);
   border-left: 4px solid var(--rail-color, var(--crew-accent, #2ec4b6));
   border-radius: 5px;
   box-shadow: 4px 4px 0 #000;
