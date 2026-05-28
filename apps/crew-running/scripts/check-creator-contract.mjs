@@ -106,8 +106,10 @@ assertIncludes(customize, 'selectedCrewSlug: string', 'components/CustomizeScree
 assertIncludes(customize, 'buildCrewRenderContext(selectedCrewSlug)', 'components/CustomizeScreen.tsx');
 assertIncludes(customize, '<RunnerTypePicker', 'components/CustomizeScreen.tsx');
 assertIncludes(customize, '<WardrobePicker', 'components/CustomizeScreen.tsx');
-assertIncludes(customize, 'TESTAR LOCAL', 'components/CustomizeScreen.tsx');
 assertIncludes(customize, "renderStyleId: 'street-v2'", 'components/CustomizeScreen.tsx');
+
+const apiKeyModal = read('components/ApiKeyModal.tsx');
+assertIncludes(apiKeyModal, 'TESTAR LOCAL', 'components/ApiKeyModal.tsx');
 
 const photoUpload = read('components/PhotoUpload.tsx');
 assertIncludes(photoUpload, 'Subir foto do rosto', 'components/PhotoUpload.tsx');

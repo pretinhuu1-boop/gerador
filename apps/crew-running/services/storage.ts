@@ -132,21 +132,41 @@ export const getIdentityEvents = (): IdentityEvent[] => {
   }
 };
 
+const materializeIdentityEvent = (
+  event: Omit<IdentityEvent, 'id'> & { id?: string },
+): IdentityEvent => ({
+  id: event.id ?? buildIdentityEventId(event.kind, event.timestamp),
+  kind: event.kind,
+  payload: event.payload,
+  timestamp: event.timestamp,
+});
+
 export const appendIdentityEvent = (
   event: Omit<IdentityEvent, 'id'> & { id?: string },
 ): IdentityEvent => {
-  const id = event.id ?? buildIdentityEventId(event.kind, event.timestamp);
-  const next: IdentityEvent = {
-    id,
-    kind: event.kind,
-    payload: event.payload,
-    timestamp: event.timestamp,
-  };
+  const next = materializeIdentityEvent(event);
   const existing = getIdentityEvents();
-  if (existing.some((e) => e.id === id)) return next;
+  if (existing.some((e) => e.id === next.id)) return next;
   const merged = [next, ...existing].slice(0, IDENTITY_EVENTS_MAX);
   writeItem(IDENTITY_EVENTS_STORAGE, JSON.stringify(merged));
   return next;
+};
+
+// Batch variant — single localStorage write, idempotent per-id. Use when
+// you have multiple events to persist atomically (e.g. backfill synthesis)
+// so concurrent readers never see a half-written intermediate array.
+export const appendIdentityEventsBatch = (
+  events: ReadonlyArray<Omit<IdentityEvent, 'id'> & { id?: string }>,
+): IdentityEvent[] => {
+  if (events.length === 0) return [];
+  const materialized = events.map(materializeIdentityEvent);
+  const existing = getIdentityEvents();
+  const existingIds = new Set(existing.map((e) => e.id));
+  const fresh = materialized.filter((e) => !existingIds.has(e.id));
+  if (fresh.length === 0) return materialized;
+  const merged = [...fresh, ...existing].slice(0, IDENTITY_EVENTS_MAX);
+  writeItem(IDENTITY_EVENTS_STORAGE, JSON.stringify(merged));
+  return materialized;
 };
 
 export const clearIdentityEvents = () => removeItem(IDENTITY_EVENTS_STORAGE);
