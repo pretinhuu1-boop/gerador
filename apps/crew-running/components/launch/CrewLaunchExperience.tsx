@@ -30,7 +30,7 @@ type LaunchScreen =
   | 'guidedSetup'
   | 'mapHome';
 
-type MainMenuPanel = 'home' | 'crews' | 'crewHome' | 'runner' | 'config';
+type MainMenuPanel = 'home' | 'crews' | 'crewHome' | 'sede' | 'runner' | 'config';
 type RunnerPanelMode = 'profile' | 'creator';
 
 type Props = {

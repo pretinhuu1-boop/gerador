@@ -6,7 +6,7 @@ import { INK_PER_FULL_OWNERSHIP } from '../../data/gamification';
 import { SP_ZONE_MAP_FEATURES, type SpZoneId } from '../../data/spLiveMap';
 import { LaunchProgress, getRunnerProgress, setCreatorTab } from '../../services/launchStorage';
 import { getSavedCharacter } from '../../services/storage';
-import { Sp3DMapBackground } from './Sp3DMapBackground';
+import { StreetBackdrop } from './StreetBackdrop';
 import { RunnerPanel } from '../voce/RunnerPanel';
 import { HomePanel } from './menu/HomePanel';
 import { CrewsPanel } from './menu/CrewsPanel';
@@ -209,7 +209,7 @@ export const MainMenu: React.FC<Props> = ({
   return (
     <motion.section className="launch-screen game-screen main-menu" style={crewThemeStyle} {...enterMotion}>
       <div className="main-menu__map" aria-hidden>
-        <Sp3DMapBackground tone="ambient" activeSlug={activeCrew.slug} />
+        <StreetBackdrop variant="hq" crewSlug={activeCrew.slug} />
       </div>
 
       <motion.div
@@ -415,7 +415,11 @@ export const MainMenu: React.FC<Props> = ({
               {panel === 'sede' && (
                 <SedeShell
                   crew={activeCrew}
-                  viewer={progress.selectedCrewSlug === activeCrew.slug ? 'member' : 'visitor'}
+                  viewer={
+                    !progress.selectedCrewSlug || progress.selectedCrewSlug === activeCrew.slug
+                      ? 'member'
+                      : 'visitor'
+                  }
                   onBack={() => selectPanel('home')}
                   onSwitchCrew={() => selectPanel('crews')}
                 />
