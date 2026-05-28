@@ -23,12 +23,14 @@ interface Segment {
 // segments grow.
 const splitSegments = (points: TrackedPoint[]): Segment[] => {
   if (points.length === 0) return [];
-  const segments: Segment[] = [{ key: `seg-${points[0].t}`, points: [] }];
+  const segments: Segment[] = [{ key: `seg-0-${points[0].t}`, points: [] }];
   for (const point of points) {
     const current = segments[segments.length - 1];
     current.points.push(point);
     if (point.isResumeAnchor) {
-      segments.push({ key: `seg-${point.t}-resume`, points: [] });
+      // Index disambiguates back-to-back pauses that happen within the same
+      // millisecond timestamp (rare but possible in tests).
+      segments.push({ key: `seg-${segments.length}-${point.t}`, points: [] });
     }
   }
   return segments.filter((segment) => segment.points.length > 1);
