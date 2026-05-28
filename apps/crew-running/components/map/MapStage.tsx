@@ -26,6 +26,7 @@ import { RunHud } from './RunHud';
 import { RunSummary } from './RunSummary';
 import { FriendPings } from './FriendPings';
 import { CrewRadioOverlay } from './CrewRadioOverlay';
+import { MapLibreCanvas } from './MapLibreCanvas';
 import { type MapLayerState, type MapView } from './mapTypes';
 import { getMapLayerPrefs, saveMapLayerPrefs } from '../../services/mapLayerStorage';
 import { useRunController } from '../../hooks/useRunController';
@@ -162,6 +163,14 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
       <HudOverlay progress={runnerProgress} crewSlug={selectedCrewSlug} />
 
       <div className="map-stage-canvas">
+        <div className="map-stage-tiles" aria-hidden="true">
+          <MapLibreCanvas
+            activeCrewSlug={selectedCrewSlug}
+            userPosition={snapshot.points[snapshot.points.length - 1] ?? null}
+            trail={snapshot.points}
+            zoom={view.zoom === 'city' ? 11 : view.zoom === 'zone' ? 13 : 15}
+          />
+        </div>
         <svg
           id={svgDomId}
           viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}

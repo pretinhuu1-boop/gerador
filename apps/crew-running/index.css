@@ -5036,12 +5036,63 @@ button.mapa-cidade__ping:focus-visible {
   overflow: hidden;
 }
 
+.map-stage-tiles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.map-stage-tiles canvas {
+  outline: none;
+}
+
 .map-stage-svg {
-  position: relative;
-  z-index: 1;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   width: 100%;
   height: 100%;
   display: block;
+  pointer-events: none;
+}
+
+.map-stage-svg [role="button"],
+.map-stage-svg button {
+  pointer-events: auto;
+}
+
+.maplibre-crew-marker {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  padding: 0;
+  border: 2px solid color-mix(in srgb, var(--crew-accent) 60%, transparent);
+  background: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--crew-accent) 50%, transparent);
+}
+
+.maplibre-crew-marker.is-active {
+  border-color: var(--crew-accent);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--crew-accent) 90%, transparent);
+  transform: scale(1.12);
+}
+
+.maplibre-crew-marker img {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+}
+
+.maplibre-user-pin {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: white;
+  border: 3px solid var(--crew-accent, #2ec4b6);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--crew-accent) 28%, transparent);
 }
 
 .map-base-layer {
