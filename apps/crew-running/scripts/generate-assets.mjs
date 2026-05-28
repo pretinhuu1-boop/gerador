@@ -242,6 +242,53 @@ All-black trail running shoes with reflective grey details, aggressive tread,
 dark tactical runner feel.`,
   },
   {
+    name: 'accessory',
+    size: '1024x1024',
+    outFiles: [
+      'wardrobe/accessory/acc_reflective_armband.png',
+      'wardrobe/accessory/acc_hydration_belt.png',
+      'wardrobe/accessory/acc_crossbody_pack.png',
+      'wardrobe/accessory/acc_blank_bib.png',
+    ],
+    slice: true,
+    prompt: `Create a 2x2 UI inventory icon sheet for running accessories. Each
+cell is a dark square customization tile like a gritty mobile game equipment
+menu. Thin charcoal separators, no text labels, no numbers, no readable
+characters anywhere on any item.
+
+Global tile treatment:
+- single accessory item per cell, floating centered, ghost-mannequin style
+- no head, no hands, no full body, no legs, no shoes
+- dark tile background with faint scratches, graffiti scribbles and paper grain
+- mature sports-comic rendering, bold black ink shadows, screen-print grain
+- worn fabric and rubber textures, small cream highlights only where needed
+- restrained safety orange and muted teal accents matching the crew palette
+
+TOP-LEFT:
+Single reflective runner armband. A curved cylindrical strap with a thin
+horizontal reflective silver stripe across the middle, matte black fabric
+body, slight curve as if wrapped around an invisible upper arm, small velcro
+closure detail. No arm, no skin, no body.
+
+TOP-RIGHT:
+Compact runner hydration belt. A closed adjustable waistband loop with two
+small soft-flask pockets at the front, muted teal trim accents, matte black
+nylon body, thin buckle. Shown front-facing as if wrapped around an invisible
+waist. No torso, no skin, no body.
+
+BOTTOM-LEFT:
+Slim crossbody sling pouch. A small low-profile rectangular runner pouch with
+a single thin diagonal strap forming an empty loop above it, matte charcoal
+fabric, safety orange zipper pull, subtle worn texture. No body, no shoulder,
+no chest.
+
+BOTTOM-RIGHT:
+Blank race bib. A slightly creased rectangular off-white paper-fabric race bib
+floating flat, four small safety pins in the corners, completely blank front
+with NO numbers, NO letters, NO logos, NO sponsor text, NO signage, just a
+worn empty surface with subtle paper grain.`,
+  },
+  {
     name: 'styles',
     size: '1024x1024',
     outFiles: [
