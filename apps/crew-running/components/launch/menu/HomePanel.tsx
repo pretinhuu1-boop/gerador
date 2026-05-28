@@ -5,7 +5,7 @@ import type { LaunchProgress } from '../../../services/launchStorage';
 import type { SavedCharacter } from '../../../services/storage';
 import { CartridgeButton } from '../../CartridgeButton';
 import { CrewBadge } from '../../CrewBadge';
-import { LaunchCityMap } from '../LaunchCityMap';
+import { MapaCidade } from '../../map/MapaCidade';
 
 type Props = {
   activeCrew: CrewZone;
@@ -52,9 +52,9 @@ export const HomePanel: React.FC<Props> = ({
     <h1>{activeCrew.name}</h1>
     <p>{homeCopy}</p>
     <div className="main-menu__city-map">
-      <LaunchCityMap
-        mode="menu"
-        activeSlug={activeCrew.slug}
+      <MapaCidade
+        variant="menu"
+        activeCrewSlug={activeCrew.slug}
         ownershipByZone={ownershipByZone}
         onSelectCrew={onSelectCrew}
       />

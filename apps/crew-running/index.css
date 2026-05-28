@@ -1544,6 +1544,89 @@ button.launch-city-map__ping.is-status-neutral img {
   pointer-events: auto;
 }
 
+.mapa-cidade__ping {
+  position: absolute;
+  z-index: 3;
+  width: 56px;
+  min-height: 44px;
+  min-width: 44px;
+  transform: translate(-50%, -50%);
+  opacity: 0.78;
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+  animation: launchPingIn 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.18) both;
+  animation-delay: var(--delay);
+}
+
+button.mapa-cidade__ping {
+  cursor: pointer;
+}
+
+.mapa-cidade__ping.is-active {
+  z-index: 4;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+button.mapa-cidade__ping:hover {
+  opacity: 1;
+}
+
+button.mapa-cidade__ping:focus-visible {
+  outline: 2px solid var(--crew-accent);
+  outline-offset: 6px;
+  border-radius: 999px;
+}
+
+.mapa-cidade__ping img {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  border-radius: 999px;
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--crew-accent) 72%, transparent));
+}
+
+.mapa-cidade__ping.is-status-owned img {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--crew-accent) 80%, transparent);
+}
+
+.mapa-cidade__ping.is-status-contested img {
+  box-shadow: 0 0 0 2px rgba(240, 195, 60, 0.75);
+}
+
+.mapa-cidade__ping.is-status-neutral img {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.mapa-cidade__ping-halo {
+  position: absolute;
+  inset: 6px;
+  z-index: 1;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--crew-accent) 32%, transparent);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--crew-accent) 56%, transparent);
+  animation: launchPulse var(--motion-pulse-crew);
+}
+
+.mapa-cidade__ping-label {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  z-index: 4;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--white);
+  background: rgba(0, 0, 0, 0.72);
+  font-family: var(--brush);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .main-menu__city-map .launch-city-map {
   position: absolute;
   inset: 0;

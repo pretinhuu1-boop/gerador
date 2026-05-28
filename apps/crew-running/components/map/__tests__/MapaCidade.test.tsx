@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { MapaCidade } from '../MapaCidade';
 import type { MapaCidadeVariant } from '../mapTypes';
@@ -113,6 +113,67 @@ describe('MapaCidade phase B static layers', () => {
     // the centro zone hits the "owned" tier.
     const owned = container.querySelector('.map-zone.is-status-owned');
     expect(owned).not.toBeNull();
+  });
+});
+
+describe('MapaCidade phase C interactivity', () => {
+  it('renders interactive ping buttons when onSelectCrew is provided', () => {
+    const { container } = render(
+      <MapaCidade variant="menu" onSelectCrew={() => undefined} />,
+    );
+    const pings = container.querySelectorAll('button.mapa-cidade__ping');
+    expect(pings).toHaveLength(5);
+    pings.forEach((p) => {
+      expect(p.getAttribute('aria-label')).toMatch(/,/);
+    });
+  });
+
+  it('marks the active crew with aria-pressed=true and dims the rest', () => {
+    const { container } = render(
+      <MapaCidade
+        variant="menu"
+        activeCrewSlug="east-burners"
+        onSelectCrew={() => undefined}
+      />,
+    );
+    const pressed = container.querySelectorAll(
+      'button.mapa-cidade__ping[aria-pressed="true"]',
+    );
+    expect(pressed).toHaveLength(1);
+    expect(pressed[0].getAttribute('aria-label')).toMatch(/East Burners/);
+  });
+
+  it('falls back to non-interactive div pings when no callback', () => {
+    const { container } = render(<MapaCidade variant="signal" />);
+    expect(container.querySelectorAll('button.mapa-cidade__ping')).toHaveLength(0);
+    expect(container.querySelectorAll('div.mapa-cidade__ping')).toHaveLength(5);
+  });
+
+  it('fires onSelectCrew with the crew slug on ping click', () => {
+    const spy = vi.fn();
+    const { container } = render(
+      <MapaCidade variant="menu" activeCrewSlug="east-burners" onSelectCrew={spy} />,
+    );
+    const north = Array.from(
+      container.querySelectorAll('button.mapa-cidade__ping'),
+    ).find((b) => /North/.test(b.getAttribute('aria-label') ?? ''));
+    (north as HTMLButtonElement).click();
+    expect(spy).toHaveBeenCalledWith('north-breakers');
+  });
+
+  it('surfaces the territory tier in the aria-label when ownership is provided', () => {
+    const { container } = render(
+      <MapaCidade
+        variant="menu"
+        activeCrewSlug="downtown-rush"
+        ownershipByZone={{ centro: 0.9 }}
+        onSelectCrew={() => undefined}
+      />,
+    );
+    const active = container.querySelector(
+      'button.mapa-cidade__ping[aria-pressed="true"]',
+    );
+    expect(active?.getAttribute('aria-label')).toMatch(/owned/);
   });
 });
 

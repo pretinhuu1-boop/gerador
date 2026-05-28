@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ProjectionOpts, SpZoneId } from '../../data/spLiveMap';
 import { AsphaltLayer } from './layers/AsphaltLayer';
+import { PingsLayer } from './layers/PingsLayer';
 import { RoadsLayer } from './layers/RoadsLayer';
 import { ZonesLayer } from './layers/ZonesLayer';
 import { SpotsLayer } from './layers/SpotsLayer';
@@ -40,10 +41,9 @@ export const MapaCidade: React.FC<Props> = ({
   variant,
   activeCrewSlug,
   ownershipByZone,
-  // Destructured to lock the prop API now — phases C and D wire the
-  // PingsLayer and the run-control entry points to these callbacks.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onSelectCrew,
+  // Destructured to lock the prop API now — phase D wires the
+  // run-control entry point to this callback.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onOpenRun,
 }) => {
@@ -76,8 +76,18 @@ export const MapaCidade: React.FC<Props> = ({
           <SpotsLayer projection={PROJECTION} zoom="city" />
         </svg>
       </div>
-      {/* Phase C will mount PingsLayer (interactive in menu/run/signal). */}
-      {!decorative && <div className="mapa-cidade__pings" />}
+      {!decorative && (
+        <div className="mapa-cidade__pings">
+          <PingsLayer
+            projection={PROJECTION}
+            viewBoxWidth={VIEWBOX_W}
+            viewBoxHeight={VIEWBOX_H}
+            activeCrewSlug={activeCrewSlug}
+            ownershipByZone={ownershipByZone}
+            onSelectCrew={onSelectCrew}
+          />
+        </div>
+      )}
       {/* Phase D will mount HudLayer + FriendsLayer + MissionsLayer for variant=run. */}
       {variant === 'run' && <div className="mapa-cidade__overlays" />}
     </div>
