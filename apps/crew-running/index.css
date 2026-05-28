@@ -5285,8 +5285,13 @@ body::after {
   }
 
   .map-zone,
-  .map-hud-xp-fill {
+  .map-hud-xp-fill,
+  .map-trail-segment,
+  .run-hud,
+  .run-summary-card,
+  .run-resume-card {
     transition: none !important;
+    animation: none !important;
   }
 }
 

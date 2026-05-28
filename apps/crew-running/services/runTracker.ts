@@ -1,3 +1,14 @@
+// Module-level singleton that owns the active GPS run.
+//
+// Lifecycle: intentionally NOT tied to a React component. The tracker keeps
+// running even if the user navigates away from MapStage (e.g. tabs into the
+// QG menu) so a background tab doesn't kill an in-progress street run. The
+// only ways to stop it are stop(), reset(), or pause(). React consumers
+// subscribe via useRunTracker and the subscription cleans up on unmount.
+//
+// Privacy: collected GPS coordinates live ONLY in the user's own browser via
+// activeRunStorage. They are never sent over the network and never read by
+// foreign scripts (this app has no third-party JS). Cleared on stop / reset.
 import type { LngLat, SpSpotMapFeature, SpZoneId, SpZoneMapFeature } from '../data/spLiveMap';
 import { SP_SPOT_MAP_FEATURES, getZoneById, getZoneByCrewSlug } from '../data/spLiveMap';
 import { haversineMeters, pointInPolygon } from '../data/geo';
