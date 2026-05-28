@@ -62,6 +62,9 @@
 .sticker-shadow-md { box-shadow: 4px 4px 0 #000; }
 .sticker-shadow-sm { box-shadow: 2px 2px 0 #000; }
 .sticker-shadow-lg { box-shadow: 6px 6px 0 #000; }
+/* Use only on elements that define --crew-accent (inline style or
+   inherited). Without a defined accent, this collapses to plain black
+   and adds no value over .sticker-shadow. */
 .sticker-shadow-crew {
   box-shadow: 4px 4px 0 color-mix(in srgb, var(--crew-accent, #000) 70%, #000);
 }
