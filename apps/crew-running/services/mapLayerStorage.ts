@@ -25,12 +25,19 @@ const isShape = (value: unknown): value is Partial<MapLayerPrefs> => {
   );
 };
 
-const pick = (parsed: Partial<MapLayerPrefs>): MapLayerPrefs => ({
-  territory: parsed.territory ?? DEFAULT.territory,
-  live: parsed.live ?? DEFAULT.live,
-  missions: parsed.missions ?? DEFAULT.missions,
-  history: parsed.history ?? DEFAULT.history,
-});
+const pick = (parsed: Partial<MapLayerPrefs>): MapLayerPrefs => {
+  const next: MapLayerPrefs = {
+    territory: parsed.territory ?? DEFAULT.territory,
+    live: parsed.live ?? DEFAULT.live,
+    missions: parsed.missions ?? DEFAULT.missions,
+    history: parsed.history ?? DEFAULT.history,
+  };
+  // Persisted state with every layer toggled off renders an empty map and
+  // leaves the user with no obvious recovery path. Treat it as corruption
+  // and fall back to defaults.
+  const allOff = !next.territory && !next.live && !next.missions && !next.history;
+  return allOff ? DEFAULT : next;
+};
 
 export const getMapLayerPrefs = (): MapLayerPrefs => {
   if (!canUseStorage()) return DEFAULT;

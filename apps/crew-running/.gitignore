@@ -9,3 +9,7 @@ output/
 
 # Audio pipeline build artifact (unseamed processing intermediates)
 public/audio/.unseamed
+
+# Playwright artifacts
+test-results/
+playwright-report/

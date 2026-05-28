@@ -83,6 +83,11 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const handleToggleLayer = useCallback((key: keyof MapLayerState) => {
     setLayers((prev) => {
       const next = { ...prev, [key]: !prev[key] };
+      // Refuse the toggle that would leave every layer off — the map would
+      // become empty with no obvious way back. Persisted recovery still kicks
+      // in via getMapLayerPrefs, but blocking it at the UI is cheaper.
+      const anyOn = next.territory || next.live || next.missions || next.history;
+      if (!anyOn) return prev;
       saveMapLayerPrefs(next);
       return next;
     });
@@ -107,9 +112,13 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const userZone = userZoneId ? getZoneById(userZoneId) : undefined;
   const userPos = userZone ? projectLngLat(userZone.center, PROJECTION) : null;
   const signalPath = polylineToPath(SP_SIGNAL_ROUTE, PROJECTION);
-  const visibleMissions = layers.missions
-    ? SAMPLE_MISSIONS.filter((m) => view.zoom === 'spot' || !view.zoneId || m.zoneId === view.zoneId)
-    : [];
+  // Missions relevant to the current view, regardless of toggle state. The
+  // toggle controls render visibility; this list drives chip availability so
+  // the Missions chip stays clickable as long as data exists for this view.
+  const missionsForView = SAMPLE_MISSIONS.filter(
+    (m) => view.zoom === 'spot' || !view.zoneId || m.zoneId === view.zoneId,
+  );
+  const visibleMissions = layers.missions ? missionsForView : [];
   const activeZone = view.zoneId ? getZoneById(view.zoneId) : undefined;
   const liveBadges = view.zoom === 'city' && layers.live
     ? SP_ZONE_MAP_FEATURES.map((zone) => ({
@@ -119,7 +128,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     : [];
 
   const layerAvailability: Partial<Record<keyof MapLayerState, boolean>> = {
-    missions: visibleMissions.length > 0 || layers.missions,
+    missions: missionsForView.length > 0,
     history: false,
   };
 
