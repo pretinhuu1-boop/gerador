@@ -126,6 +126,38 @@ export const SP_SIGNAL_ROUTE: LngLat[] = [
   { lng: -46.6461, lat: -23.5502 },
 ];
 
+// Coarse arterial polylines that read as "city skeleton" under the
+// zones. They thread the centro through each of the four cardinal
+// zones plus two diagonals — not literal SP streets, just enough lines
+// to make the canvas feel like a real urban grid instead of empty
+// space behind the polygons.
+export const SP_ROADS_POLYLINES: LngLat[][] = [
+  // Oeste → Centro → Leste (E-W axis)
+  [
+    { lng: -46.741, lat: -23.5505 },
+    { lng: -46.6333, lat: -23.5505 },
+    { lng: -46.546, lat: -23.5505 },
+  ],
+  // Norte → Centro → Sul (N-S axis)
+  [
+    { lng: -46.6333, lat: -23.481 },
+    { lng: -46.6333, lat: -23.5505 },
+    { lng: -46.6333, lat: -23.628 },
+  ],
+  // Oeste → Norte → Leste (upper arc)
+  [
+    { lng: -46.741, lat: -23.5505 },
+    { lng: -46.6333, lat: -23.481 },
+    { lng: -46.546, lat: -23.5505 },
+  ],
+  // Oeste → Sul → Leste (lower arc)
+  [
+    { lng: -46.741, lat: -23.5505 },
+    { lng: -46.6333, lat: -23.628 },
+    { lng: -46.546, lat: -23.5505 },
+  ],
+];
+
 export const getZoneByCrewSlug = (crewSlug?: string): SpZoneMapFeature | undefined =>
   SP_ZONE_MAP_FEATURES.find((zone) => zone.crewSlug === crewSlug);
 

@@ -1,4 +1,9 @@
 import React from 'react';
+import type { ProjectionOpts, SpZoneId } from '../../data/spLiveMap';
+import { AsphaltLayer } from './layers/AsphaltLayer';
+import { RoadsLayer } from './layers/RoadsLayer';
+import { ZonesLayer } from './layers/ZonesLayer';
+import { SpotsLayer } from './layers/SpotsLayer';
 import type { MapaCidadeVariant } from './mapTypes';
 
 // Phase A shell. The unified map component the vault blueprint
@@ -16,13 +21,25 @@ import type { MapaCidadeVariant } from './mapTypes';
 type Props = {
   variant: MapaCidadeVariant;
   activeCrewSlug?: string;
+  ownershipByZone?: Partial<Record<SpZoneId, number>>;
   onSelectCrew?: (slug: string) => void;
   onOpenRun?: () => void;
+};
+
+const VIEWBOX_W = 800;
+const VIEWBOX_H = 700;
+const PADDING = 40;
+
+const PROJECTION: ProjectionOpts = {
+  width: VIEWBOX_W,
+  height: VIEWBOX_H,
+  padding: PADDING,
 };
 
 export const MapaCidade: React.FC<Props> = ({
   variant,
   activeCrewSlug,
+  ownershipByZone,
   // Destructured to lock the prop API now — phases C and D wire the
   // PingsLayer and the run-control entry points to these callbacks.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -42,10 +59,21 @@ export const MapaCidade: React.FC<Props> = ({
       data-variant={variant}
       data-active-crew={slug}
     >
-      {/* Phase B will mount AsphaltLayer + RoadsLayer + ZonesLayer + SpotsLayer.
-       * The slot itself stays in the a11y tree so per-layer roles/labels can
-       * land without fighting an inherited aria-hidden. */}
-      <div className="mapa-cidade__layers" role="presentation" />
+      <div className="mapa-cidade__layers" role="presentation">
+        <AsphaltLayer />
+        <svg
+          className="mapa-cidade__svg"
+          viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label={decorative ? '' : 'Mapa de Sao Paulo'}
+          aria-hidden={decorative ? true : undefined}
+        >
+          <RoadsLayer projection={PROJECTION} />
+          <ZonesLayer projection={PROJECTION} ownershipByZone={ownershipByZone} />
+          <SpotsLayer projection={PROJECTION} zoom="city" />
+        </svg>
+      </div>
       {/* Phase C will mount PingsLayer (interactive in menu/run/signal). */}
       {!decorative && <div className="mapa-cidade__pings" />}
       {/* Phase D will mount HudLayer + FriendsLayer + MissionsLayer for variant=run. */}

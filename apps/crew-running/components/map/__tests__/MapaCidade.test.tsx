@@ -74,6 +74,50 @@ describe('MapaCidade interactive variants', () => {
   });
 });
 
+describe('MapaCidade phase B static layers', () => {
+  it.each<MapaCidadeVariant>(['menu', 'run', 'signal', 'ambient'])(
+    'mounts AsphaltLayer + SVG roads + zones for variant %s',
+    (variant) => {
+      const { container } = render(<MapaCidade variant={variant} />);
+      expect(container.querySelector('.mapa-cidade__asphalt')).not.toBeNull();
+      expect(container.querySelector('svg.mapa-cidade__svg')).not.toBeNull();
+      expect(container.querySelector('.mapa-cidade__roads')).not.toBeNull();
+      expect(container.querySelector('.map-zone-layer')).not.toBeNull();
+    },
+  );
+
+  it('hides individual spot markers at city zoom (SpotLayer returns null)', () => {
+    // The shell pins zoom="city" today; SpotLayer treats that as zoom-out
+    // and renders nothing. Phase C lifts zoom into useMapView and the
+    // assertion flips per active zoom level.
+    const { container } = render(<MapaCidade variant="menu" />);
+    expect(container.querySelector('.map-spot-layer')).toBeNull();
+  });
+
+  it('hides the SVG from a11y when variant=ambient', () => {
+    const { container } = render(<MapaCidade variant="ambient" />);
+    const svg = container.querySelector('svg.mapa-cidade__svg') as SVGElement;
+    expect(svg.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('exposes a meaningful SVG label on interactive variants', () => {
+    const { container } = render(<MapaCidade variant="menu" />);
+    const svg = container.querySelector('svg.mapa-cidade__svg') as SVGElement;
+    expect(svg.getAttribute('aria-label')).toMatch(/Sao Paulo/i);
+    expect(svg.getAttribute('aria-hidden')).toBeNull();
+  });
+
+  it('passes ownershipByZone through to ZonesLayer', () => {
+    const { container } = render(
+      <MapaCidade variant="menu" ownershipByZone={{ centro: 0.9 }} />,
+    );
+    // ZoneLayer derives a status class per zone; with ownership=0.9
+    // the centro zone hits the "owned" tier.
+    const owned = container.querySelector('.map-zone.is-status-owned');
+    expect(owned).not.toBeNull();
+  });
+});
+
 describe('MapaCidade activeCrewSlug', () => {
   it('falls back to "unset" when no slug is provided', () => {
     const { container } = render(<MapaCidade variant="menu" />);
