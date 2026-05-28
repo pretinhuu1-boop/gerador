@@ -145,4 +145,20 @@ describe('useRunController', () => {
     act(() => result.current.dismissUnlocks());
     expect(result.current.pendingSummary?.newlyUnlocked).toEqual([]);
   });
+
+  it('C-Badge5: dismissUnlocks before saveSummary still delivers badges to onRunCompleted', () => {
+    // Regression: BadgeUnlockToast stacks over RunSummary at z-index 1000 vs 40,
+    // so the user MUST dismiss the toast to reach SAVE. Earned badges live on
+    // nextProgress from stopRun onward — dismiss can't strip them.
+    const onRunCompleted = vi.fn();
+    const { result } = renderHook(() =>
+      useRunController(baseProgress, 'downtown-rush', onRunCompleted),
+    );
+    act(() => result.current.startRun());
+    act(() => result.current.stopRun());
+    act(() => result.current.dismissUnlocks());
+    act(() => result.current.saveSummary());
+    const [next] = onRunCompleted.mock.calls[0];
+    expect(next.badgeUnlocks).toContain('first-blood');
+  });
 });

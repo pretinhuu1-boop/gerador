@@ -113,32 +113,32 @@ export const useRunController = (
       breakdown,
       now,
     });
-    setPendingSummary({ breakdown, streak, nextProgress: streak.next, newlyUnlocked });
+    // Merge newly-unlocked badges into nextProgress at stop time so the save
+    // path stays trivial — dismissing the unlock toast later can never strip
+    // badges that the user actually earned (BadgeUnlockToast stacks on top of
+    // RunSummary and must be dismissed before SAVE is reachable).
+    const nextProgress: RunnerProgress = {
+      ...streak.next,
+      badgeUnlocks: Array.from(
+        new Set([...streak.next.badgeUnlocks, ...newlyUnlocked]),
+      ),
+    };
+    setPendingSummary({ breakdown, streak, nextProgress, newlyUnlocked });
   }, [runnerProgress]);
 
   const saveSummary = useCallback(() => {
     if (!pendingSummary) return;
     const snap = runTracker.getSnapshot();
-    const priorHistory = loadRunHistoryStats();
     const now = new Date();
     const nextHistory = applyRunToHistory({
-      prior: priorHistory,
+      prior: loadRunHistoryStats(),
       snapshot: snap,
       breakdown: pendingSummary.breakdown,
       runWeekKey: isoWeekKey(now),
       priorWeekKey: runnerProgress.weekKey,
     });
     saveRunHistoryStats(nextHistory);
-    const mergedProgress: RunnerProgress = {
-      ...pendingSummary.nextProgress,
-      badgeUnlocks: Array.from(
-        new Set([
-          ...pendingSummary.nextProgress.badgeUnlocks,
-          ...(pendingSummary.newlyUnlocked ?? []),
-        ]),
-      ),
-    };
-    onRunCompleted?.(mergedProgress, pendingSummary.breakdown);
+    onRunCompleted?.(pendingSummary.nextProgress, pendingSummary.breakdown);
     setPendingSummary(null);
     runTracker.reset();
   }, [pendingSummary, onRunCompleted, runnerProgress.weekKey]);
