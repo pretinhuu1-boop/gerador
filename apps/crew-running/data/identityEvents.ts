@@ -5,7 +5,7 @@ export type IdentityEventKind =
   | 'RUNNER_TYPE_CHANGED'
   | 'BADGE_EARNED'
   | 'STICKER_DROPPED'
-  | 'PHOTO_CHANGED';
+  | 'VISUAL_CREATED';
 
 export type IdentityEventPayload = {
   crewSlug?: string;
@@ -89,11 +89,11 @@ export const IDENTITY_EVENT_VARIANTS: Record<IdentityEventKind, IdentityEventVar
     bodyTemplate: (p) => p.stickerId ? p.stickerId.toUpperCase() : 'Sticker no dossier.',
     showLookCard: false,
   },
-  PHOTO_CHANGED: {
+  VISUAL_CREATED: {
     railToken: 'var(--ink-cream)',
     swatchToken: 'var(--spray-cyan)',
-    headline: 'FOTO ATUALIZADA',
-    bodyTemplate: () => 'Nova selfie no passaporte.',
+    headline: 'IDENTIDADE VISUAL CRIADA',
+    bodyTemplate: () => 'Novo visual no passaporte.',
     showLookCard: true,
   },
 };

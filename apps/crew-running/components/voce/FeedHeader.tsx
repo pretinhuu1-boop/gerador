@@ -36,14 +36,14 @@ export const FeedHeader: React.FC<Props> = ({
   const portrait = savedCharacter?.imageDataUrl;
   return (
     <header className="voce-feed-header" style={style}>
-      <div className="voce-feed-header__portrait" aria-hidden>
+      <div className="voce-feed-header__portrait">
         {portrait ? (
-          <img src={portrait} alt={`Runner ${runnerName}`} />
+          <img src={portrait} alt={`Retrato do runner ${runnerName}`} />
         ) : (
-          <CrewBadge crew={crew} size="lg" />
+          <CrewBadge crew={crew} size="lg" alt={`Distintivo da crew ${crew.name}`} />
         )}
         {status === 'ready' && (
-          <span className="voce-feed-header__stamp" aria-hidden>
+          <span className="voce-feed-header__stamp" aria-hidden="true">
             RUNNER PRONTO
           </span>
         )}
@@ -68,8 +68,8 @@ export const FeedHeader: React.FC<Props> = ({
         </li>
       </ul>
       <div className="voce-feed-header__actions">
-        <CartridgeButton variant="chalk" className="game-command" onClick={onAdjust}>
-          AJUSTAR LOOK
+        <CartridgeButton variant="link" onClick={onAdjust}>
+          AJUSTAR
         </CartridgeButton>
         <span
           className="voce-feed-header__dm-placeholder"

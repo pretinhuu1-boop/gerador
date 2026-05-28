@@ -5218,7 +5218,7 @@ body::after {
 
 .voce-feed-post__headline {
   font-family: 'Anton', sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   letter-spacing: 0.1em;
   color: var(--ink-cream, #f0ebe0);
   text-transform: uppercase;

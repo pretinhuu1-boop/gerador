@@ -13,7 +13,7 @@ const ALL_KINDS: IdentityEventKind[] = [
   'RUNNER_TYPE_CHANGED',
   'BADGE_EARNED',
   'STICKER_DROPPED',
-  'PHOTO_CHANGED',
+  'VISUAL_CREATED',
 ];
 
 describe('IDENTITY_EVENT_VARIANTS', () => {
@@ -33,9 +33,9 @@ describe('IDENTITY_EVENT_VARIANTS', () => {
     }
   });
 
-  it('shows look card only for LOOK_SAVED + PHOTO_CHANGED', () => {
+  it('shows look card only for LOOK_SAVED + VISUAL_CREATED', () => {
     for (const kind of ALL_KINDS) {
-      const expected = kind === 'LOOK_SAVED' || kind === 'PHOTO_CHANGED';
+      const expected = kind === 'LOOK_SAVED' || kind === 'VISUAL_CREATED';
       expect(IDENTITY_EVENT_VARIANTS[kind].showLookCard).toBe(expected);
     }
   });
