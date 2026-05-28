@@ -66,3 +66,29 @@ describe('computeOwnershipFromInk', () => {
     expect(out.centro).toBeCloseTo(0.25);
   });
 });
+
+describe('decay + ownership pipeline', () => {
+  const T = (days: number) => new Date('2026-05-28T00:00:00Z').getTime() + days * 86_400_000;
+
+  it('zone with full ownership decays to neutral over many idle weeks', () => {
+    const fresh: Partial<Record<SpZoneId, number>> = { centro: 1000 }; // full ownership
+    const ownershipFresh = computeOwnershipFromInk(fresh, SP_ZONE_MAP_FEATURES, 1000);
+    expect(ownershipFresh.centro).toBe(1);
+
+    const decayed = applyInkDecay(fresh, T(0), T(180)); // 6 months idle
+    const ownershipDecayed = computeOwnershipFromInk(decayed, SP_ZONE_MAP_FEATURES, 1000);
+    expect(ownershipDecayed.centro).toBeLessThan(0.01);
+  });
+
+  it('one week of idle takes a fully owned zone to ~contested', () => {
+    // INK_OWNERSHIP_CONTESTED is 0.4 per gamification.ts. With INK_DECAY_PER_DAY
+    // 0.033, 1000 ink after 7 days is ~792 -> 0.79 ownership. Still owned.
+    // After 21 days (≈ half-life) it should drop to ~0.5 — borderline owned.
+    // Verified: 1000 * 0.967^21 ≈ 494.26 -> ownership ≈ 0.494, inside (0.45, 0.55).
+    const fresh: Partial<Record<SpZoneId, number>> = { centro: 1000 };
+    const decayed = applyInkDecay(fresh, T(0), T(21));
+    const ownership = computeOwnershipFromInk(decayed, SP_ZONE_MAP_FEATURES, 1000);
+    expect(ownership.centro).toBeGreaterThan(0.45);
+    expect(ownership.centro).toBeLessThan(0.55);
+  });
+});
