@@ -31,8 +31,10 @@ const CONDITIONS: Record<BadgeId, Condition> = {
     const counting = breakdown.invasionMult > 1 ? 1 : 0;
     return history.invasionsSucceeded + counting >= 5;
   },
-  cartographer: ({ history }) => history.uniqueSpotsTouched.length >= 11,
-  'urban-marathon': ({ history }) => history.kmThisWeek >= 42,
+  cartographer: ({ history, snapshot }) =>
+    new Set([...history.uniqueSpotsTouched, ...snapshot.touchedSpotIds]).size >= 11,
+  'urban-marathon': ({ history, snapshot }) =>
+    history.kmThisWeek + snapshot.totalMeters / 1000 >= 42,
   'local-legend': () => false,
   'streak-12': ({ progress }) => progress.streakWeeks >= 12,
   'solo-wolf': ({ history, snapshot }) => {
