@@ -7609,3 +7609,123 @@ button.map-stage-zone-title:hover {
   font-size: 11px;
   color: var(--bone-soft);
 }
+
+.runner-profile-screen-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: grid;
+  place-items: center;
+  z-index: 900;
+  padding: 16px;
+}
+
+.runner-profile-screen-card {
+  background: var(--char);
+  color: var(--bone);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 420px;
+  width: 100%;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.runner-profile-screen-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.runner-profile-screen-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+}
+
+.runner-profile-screen-identity {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.runner-profile-screen-crew {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-size: 14px;
+}
+
+.runner-profile-screen-zone {
+  margin: 0;
+  font-size: 11px;
+  color: var(--bone-soft);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.runner-profile-screen-close {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bone);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.runner-profile-screen-stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.runner-profile-screen-stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.runner-profile-screen-stats dt {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--bone-soft);
+}
+
+.runner-profile-screen-stats dd {
+  margin: 0;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.runner-profile-screen-xp-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.runner-profile-screen-xp-fill {
+  height: 100%;
+  transition: width 0.3s ease-out;
+}
+
+.runner-profile-screen-section-title {
+  margin: 4px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bone-soft);
+}

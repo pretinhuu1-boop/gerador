@@ -22,6 +22,7 @@ import { ZoneSheet } from './ZoneSheet';
 import { SpotSheet } from './SpotSheet';
 import { CrewSheet } from './CrewSheet';
 import { RunnerCard } from './RunnerCard';
+import { RunnerProfileScreen } from '../profile/RunnerProfileScreen';
 import { type MapLayerState, type MapView } from './mapTypes';
 import { getMapLayerPrefs, saveMapLayerPrefs } from '../../services/mapLayerStorage';
 import { useRunController } from '../../hooks/useRunController';
@@ -53,6 +54,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const [view, setView] = useState<MapView>(() => ({ zoom: 'city' }));
   const [layers, setLayers] = useState<MapLayerState>(() => getMapLayerPrefs());
   const [sheet, setSheet] = useState<SheetState>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const canvasId = useId();
   const canvasDomId = `map-stage-canvas-${canvasId.replace(/[^\w-]/g, '')}`;
 
@@ -115,7 +117,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   }, [view.zoneId]);
 
   const missionsForView = SAMPLE_MISSIONS.filter(
-    (m) => view.zoom === 'spot' || !view.zoneId || m.zoneId === view.zoneId,
+    (m) => !view.zoneId || m.zoneId === view.zoneId,
   );
   const visibleMissions = layers.missions ? missionsForView : [];
   const activeZone = view.zoneId ? getZoneById(view.zoneId) : undefined;
@@ -134,7 +136,11 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
       aria-label={`Mapa Crew Running - ${activeZone ? activeZone.label : 'cidade'}`}
     >
       <h2 className="sr-only">Mapa vivo da cidade</h2>
-      <HudOverlay progress={runnerProgress} crewSlug={selectedCrewSlug} />
+      <HudOverlay
+        progress={runnerProgress}
+        crewSlug={selectedCrewSlug}
+        onOpenProfile={() => setProfileOpen(true)}
+      />
 
       <div className="map-stage-canvas">
         <div id={canvasDomId} className="map-stage-tiles">
@@ -254,6 +260,14 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
             </div>
           </div>
         </div>
+      )}
+
+      {profileOpen && (
+        <RunnerProfileScreen
+          progress={runnerProgress}
+          crewSlug={selectedCrewSlug}
+          onClose={() => setProfileOpen(false)}
+        />
       )}
 
       {sheet?.type === 'zone' && (
