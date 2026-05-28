@@ -1,8 +1,8 @@
 import React from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { GenerateResult, SheetVariant } from '../services/crewService';
-import { CrewBadge } from './CrewBadge';
 import { HandUnderline } from './SvgDefs';
+import { RunnerLookCard } from './RunnerLookCard';
 import { audio } from '../services/audio';
 
 type PartialPreview = {
@@ -65,20 +65,14 @@ export const SheetPreview: React.FC<Props> = ({
 
         {!loading && !error && !result && hasPartial && partial && (
           <div className="runner-creator__preview-state runner-creator__preview--partial">
-            {partial.photo && (
-              <div className="runner-creator__preview-photo" aria-hidden>
-                <img src={partial.photo} alt="" />
-              </div>
-            )}
-            <div className="runner-creator__preview-meta">
-              {partial.crewSlug && <CrewBadge crew={partial.crewSlug} size="sm" />}
-              {partial.name && (
-                <strong className="runner-creator__preview-name">{partial.name}</strong>
-              )}
-              {partial.runnerTypeLabel && (
-                <span className="runner-creator__preview-type">{partial.runnerTypeLabel}</span>
-              )}
-            </div>
+            <RunnerLookCard
+              imageDataUrl={partial.photo}
+              name={partial.name}
+              crewSlug={partial.crewSlug}
+              runnerTypeLabel={partial.runnerTypeLabel}
+              size="sm"
+              className="runner-creator__preview-look"
+            />
             <small className="runner-creator__preview-hint">
               prévia parcial — falta foto+ficha pra liberar CRIAR RUNNER
             </small>
