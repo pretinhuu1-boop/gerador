@@ -56,4 +56,4 @@ Revisao feita a partir dos prints do menu e da intro. A area central do menu ain
 - Screenshot menu runner pendente desktop: `output/playwright/menu-hq/desktop-runner-passport-pendente-reviewed.png`.
 - Screenshot menu runner salvo mobile: `output/playwright/menu-hq/mobile-runner-passport-salvo-reviewed.png`.
 
-Observacao: o `runnerTypeId` canonico atual no codigo e `crew-flow`; saves antigos com `crew-pace` sao aceitos como alias para evitar fallback indevido para Sprint.
+Observacao: o `runnerTypeId` canonico atual no codigo e `crew-pace` (ver `data/runnerTypes.ts:4-6` e `CREATOR_CONTRACT.md`). Nota anterior tinha `crew-flow` invertido, corrigido em 2026-05-28 no closeout da Fase 1 da aba VOCE.

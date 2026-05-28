@@ -8,6 +8,7 @@ import { CartridgeButton } from '../CartridgeButton';
 import { CrewBadge } from '../CrewBadge';
 import { CrewPilotPreview } from './CrewPilotPreview';
 import { StreetBackdrop } from './StreetBackdrop';
+import { RunnerPanel } from '../voce/RunnerPanel';
 import { audio, type CrewSlug } from '../../services/audio';
 
 const AudioMuteToggle: React.FC = () => {
@@ -61,7 +62,20 @@ export const MainMenu: React.FC<Props> = ({
   const [activeCrewSlug, setActiveCrewSlug] = useState(
     () => getCrewBySlug(selectedCrewSlug).slug,
   );
-  const savedCharacter = useMemo(() => getSavedCharacter(), []);
+  const [savedCharacter, setSavedCharacter] = useState(() => getSavedCharacter());
+  const [runnerVersion, setRunnerVersion] = useState(0);
+
+  useEffect(() => {
+    setSavedCharacter(getSavedCharacter());
+    setRunnerVersion((v) => v + 1);
+  }, [progress.runnerCustomized]);
+
+  useEffect(() => {
+    if (panel !== 'runner') return;
+    setSavedCharacter(getSavedCharacter());
+    setRunnerVersion((v) => v + 1);
+  }, [panel]);
+
   const runnerName = savedCharacter?.profile?.name || 'Runner';
 
   const activeCrew = useMemo(
@@ -426,49 +440,16 @@ export const MainMenu: React.FC<Props> = ({
               )}
 
               {panel === 'runner' && (
-                <>
-                  <span className="main-menu__eyebrow">RUNNER</span>
-                  <h1>{runnerSaved ? 'Runner pronto' : guideDone ? 'Montar runner' : 'Runner pendente'}</h1>
-                  <p>
-                    {runnerSaved
-                      ? 'Seu runner esta pronto. Abra o vestiario para ajustar look, foto e equipamento.'
-                      : guideDone
-                        ? 'O guia ja liberou tua entrada. Agora monte a identidade do runner.'
-                        : 'Antes da rua, o guia da crew prepara o sinal e libera tua identidade.'}
-                  </p>
-                  {runnerSaved && (
-                    <div className="main-menu__runner-pass main-menu__runner-pass--compact">
-                      <div className="main-menu__runner-portrait">
-                        {savedCharacter ? (
-                          <img src={savedCharacter.imageDataUrl} alt="Runner ready" />
-                        ) : (
-                          <CrewBadge crew={activeCrew} size="lg" />
-                        )}
-                      </div>
-                      <div>
-                        <span>IDENTIDADE</span>
-                        <strong>{runnerName}</strong>
-                        <p>Identidade pronta para a proxima fase de cidade.</p>
-                      </div>
-                    </div>
-                  )}
-                  <div className="main-menu__status">
-                    <span>GUIA</span>
-                    <strong>{guideStatusLabel}</strong>
-                    <span>CREW</span>
-                    <strong>{activeCrew.zone}</strong>
-                    <span>RUNNER</span>
-                    <strong>{runnerStatusLabel}</strong>
-                  </div>
-                  <div className="main-menu__panel-actions">
-                    <CartridgeButton variant="solid" className="game-command game-command--primary" onClick={primaryAction}>
-                      {primaryLabel}
-                    </CartridgeButton>
-                    <CartridgeButton variant="chalk" className="game-command" onClick={guideDone ? onReviewGuidedSetup : onStartGuidedSetup}>
-                      {guideDone ? 'REVER GUIA' : 'ABRIR GUIA'}
-                    </CartridgeButton>
-                  </div>
-                </>
+                <RunnerPanel
+                  crew={savedCrew}
+                  savedCharacter={savedCharacter}
+                  progress={progress}
+                  runnerName={runnerName}
+                  onAdjust={onOpenRunnerCreator}
+                  onReplayGuide={guideDone ? onReviewGuidedSetup : onStartGuidedSetup}
+                  guideDone={guideDone}
+                  version={runnerVersion}
+                />
               )}
 
               {panel === 'config' && (
@@ -484,6 +465,13 @@ export const MainMenu: React.FC<Props> = ({
                     <AudioMuteToggle />
                     <CartridgeButton variant="chalk" className="game-command" onClick={onReplayIntro}>
                       REVER INTRO
+                    </CartridgeButton>
+                    <CartridgeButton
+                      variant="chalk"
+                      className="game-command"
+                      onClick={guideDone ? onReviewGuidedSetup : onStartGuidedSetup}
+                    >
+                      {guideDone ? 'REVER GUIA' : 'ABRIR GUIA'}
                     </CartridgeButton>
                     <CartridgeButton variant="solid" className="game-command game-command--primary" onClick={primaryAction}>
                       {primaryLabel}
