@@ -6037,3 +6037,32 @@ body::after {
   min-height: 44px;
 }
 
+.runner-tab__nav {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--crew-accent, #f4a52c);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+}
+.runner-tab__nav-item {
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--cream-ink, #e8e2d2);
+  font-family: inherit;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.runner-tab__nav-item.is-active {
+  background: var(--crew-accent, #f4a52c);
+  color: #000;
+  border-color: var(--crew-accent, #f4a52c);
+}
+.runner-tab__nav-item:focus-visible {
+  outline: 2px solid var(--cream-ink, #e8e2d2);
+  outline-offset: 2px;
+}
+
