@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { CrewZone } from '../../data/crews';
 import {
   buildIdentityEventId,
@@ -7,10 +7,13 @@ import {
 import { getRunnerTypeById } from '../../data/runnerTypes';
 import type { LaunchProgress } from '../../services/launchStorage';
 import type { SavedCharacter } from '../../services/storage';
+import { getSelfUserId } from '../../services/storage';
 import { useIdentityFeed } from '../../hooks/useIdentityFeed';
+import { useFriends } from '../../hooks/useFriends';
+import { AddFriendModal } from './AddFriendModal';
 import { FeedHeader } from './FeedHeader';
 import { FeedPost } from './FeedPost';
-import { FriendsStripPlaceholder } from './FriendsStripPlaceholder';
+import { FriendsStrip } from './FriendsStrip';
 import { MapSocialHookButton } from './MapSocialHookButton';
 
 type Props = {
@@ -46,6 +49,9 @@ export const RunnerPanel: React.FC<Props> = ({
     : guideDone
       ? 'editing'
       : 'pending';
+  const [addFriendOpen, setAddFriendOpen] = useState(false);
+  const { friends, add: addFriendToList } = useFriends(version);
+  const selfUserId = useMemo(() => getSelfUserId(), []);
   const lookCount = events.filter((e) => e.kind === 'LOOK_SAVED').length;
   const stickerCount = events.filter((e) => e.kind === 'STICKER_DROPPED').length;
   const hasEvents = events.length > 0;
@@ -71,7 +77,7 @@ export const RunnerPanel: React.FC<Props> = ({
         lookCount={lookCount}
         stickerCount={stickerCount}
       />
-      <FriendsStripPlaceholder crew={crew} />
+      <FriendsStrip friends={friends} onAdd={() => setAddFriendOpen(true)} />
       <ol className="voce-panel__feed" aria-label="Linha do tempo de identidade">
         {hasEvents
           ? events.map((event) => (
@@ -84,6 +90,15 @@ export const RunnerPanel: React.FC<Props> = ({
       <div className="voce-panel__actions">
         <MapSocialHookButton />
       </div>
+      <AddFriendModal
+        open={addFriendOpen}
+        selfUserId={selfUserId}
+        selfRunnerName={runnerName}
+        selfCrewSlug={savedCharacter?.crewSlug ?? crew.slug}
+        selfRunnerTypeId={savedCharacter?.runnerTypeId}
+        onClose={() => setAddFriendOpen(false)}
+        onAddFriend={(friend) => addFriendToList(friend)}
+      />
     </section>
   );
 };

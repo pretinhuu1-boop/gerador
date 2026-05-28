@@ -5640,3 +5640,194 @@ body::after {
   filter: grayscale(0.4);
 }
 
+/* ===========================================
+   F2: amigos + add-friend modal
+   =========================================== */
+
+.voce-panel__friend-tile-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  margin-left: -8px;
+}
+
+.voce-panel__friend-tile-button:first-child {
+  margin-left: 0;
+}
+
+.voce-panel__friend-tile-button .voce-panel__friend-tile {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  overflow: hidden;
+  object-fit: cover;
+  transition: transform 0.18s ease;
+  filter: none;
+  margin-left: 0;
+}
+
+.voce-panel__friend-tile-button:hover .voce-panel__friend-tile,
+.voce-panel__friend-tile-button:focus-visible .voce-panel__friend-tile {
+  transform: scale(1.08);
+}
+
+.voce-panel__friend-tile-button:focus-visible {
+  outline: 2px dashed var(--crew-accent, #2ec4b6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.voce-panel__friend-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: -8px;
+  border: 2px solid var(--crew-accent, #2ec4b6);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--crew-accent, #2ec4b6);
+  font-family: 'Bowlby One', sans-serif;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.voce-panel__friend-add:hover,
+.voce-panel__friend-add:focus-visible {
+  transform: scale(1.08);
+  background: var(--crew-accent, #2ec4b6);
+  color: #000;
+  outline: none;
+}
+
+.add-friend-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  padding: 16px;
+}
+
+.add-friend-modal {
+  width: 100%;
+  max-width: 380px;
+  background-color: rgba(10, 10, 10, 0.94);
+  border-left: 4px solid var(--crew-accent, #2ec4b6);
+  border-radius: 5px;
+  box-shadow: 6px 6px 0 #000;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+
+.add-friend-modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-friend-modal__eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--crew-accent, #2ec4b6);
+  text-transform: uppercase;
+}
+
+.add-friend-modal__close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-cream, #f0ebe0);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.add-friend-modal__close:hover,
+.add-friend-modal__close:focus-visible {
+  background: rgba(240, 235, 224, 0.12);
+  outline: none;
+}
+
+.add-friend-modal__menu,
+.add-friend-modal__share,
+.add-friend-modal__scan,
+.add-friend-modal__handle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.add-friend-modal__qr {
+  align-self: center;
+  width: 240px;
+  height: 240px;
+  border: 2px solid var(--crew-accent, #2ec4b6);
+  border-radius: 5px;
+  background: #f0ebe0;
+  box-shadow: 4px 4px 0 #000;
+}
+
+.add-friend-modal__hint {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-cream, #f0ebe0);
+  opacity: 0.84;
+  text-align: center;
+  margin: 0;
+}
+
+.add-friend-modal__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-cream, #f0ebe0);
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+.add-friend-modal__input {
+  width: 100%;
+  resize: vertical;
+  min-height: 100px;
+  padding: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-cream, #f0ebe0);
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(240, 235, 224, 0.22);
+  border-radius: 4px;
+}
+
+.add-friend-modal__input:focus-visible {
+  outline: 2px solid var(--crew-accent, #2ec4b6);
+  outline-offset: 2px;
+}
+
+.add-friend-modal__error {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--spray-orange, #e85d2c);
+  background: rgba(0, 0, 0, 0.6);
+  border-left: 3px solid var(--spray-orange, #e85d2c);
+  padding: 6px 10px;
+  margin: 0;
+}
+
