@@ -4,28 +4,13 @@ import { getCrewBySlug } from '../../data/crews';
 import { getRunnerTypeById } from '../../data/runnerTypes';
 import { LaunchProgress } from '../../services/launchStorage';
 import { getSavedCharacter } from '../../services/storage';
-import { CartridgeButton } from '../CartridgeButton';
 import { CrewBadge } from '../CrewBadge';
-import { CrewPilotPreview } from './CrewPilotPreview';
 import { StreetBackdrop } from './StreetBackdrop';
 import { RunnerPanel } from '../voce/RunnerPanel';
+import { HomePanel } from './menu/HomePanel';
+import { CrewsPanel } from './menu/CrewsPanel';
+import { ConfigPanel } from './menu/ConfigPanel';
 import { audio, type CrewSlug } from '../../services/audio';
-
-const AudioMuteToggle: React.FC = () => {
-  const [muted, setMuted] = useState(() => audio.isMuted());
-  useEffect(() => audio.onMuteChange(setMuted), []);
-  return (
-    <CartridgeButton
-      variant="chalk"
-      className="game-command"
-      onClick={() => audio.setMuted(!muted)}
-      aria-pressed={!muted}
-      sfx="none"
-    >
-      {muted ? 'SOM: MUDO' : 'SOM: ATIVO'}
-    </CartridgeButton>
-  );
-};
 
 type Props = {
   progress: LaunchProgress;
@@ -357,83 +342,28 @@ export const MainMenu: React.FC<Props> = ({
             transition={panelMotion.transition}
           >
               {panel === 'home' && (
-                <>
-                  <div className="main-menu__panel-head">
-                    <CrewBadge crew={activeCrew} size="md" />
-                    <div>
-                      <span className="main-menu__eyebrow">{activeCrew.zone} ONLINE</span>
-                      <strong>QG DE MISSÃO</strong>
-                    </div>
-                    <img src={activeCrew.assets.marker} alt="" aria-hidden />
-                  </div>
-                  <h1>{activeCrew.name}</h1>
-                  <p>{homeCopy}</p>
-                  {runnerSaved && (
-                    <div className="main-menu__runner-pass">
-                      <div className="main-menu__runner-portrait">
-                        {savedCharacter ? (
-                          <img src={savedCharacter.imageDataUrl} alt="Runner ready" />
-                        ) : (
-                          <CrewBadge crew={activeCrew} size="lg" />
-                        )}
-                      </div>
-                      <div>
-                        <span>RUNNER SALVO</span>
-                        <strong>{runnerName}</strong>
-                        <p>Identidade salva para a proxima fase. O caminho individual fica fechado nesta entrada.</p>
-                      </div>
-                    </div>
-                  )}
-                  <div className="main-menu__status">
-                    <span>SINAL</span>
-                    <strong>{progress.citySignalSeen ? 'OK' : 'ABERTO'}</strong>
-                    <span>GUIA</span>
-                    <strong>{guideStatusLabel}</strong>
-                    <span>RUNNER</span>
-                    <strong>{runnerStatusLabel}</strong>
-                  </div>
-                  <div className="main-menu__panel-actions main-menu__panel-actions--secondary">
-                    {runnerSaved && (
-                      <CartridgeButton variant="chalk" className="game-command" onClick={() => selectPanel('runner')}>
-                        VER RUNNER
-                      </CartridgeButton>
-                    )}
-                    <CartridgeButton variant="chalk" className="game-command" onClick={() => selectPanel('crews')}>
-                      TROCAR CREW
-                    </CartridgeButton>
-                  </div>
-                </>
+                <HomePanel
+                  activeCrew={activeCrew}
+                  homeCopy={homeCopy}
+                  runnerSaved={runnerSaved}
+                  savedCharacter={savedCharacter}
+                  runnerName={runnerName}
+                  progress={progress}
+                  guideStatusLabel={guideStatusLabel}
+                  runnerStatusLabel={runnerStatusLabel}
+                  onShowRunnerPanel={() => selectPanel('runner')}
+                  onShowCrewsPanel={() => selectPanel('crews')}
+                />
               )}
 
               {panel === 'crews' && (
-                <>
-                  <span className="main-menu__eyebrow">CREWS PILOTO</span>
-                  <h1>5 sinais no mapa</h1>
-                  <CrewPilotPreview activeSlug={activeCrew.slug} onSelect={handleSelectCrew} />
-                  <div
-                    className="main-menu__crew-dossier"
-                    style={{
-                      '--crew-accent': activeCrew.accent,
-                      backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.9), rgba(0,0,0,0.56)), url(${activeCrew.assets.shareCard})`,
-                    } as React.CSSProperties}
-                  >
-                    <div>
-                      <span>{activeCrew.zone} / {activeCrew.mission}</span>
-                      <strong>{activeCrew.name}</strong>
-                      <p>{activeCrew.introLine}</p>
-                    </div>
-                    <div className="main-menu__crew-members" aria-hidden>
-                      {activeCrew.assets.members.map((member) => (
-                        <img key={member} src={member} alt="" />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="main-menu__panel-actions">
-                    <CartridgeButton variant="solid" className="game-command game-command--primary" onClick={primaryAction}>
-                      {runnerSaved ? 'AJUSTAR RUNNER' : guideDone ? 'MONTAR RUNNER' : 'ABRIR GUIA'}
-                    </CartridgeButton>
-                  </div>
-                </>
+                <CrewsPanel
+                  activeCrew={activeCrew}
+                  runnerSaved={runnerSaved}
+                  guideDone={guideDone}
+                  onSelectCrew={handleSelectCrew}
+                  onPrimaryAction={primaryAction}
+                />
               )}
 
               {panel === 'runner' && (
@@ -449,31 +379,14 @@ export const MainMenu: React.FC<Props> = ({
               )}
 
               {panel === 'config' && (
-                <>
-                  <span className="main-menu__eyebrow">CONFIG</span>
-                  <h1>Ritmo seguro</h1>
-                  <ul className="main-menu__rules">
-                    <li>O mapa inicial mostra sinal coletivo.</li>
-                    <li>Seu caminho individual nao aparece nesta entrada.</li>
-                    <li>Sem pressao de ritmo. Entra no teu tempo.</li>
-                  </ul>
-                  <div className="main-menu__panel-actions">
-                    <AudioMuteToggle />
-                    <CartridgeButton variant="chalk" className="game-command" onClick={onReplayIntro}>
-                      REVER INTRO
-                    </CartridgeButton>
-                    <CartridgeButton
-                      variant="chalk"
-                      className="game-command"
-                      onClick={guideDone ? onReviewGuidedSetup : onStartGuidedSetup}
-                    >
-                      {guideDone ? 'REVER GUIA' : 'ABRIR GUIA'}
-                    </CartridgeButton>
-                    <CartridgeButton variant="solid" className="game-command game-command--primary" onClick={primaryAction}>
-                      {primaryLabel}
-                    </CartridgeButton>
-                  </div>
-                </>
+                <ConfigPanel
+                  guideDone={guideDone}
+                  primaryLabel={primaryLabel}
+                  onReplayIntro={onReplayIntro}
+                  onReviewGuidedSetup={onReviewGuidedSetup}
+                  onStartGuidedSetup={onStartGuidedSetup}
+                  onPrimaryAction={primaryAction}
+                />
               )}
           </motion.div>
         </div>

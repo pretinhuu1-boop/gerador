@@ -113,10 +113,13 @@ const photoUpload = read('components/PhotoUpload.tsx');
 assertIncludes(photoUpload, 'Subir foto do rosto', 'components/PhotoUpload.tsx');
 
 const mainMenu = read('components/launch/MainMenu.tsx');
-assertIncludes(mainMenu, '<span>RUNNER SALVO</span>', 'components/launch/MainMenu.tsx');
-assertIncludes(mainMenu, 'Identidade salva para a proxima fase', 'components/launch/MainMenu.tsx');
+const homePanel = read('components/launch/menu/HomePanel.tsx');
+assertIncludes(homePanel, '<span>RUNNER SALVO</span>', 'components/launch/menu/HomePanel.tsx');
+assertIncludes(homePanel, 'Identidade salva para a proxima fase', 'components/launch/menu/HomePanel.tsx');
 assertNotIncludes(mainMenu, 'RUNNER READY', 'components/launch/MainMenu.tsx');
+assertNotIncludes(homePanel, 'RUNNER READY', 'components/launch/menu/HomePanel.tsx');
 assertNotIncludes(mainMenu, 'PNG limpo salvo para a proxima fase', 'components/launch/MainMenu.tsx');
+assertNotIncludes(homePanel, 'PNG limpo salvo para a proxima fase', 'components/launch/menu/HomePanel.tsx');
 
 const runnerSavedTeaser = read('components/launch/RunnerSavedTeaser.tsx');
 assertIncludes(runnerSavedTeaser, '<span>RUNNER SALVO</span>', 'components/launch/RunnerSavedTeaser.tsx');
