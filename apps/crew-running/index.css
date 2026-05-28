@@ -44,6 +44,12 @@
   --motion-sticker-press: 120ms cubic-bezier(0.22, 1, 0.36, 1);
   --motion-radio-fade: 400ms ease-out;
   --motion-marker-draw: 600ms ease-out;
+
+  /* Generic timing scale for animations with broad reuse. Keyframes with
+     unique cadence (blink, scanner, route draw) keep literal durations. */
+  --motion-quick: 280ms;
+  --motion-slow: 1400ms;
+  --motion-loop-breath: 4800ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -52,6 +58,9 @@
     --motion-sticker-press: 0s;
     --motion-radio-fade: 0s;
     --motion-marker-draw: 0s;
+    --motion-quick: 0s;
+    --motion-slow: 0s;
+    --motion-loop-breath: 0s;
   }
 }
 
@@ -566,7 +575,7 @@ body::after {
   bottom: 24vh;
   width: min(560px, 42vw);
   transform: rotate(-8deg);
-  animation: streetRouteBreath 4.8s ease-in-out infinite;
+  animation: streetRouteBreath var(--motion-loop-breath) ease-in-out infinite;
 }
 
 .street-backdrop__route--two {
@@ -1095,7 +1104,7 @@ body::after {
   height: 6px;
   background: linear-gradient(90deg, transparent, var(--spray-cyan-bright), transparent);
   filter: drop-shadow(0 0 14px rgba(46, 196, 182, 0.7));
-  animation: titleSignalSweep 1.4s ease-in-out infinite;
+  animation: titleSignalSweep var(--motion-slow) ease-in-out infinite;
 }
 
 .title-screen__signal span:nth-child(2) { animation-delay: 0.18s; }
@@ -1404,7 +1413,7 @@ body::after {
   border-radius: 999px;
   background: color-mix(in srgb, var(--crew-accent) 38%, transparent);
   box-shadow: 0 0 34px color-mix(in srgb, var(--crew-accent) 58%, transparent);
-  animation: launchPulse 1.8s ease-in-out infinite;
+  animation: launchPulse var(--motion-pulse-crew);
 }
 
 .launch-city-map__ping span:not(.launch-city-map__halo) {
