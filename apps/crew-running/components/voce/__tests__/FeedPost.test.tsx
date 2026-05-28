@@ -6,7 +6,7 @@ import type { SavedCharacter } from '../../../services/storage';
 
 const sampleSaved: SavedCharacter = {
   imageDataUrl: 'data:image/png;base64,iVBORw0KGgo=',
-  profile: { name: 'NINA QA' },
+  profile: { name: 'NINA QA', sex: 'female', heightCm: 170, weightKg: 70, personality: '' },
   crewSlug: 'west-flow',
   runnerTypeId: 'crew-pace',
   slots: { top: 'jersey_black', bottom: 'shorts_grey', shoes: 'kicks_white', accessory: 'cap_red' },
