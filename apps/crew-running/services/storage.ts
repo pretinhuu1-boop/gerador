@@ -23,6 +23,7 @@ const IDENTITY_EVENTS_MAX = 50;
 const FRIENDS_STORAGE = 'crew.friends';
 const CREW_RADIO_STORAGE = 'crew.crew_radio';
 const SELF_USER_ID_STORAGE = 'crew.self_user_id';
+const FRIEND_AVATAR_MAX_BYTES = 10 * 1024;
 const ENV_API_KEY =
   (
     (import.meta as ImportMeta & { env?: { VITE_GEMINI_API_KEY?: string } }).env
@@ -193,10 +194,14 @@ export const getFriends = (): FriendRecord[] => {
 export const addFriend = (friend: FriendRecord): FriendRecord => {
   const existing = getFriends();
   if (friend.userId === getSelfUserId()) return friend;
-  const filtered = existing.filter((f) => f.userId !== friend.userId);
-  const merged = [friend, ...filtered];
+  const sanitized: FriendRecord =
+    friend.avatarDataUrl && friend.avatarDataUrl.length > FRIEND_AVATAR_MAX_BYTES
+      ? { ...friend, avatarDataUrl: undefined }
+      : friend;
+  const filtered = existing.filter((f) => f.userId !== sanitized.userId);
+  const merged = [sanitized, ...filtered];
   writeItem(FRIENDS_STORAGE, JSON.stringify(merged));
-  return friend;
+  return sanitized;
 };
 
 export const removeFriend = (userId: string): void => {

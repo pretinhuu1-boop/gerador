@@ -256,6 +256,17 @@ export const AddFriendModal: React.FC<Props> = (props) => {
             <CartridgeButton variant="chalk" className="game-command" onClick={handleCopySelf}>
               COPIAR CONVITE
             </CartridgeButton>
+            <details className="add-friend-modal__fallback">
+              <summary>Clipboard bloqueado? Selecionar manualmente</summary>
+              <textarea
+                className="add-friend-modal__input"
+                readOnly
+                value={selfPayloadJson}
+                rows={3}
+                aria-label="Convite copiável manualmente"
+                onFocus={(e) => e.currentTarget.select()}
+              />
+            </details>
             {nfcSupported && (
               <CartridgeButton
                 variant="chalk"

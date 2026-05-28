@@ -32,5 +32,8 @@ export const isCrewRadioMessage = (value: unknown): value is CrewRadioMessage =>
 export const isExpired = (msg: CrewRadioMessage, now: number = Date.now()): boolean =>
   msg.expiresAt <= now;
 
-export const sanitizeRadioText = (raw: string): string =>
-  raw.trim().slice(0, CREW_RADIO_MAX_LENGTH);
+export const sanitizeRadioText = (raw: string): string => {
+  const trimmed = raw.trim();
+  if (trimmed.length <= CREW_RADIO_MAX_LENGTH) return trimmed;
+  return trimmed.slice(0, CREW_RADIO_MAX_LENGTH).trimEnd();
+};

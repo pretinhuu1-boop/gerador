@@ -28,9 +28,17 @@ export const encodeFriendPayload = (payload: FriendExchangePayload): string =>
 export const decodeFriendPayload = (raw: string): FriendExchangePayload | null => {
   try {
     const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (typeof parsed.v !== 'number') return null;
+    if (parsed.v > FRIEND_EXCHANGE_VERSION) {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn(
+          `[friends] payload v${parsed.v} ignored — this build only accepts v${FRIEND_EXCHANGE_VERSION}. Update the app.`,
+        );
+      }
+      return null;
+    }
     if (
-      !parsed ||
-      typeof parsed !== 'object' ||
       parsed.v !== FRIEND_EXCHANGE_VERSION ||
       typeof parsed.userId !== 'string' ||
       typeof parsed.runnerName !== 'string'
