@@ -39,12 +39,12 @@ afterEach(() => {
 });
 
 describe('MapStage', () => {
-  it('MS1: mounts with HUD, SVG canvas, layer rail and actions', () => {
+  it('MS1: mounts with HUD, map canvas, layer rail and actions', () => {
     const { container } = render(
       <MapStage runnerProgress={baseProgress} selectedCrewSlug="downtown-rush" />,
     );
     expect(container.querySelector('.map-hud-overlay')).toBeTruthy();
-    expect(container.querySelector('.map-stage-svg')).toBeTruthy();
+    expect(container.querySelector('.map-stage-tiles')).toBeTruthy();
     expect(container.querySelector('.map-layer-rail')).toBeTruthy();
     expect(container.querySelector('.map-stage-actions')).toBeTruthy();
   });

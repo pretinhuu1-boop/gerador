@@ -1,12 +1,8 @@
 import React, { useCallback, useId, useMemo, useState } from 'react';
 import {
-  SP_SIGNAL_ROUTE,
   SP_SPOT_MAP_FEATURES,
   SP_ZONE_MAP_FEATURES,
   getZoneById,
-  polylineToPath,
-  projectLngLat,
-  type ProjectionOpts,
   type SpZoneId,
 } from '../../data/spLiveMap';
 import { getCrewBySlug } from '../../data/crews';
@@ -16,39 +12,29 @@ import {
   type RunXpBreakdown,
   type RunnerProgress,
 } from '../../data/gamification';
-import { ZoneLayer } from './ZoneLayer';
-import { SpotLayer } from './SpotLayer';
-import { MissionLayer } from './MissionLayer';
 import { HudOverlay } from './HudOverlay';
 import { LayerRail } from './LayerRail';
-import { TrailLayer } from './TrailLayer';
 import { RunHud } from './RunHud';
 import { RunSummary } from './RunSummary';
-import { FriendPings } from './FriendPings';
 import { CrewRadioOverlay } from './CrewRadioOverlay';
 import { MapLibreCanvas } from './MapLibreCanvas';
+import { ZoneSheet } from './ZoneSheet';
+import { SpotSheet } from './SpotSheet';
+import { CrewSheet } from './CrewSheet';
+import { RunnerCard } from './RunnerCard';
 import { type MapLayerState, type MapView } from './mapTypes';
 import { getMapLayerPrefs, saveMapLayerPrefs } from '../../services/mapLayerStorage';
 import { useRunController } from '../../hooks/useRunController';
 import { useFriends } from '../../hooks/useFriends';
+import { useInitialPosition } from '../../hooks/useInitialPosition';
 import { getSavedCharacter, getSelfUserId } from '../../services/storage';
 
-const VIEWBOX_W = 800;
-const VIEWBOX_H = 700;
-const PADDING = 40;
-
-const PROJECTION: ProjectionOpts = {
-  width: VIEWBOX_W,
-  height: VIEWBOX_H,
-  padding: PADDING,
-};
-
-const CITY_SKELETON_ROUTES: SpZoneId[][] = [
-  ['oeste', 'centro', 'leste'],
-  ['norte', 'centro', 'sul'],
-  ['oeste', 'norte', 'leste'],
-  ['oeste', 'sul', 'leste'],
-];
+type SheetState =
+  | { type: 'zone'; zoneId: SpZoneId }
+  | { type: 'spot'; spotId: string }
+  | { type: 'crew'; crewSlug: string }
+  | { type: 'runner'; friendUserId: string }
+  | null;
 
 interface Props {
   runnerProgress: RunnerProgress;
@@ -66,13 +52,15 @@ const getInitialZoneForCrew = (slug?: string): SpZoneId | undefined => {
 export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, onBackToMenu, onRunCompleted }) => {
   const [view, setView] = useState<MapView>(() => ({ zoom: 'city' }));
   const [layers, setLayers] = useState<MapLayerState>(() => getMapLayerPrefs());
-  const svgId = useId();
-  const svgDomId = `map-stage-svg-${svgId.replace(/[^\w-]/g, '')}`;
+  const [sheet, setSheet] = useState<SheetState>(null);
+  const canvasId = useId();
+  const canvasDomId = `map-stage-canvas-${canvasId.replace(/[^\w-]/g, '')}`;
 
   const controller = useRunController(runnerProgress, selectedCrewSlug, onRunCompleted);
   const userCrew = getCrewBySlug(selectedCrewSlug);
   const userZoneId = getInitialZoneForCrew(selectedCrewSlug);
   const { friends } = useFriends();
+  const initialPos = useInitialPosition();
   const selfUserId = useMemo(() => getSelfUserId(), []);
   const selfRunnerName = useMemo(
     () => getSavedCharacter()?.profile?.name || 'Runner',
@@ -91,9 +79,6 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const handleToggleLayer = useCallback((key: keyof MapLayerState) => {
     setLayers((prev) => {
       const next = { ...prev, [key]: !prev[key] };
-      // Refuse the toggle that would leave every layer off — the map would
-      // become empty with no obvious way back. Persisted recovery still kicks
-      // in via getMapLayerPrefs, but blocking it at the UI is cheaper.
       const anyOn = next.territory || next.live || next.missions || next.history;
       if (!anyOn) return prev;
       saveMapLayerPrefs(next);
@@ -101,15 +86,8 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     });
   }, []);
 
-  const handleSelectZone = useCallback((zoneId: SpZoneId) => {
-    setView({ zoom: 'zone', zoneId });
-  }, []);
-
-  const handleSelectSpot = useCallback((spotId: string) => {
-    setView((prev) => ({ ...prev, zoom: 'spot', spotId }));
-  }, []);
-
   const handleBackZoom = useCallback(() => {
+    setSheet(null);
     setView((prev) => {
       if (prev.zoom === 'spot') return { zoom: 'zone', zoneId: prev.zoneId };
       if (prev.zoom === 'zone') return { zoom: 'city' };
@@ -117,34 +95,30 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     });
   }, []);
 
-  const userZone = userZoneId ? getZoneById(userZoneId) : undefined;
-  const userPos = userZone ? projectLngLat(userZone.center, PROJECTION) : null;
-  const signalPath = polylineToPath(SP_SIGNAL_ROUTE, PROJECTION);
-  const baseRoutePaths = useMemo(
-    () =>
-      CITY_SKELETON_ROUTES.map((route) => {
-        const centers = route.flatMap((zoneId) => {
-          const zone = getZoneById(zoneId);
-          return zone ? [zone.center] : [];
-        });
-        return polylineToPath(centers, PROJECTION);
-      }),
-    [],
-  );
-  // Missions relevant to the current view, regardless of toggle state. The
-  // toggle controls render visibility; this list drives chip availability so
-  // the Missions chip stays clickable as long as data exists for this view.
+  const closeSheet = useCallback(() => setSheet(null), []);
+
+  const handleCrewMarkerClick = useCallback((slug: string) => {
+    setSheet({ type: 'crew', crewSlug: slug });
+  }, []);
+
+  const handleSpotClick = useCallback((spotId: string) => {
+    setView((prev) => ({ ...prev, zoom: 'spot', spotId }));
+    setSheet({ type: 'spot', spotId });
+  }, []);
+
+  const handleFriendClick = useCallback((userId: string) => {
+    setSheet({ type: 'runner', friendUserId: userId });
+  }, []);
+
+  const handleZoneBannerClick = useCallback(() => {
+    if (view.zoneId) setSheet({ type: 'zone', zoneId: view.zoneId });
+  }, [view.zoneId]);
+
   const missionsForView = SAMPLE_MISSIONS.filter(
     (m) => view.zoom === 'spot' || !view.zoneId || m.zoneId === view.zoneId,
   );
   const visibleMissions = layers.missions ? missionsForView : [];
   const activeZone = view.zoneId ? getZoneById(view.zoneId) : undefined;
-  const liveBadges = view.zoom === 'city' && layers.live
-    ? SP_ZONE_MAP_FEATURES.map((zone) => ({
-        zone,
-        center: projectLngLat(zone.center, PROJECTION),
-      }))
-    : [];
 
   const layerAvailability: Partial<Record<keyof MapLayerState, boolean>> = {
     missions: missionsForView.length > 0,
@@ -163,96 +137,36 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
       <HudOverlay progress={runnerProgress} crewSlug={selectedCrewSlug} />
 
       <div className="map-stage-canvas">
-        <div className="map-stage-tiles" aria-hidden="true">
+        <div id={canvasDomId} className="map-stage-tiles">
           <MapLibreCanvas
+            center={initialPos.center}
+            layers={layers}
             activeCrewSlug={selectedCrewSlug}
             userPosition={snapshot.points[snapshot.points.length - 1] ?? null}
             trail={snapshot.points}
             zoom={view.zoom === 'city' ? 11 : view.zoom === 'zone' ? 13 : 15}
-          />
-        </div>
-        <svg
-          id={svgDomId}
-          viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
-          preserveAspectRatio="xMidYMid meet"
-          className="map-stage-svg"
-          role="img"
-          aria-label={`Mapa de Sao Paulo - zoom ${view.zoom}`}
-        >
-          <g className="map-base-layer" aria-hidden="true">
-            <rect x={PADDING} y={PADDING} width={VIEWBOX_W - PADDING * 2} height={VIEWBOX_H - PADDING * 2} className="map-base-bounds" />
-            {baseRoutePaths.map((path, index) => (
-              <path key={`base-route-${index}`} d={path} className="map-base-route" />
-            ))}
-            <path d={signalPath} className="map-base-signal" />
-            {SP_ZONE_MAP_FEATURES.map((zone) => {
-              const center = projectLngLat(zone.center, PROJECTION);
-              return (
-                <circle
-                  key={`base-node-${zone.id}`}
-                  cx={center.x}
-                  cy={center.y}
-                  r={4}
-                  className="map-base-node"
-                />
-              );
-            })}
-          </g>
-
-          {layers.territory && (
-            <ZoneLayer
-              projection={PROJECTION}
-              activeZoneId={view.zoneId}
-              ownershipByZone={ownershipByZone}
-              onSelectZone={view.zoom === 'city' ? handleSelectZone : undefined}
-            />
-          )}
-
-          {view.zoom !== 'city' && layers.live && (
-            <path d={signalPath} className="map-signal-route" fill="none" strokeDasharray="6 4" />
-          )}
-
-          <SpotLayer
-            projection={PROJECTION}
-            zoom={view.zoom}
+            mapZoom={view.zoom}
+            ownershipByZone={ownershipByZone}
             activeZoneId={view.zoneId}
             activeSpotId={view.spotId}
-            onSelectSpot={view.zoom === 'zone' ? handleSelectSpot : undefined}
+            trailColor={userCrew.accent}
+            onSelectSpot={view.zoom === 'zone' ? handleSpotClick : undefined}
+            onSelectCrew={handleCrewMarkerClick}
+            onSelectFriend={handleFriendClick}
+            missions={visibleMissions}
+            friends={friends}
+            trackerActive={trackerActive}
           />
-
-          {layers.missions && <MissionLayer projection={PROJECTION} zoom={view.zoom} missions={visibleMissions} />}
-
-          {trackerActive && (
-            <TrailLayer points={snapshot.points} projection={PROJECTION} color={userCrew.accent} />
-          )}
-
-          {liveBadges.map(({ zone, center }) => (
-            <g key={`live-${zone.id}`} className="map-live-pulse" transform={`translate(${center.x} ${center.y})`}>
-              <circle r={10} className="map-live-halo" stroke={zone.color} />
-              <image href={getCrewBySlug(zone.crewSlug).assets.badge} x={-14} y={-14} width={28} height={28} />
-            </g>
-          ))}
-
-          {userPos && !trackerActive && (
-            <g className="map-user-pin" transform={`translate(${userPos.x} ${userPos.y})`}>
-              <circle r={14} fill="var(--bone)" stroke="var(--crew-accent)" strokeWidth={3} />
-              <image href={userCrew.assets.badge} x={-10} y={-10} width={20} height={20} />
-            </g>
-          )}
-
-          {view.zoom === 'city' && !trackerActive && (
-            <FriendPings friends={friends} projection={PROJECTION} />
-          )}
-        </svg>
+        </div>
       </div>
 
       {view.zoom !== 'city' && activeZone && !trackerActive && (
         <header className="map-stage-zone-banner">
           <button type="button" className="map-back" onClick={handleBackZoom} aria-label="Voltar zoom">←</button>
-          <div className="map-stage-zone-title">
+          <button type="button" className="map-stage-zone-title" onClick={handleZoneBannerClick} aria-label={`Detalhes ${activeZone.label}`}>
             <span className="map-stage-zone-label">{activeZone.label}</span>
             <span className="map-stage-zone-mission">{getCrewBySlug(activeZone.crewSlug).mission}</span>
-          </div>
+          </button>
         </header>
       )}
 
@@ -261,7 +175,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           layers={layers}
           onToggle={handleToggleLayer}
           availability={layerAvailability}
-          controlsId={svgDomId}
+          controlsId={canvasDomId}
         />
       )}
 
@@ -281,7 +195,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           <button
             type="button"
             className="map-action-secondary"
-            onClick={onBackToMenu}
+            onClick={onBackToMenu ?? undefined}
             disabled={!onBackToMenu}
             aria-disabled={!onBackToMenu}
           >
@@ -308,8 +222,10 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           streakBumped={controller.pendingSummary.streak.streakBumped}
           streakBroken={controller.pendingSummary.streak.streakBroken}
           freezeUsed={controller.pendingSummary.streak.freezeUsed}
+          newlyUnlocked={controller.pendingSummary.newlyUnlocked ?? []}
           onSave={controller.saveSummary}
           onDiscard={controller.discardSummary}
+          onDismissUnlocks={closeSheet}
         />
       )}
 
@@ -339,6 +255,33 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           </div>
         </div>
       )}
+
+      {sheet?.type === 'zone' && (
+        <ZoneSheet
+          zoneId={sheet.zoneId}
+          progress={runnerProgress}
+          friends={friends}
+          open
+          onClose={closeSheet}
+        />
+      )}
+      {sheet?.type === 'spot' && (
+        <SpotSheet spotId={sheet.spotId} open onClose={closeSheet} />
+      )}
+      {sheet?.type === 'crew' && (
+        <CrewSheet
+          crewSlug={sheet.crewSlug}
+          progress={runnerProgress}
+          friends={friends}
+          isUserCrew={sheet.crewSlug === selectedCrewSlug}
+          open
+          onClose={closeSheet}
+        />
+      )}
+      {sheet?.type === 'runner' && (() => {
+        const friend = friends.find((f) => f.userId === sheet.friendUserId);
+        return friend ? <RunnerCard friend={friend} open onClose={closeSheet} /> : null;
+      })()}
     </section>
   );
 };
