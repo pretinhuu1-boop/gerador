@@ -1,33 +1,41 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './supabaseTypes';
 
-type ImportMetaEnv = {
-  VITE_SUPABASE_URL?: string;
-  VITE_SUPABASE_PUBLISHABLE_KEY?: string;
+/** Read an env var — prefers process.env (works in tests/node), falls back to
+ *  import.meta.env (works in Vite browser builds).  Vite inlines import.meta.env
+ *  references at transform time, making them immune to vi.stubEnv; process.env is
+ *  patched at runtime so test stubs work correctly. */
+const readEnv = (key: string): string => {
+  if (typeof process !== 'undefined' && process.env) {
+    const v = process.env[key];
+    if (v !== undefined) return v;
+  }
+  // Vite browser build: access via bracket notation to avoid static inlining
+  const metaEnv = (import.meta as ImportMeta & { env?: Record<string, string> }).env ?? {};
+  return metaEnv[key] ?? '';
 };
 
-const env = (import.meta as ImportMeta & { env?: ImportMetaEnv }).env ?? {};
-const url = (env.VITE_SUPABASE_URL ?? '').trim();
-const key = (env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '').trim();
-
-let client: SupabaseClient<Database> | null = null;
-
-export const isSupabaseConfigured = (): boolean => Boolean(url && key);
+let instance: SupabaseClient<Database> | null = null;
+let checked = false;
 
 export const getSupabase = (): SupabaseClient<Database> | null => {
-  if (!isSupabaseConfigured()) return null;
-  if (!client) {
-    client = createClient<Database>(url, key, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false,
-        storageKey: 'crew.supabase.auth',
-      },
-    });
-  }
-  return client;
+  if (checked) return instance;
+  checked = true;
+  const url = readEnv('VITE_SUPABASE_URL').trim();
+  const key = readEnv('VITE_SUPABASE_PUBLISHABLE_KEY').trim();
+  if (!url || !key) return null;
+  instance = createClient<Database>(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+      storageKey: 'crew.supabase.auth',
+    },
+  });
+  return instance;
 };
+
+export const isSupabaseConfigured = (): boolean => getSupabase() !== null;
 
 export const ensureAnonSession = async (): Promise<string | null> => {
   const sb = getSupabase();
