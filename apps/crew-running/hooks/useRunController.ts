@@ -15,7 +15,18 @@ import {
 } from '../data/gamification';
 import { evaluateBadgeUnlocks } from '../data/badges';
 import { applyRunToHistory } from '../data/runHistoryUpdate';
-import { loadRunHistoryStats, saveRunHistoryStats } from '../services/storage';
+import {
+  loadRunHistoryStats,
+  saveRunHistoryStats,
+  getActiveMissions,
+  saveActiveMissions,
+  appendCompletedMission,
+} from '../services/storage';
+import { SAMPLE_MISSIONS } from '../data/gamification';
+import {
+  resolveMissions,
+  type CompletedMission,
+} from '../data/missions';
 import { runTracker, type RunSnapshot } from '../services/runTracker';
 import { useRunTracker } from './useRunTracker';
 
@@ -24,6 +35,7 @@ export interface PendingSummary {
   streak: StreakBumpResult;
   nextProgress: RunnerProgress;
   newlyUnlocked?: BadgeId[];
+  missionsCompleted?: CompletedMission[];
 }
 
 export interface RunController {
@@ -106,24 +118,42 @@ export const useRunController = (
     );
     const priorHistory = loadRunHistoryStats();
     const now = new Date();
-    const newlyUnlocked = evaluateBadgeUnlocks({
+    const { badges: newlyUnlocked, events: badgeUnlockEvents } = evaluateBadgeUnlocks({
       progress: streak.next,
       history: priorHistory,
       snapshot: snap,
       breakdown,
       now,
-    });
+    }, snap.homeZoneId ?? undefined);
     // Merge newly-unlocked badges into nextProgress at stop time so the save
     // path stays trivial — dismissing the unlock toast later can never strip
     // badges that the user actually earned (BadgeUnlockToast stacks on top of
     // RunSummary and must be dismissed before SAVE is reachable).
+    const { completed: missionsNowCompleted, stillActive } = resolveMissions(
+      getActiveMissions(),
+      snap,
+      SAMPLE_MISSIONS,
+    );
+    for (const cm of missionsNowCompleted) appendCompletedMission(cm);
+    saveActiveMissions(stillActive);
+
     const nextProgress: RunnerProgress = {
       ...streak.next,
       badgeUnlocks: Array.from(
         new Set([...streak.next.badgeUnlocks, ...newlyUnlocked]),
       ),
+      badgeUnlockEvents: [
+        ...(streak.next.badgeUnlockEvents ?? []),
+        ...badgeUnlockEvents,
+      ],
     };
-    setPendingSummary({ breakdown, streak, nextProgress, newlyUnlocked });
+    setPendingSummary({
+      breakdown,
+      streak,
+      nextProgress,
+      newlyUnlocked,
+      missionsCompleted: missionsNowCompleted,
+    });
   }, [runnerProgress]);
 
   const saveSummary = useCallback(() => {

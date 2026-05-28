@@ -16,6 +16,13 @@ import {
   type CrewRadioMessage,
 } from '../data/crewRadio';
 import { emptyRunHistoryStats, type RunHistoryStats } from '../data/gamification';
+import {
+  type ActiveMission,
+  type CompletedMission,
+  isExpired as isMissionExpired,
+} from '../data/missions';
+import { DIARY_MAX_ENTRIES, isDiaryEntry, type DiaryEntry } from '../data/diary';
+import { isFriendNote, type FriendNote } from '../data/friendNotes';
 
 const API_KEY_STORAGE = 'crew.gemini_api_key';
 const CHARACTER_STORAGE = 'crew.saved_character';
@@ -26,6 +33,11 @@ const CREW_RADIO_STORAGE = 'crew.crew_radio';
 const SELF_USER_ID_STORAGE = 'crew.self_user_id';
 const RUN_HISTORY_STATS_STORAGE = 'crew.run_history_stats';
 const FRIEND_AVATAR_MAX_BYTES = 10 * 1024;
+const ACTIVE_MISSIONS_STORAGE = 'crew.active_missions';
+const COMPLETED_MISSIONS_STORAGE = 'crew.completed_missions';
+const COMPLETED_MISSIONS_MAX = 50;
+const DIARY_STORAGE = 'crew.run_diary';
+const FRIEND_NOTES_STORAGE = 'crew.friend_notes';
 const ENV_API_KEY =
   (
     (import.meta as ImportMeta & { env?: { VITE_GEMINI_API_KEY?: string } }).env
@@ -325,4 +337,112 @@ export const loadRunHistoryStats = (): RunHistoryStats => {
 
 export const saveRunHistoryStats = (stats: RunHistoryStats): void => {
   writeItem(RUN_HISTORY_STATS_STORAGE, JSON.stringify(stats));
+};
+
+// ── Missions ──────────────────────────────────────────────────
+
+const isActiveMission = (v: unknown): v is ActiveMission => {
+  if (!v || typeof v !== 'object') return false;
+  const m = v as Record<string, unknown>;
+  return (
+    typeof m.missionId === 'string' &&
+    typeof m.acceptedAt === 'number' &&
+    typeof m.expiresAt === 'number' &&
+    typeof m.progress === 'object' &&
+    m.progress !== null
+  );
+};
+
+export const getActiveMissions = (): ActiveMission[] => {
+  const raw = readItem(ACTIVE_MISSIONS_STORAGE);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isActiveMission).filter((m) => !isMissionExpired(m));
+  } catch {
+    return [];
+  }
+};
+
+export const saveActiveMissions = (missions: ActiveMission[]): void => {
+  writeItem(ACTIVE_MISSIONS_STORAGE, JSON.stringify(missions));
+};
+
+const isCompletedMission = (v: unknown): v is CompletedMission => {
+  if (!v || typeof v !== 'object') return false;
+  const m = v as Record<string, unknown>;
+  return (
+    typeof m.missionId === 'string' &&
+    typeof m.completedAt === 'number' &&
+    typeof m.xpEarned === 'number'
+  );
+};
+
+export const getCompletedMissions = (): CompletedMission[] => {
+  const raw = readItem(COMPLETED_MISSIONS_STORAGE);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isCompletedMission);
+  } catch {
+    return [];
+  }
+};
+
+export const appendCompletedMission = (mission: CompletedMission): void => {
+  const existing = getCompletedMissions();
+  if (existing.some((m) => m.missionId === mission.missionId)) return;
+  const merged = [mission, ...existing].slice(0, COMPLETED_MISSIONS_MAX);
+  writeItem(COMPLETED_MISSIONS_STORAGE, JSON.stringify(merged));
+};
+
+// ── Diary ─────────────────────────────────────────────────────
+
+export const getDiaryEntries = (): DiaryEntry[] => {
+  const raw = readItem(DIARY_STORAGE);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isDiaryEntry);
+  } catch {
+    return [];
+  }
+};
+
+export const appendDiaryEntry = (entry: DiaryEntry): DiaryEntry => {
+  const existing = getDiaryEntries();
+  if (existing.some((e) => e.id === entry.id)) return entry;
+  const merged = [entry, ...existing].slice(0, DIARY_MAX_ENTRIES);
+  writeItem(DIARY_STORAGE, JSON.stringify(merged));
+  return entry;
+};
+
+// ── Friend Notes ──────────────────────────────────────────────
+
+export const getFriendNotes = (): FriendNote[] => {
+  const raw = readItem(FRIEND_NOTES_STORAGE);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isFriendNote);
+  } catch {
+    return [];
+  }
+};
+
+export const saveFriendNote = (note: FriendNote): void => {
+  const existing = getFriendNotes();
+  const filtered = existing.filter((n) => n.friendUserId !== note.friendUserId);
+  writeItem(FRIEND_NOTES_STORAGE, JSON.stringify([note, ...filtered]));
+};
+
+export const removeFriendNote = (friendUserId: string): void => {
+  const existing = getFriendNotes();
+  const filtered = existing.filter((n) => n.friendUserId !== friendUserId);
+  if (filtered.length === existing.length) return;
+  writeItem(FRIEND_NOTES_STORAGE, JSON.stringify(filtered));
 };

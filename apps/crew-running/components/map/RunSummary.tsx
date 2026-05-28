@@ -1,8 +1,10 @@
 import React from 'react';
 import type { BadgeId, RunXpBreakdown } from '../../data/gamification';
+import type { CompletedMission } from '../../data/missions';
 import type { RunSnapshot } from '../../services/runTracker';
 import { MultiplierChip } from './MultiplierChip';
 import { BadgeUnlockToast } from './BadgeUnlockToast';
+import { SAMPLE_MISSIONS } from '../../data/gamification';
 
 interface Props {
   snapshot: RunSnapshot;
@@ -11,6 +13,7 @@ interface Props {
   streakBroken: boolean;
   freezeUsed: boolean;
   newlyUnlocked: BadgeId[];
+  missionsCompleted?: CompletedMission[];
   onSave: () => void;
   onDiscard: () => void;
   onDismissUnlocks: () => void;
@@ -33,6 +36,7 @@ export const RunSummary: React.FC<Props> = ({
   streakBroken,
   freezeUsed,
   newlyUnlocked,
+  missionsCompleted,
   onSave,
   onDiscard,
   onDismissUnlocks,
@@ -75,6 +79,22 @@ export const RunSummary: React.FC<Props> = ({
             <MultiplierChip kind="invasion" multiplier={breakdown.invasionMult} />
           </div>
         </div>
+        {missionsCompleted && missionsCompleted.length > 0 && (
+          <div className="run-summary-missions">
+            <h3 className="run-summary-missions__title">Missões completadas</h3>
+            <ul className="run-summary-missions__list">
+              {missionsCompleted.map((cm) => {
+                const def = SAMPLE_MISSIONS.find((d) => d.id === cm.missionId);
+                return (
+                  <li key={cm.missionId} className="run-summary-missions__item">
+                    <span>{def?.title ?? cm.missionId}</span>
+                    <span className="run-summary-missions__xp">+{cm.xpEarned} XP</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
         {streakBumped && <p className="run-summary-notice run-summary-notice--good">Streak +1!</p>}
         {freezeUsed && <p className="run-summary-notice">Freeze usado pra preservar streak.</p>}
         {streakBroken && <p className="run-summary-notice run-summary-notice--bad">Streak quebrado.</p>}

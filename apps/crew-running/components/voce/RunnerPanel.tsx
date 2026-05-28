@@ -4,13 +4,17 @@ import {
   buildIdentityEventId,
   type IdentityEvent,
 } from '../../data/identityEvents';
+import type { FriendNote } from '../../data/friendNotes';
 import { getRunnerTypeById } from '../../data/runnerTypes';
 import type { LaunchProgress } from '../../services/launchStorage';
 import type { SavedCharacter } from '../../services/storage';
 import { getSelfUserId } from '../../services/storage';
 import { useIdentityFeed } from '../../hooks/useIdentityFeed';
 import { useFriends } from '../../hooks/useFriends';
+import { useFriendNotes } from '../../hooks/useFriendNotes';
+import { useDiary } from '../../hooks/useDiary';
 import { AddFriendModal } from './AddFriendModal';
+import { DiaryEntryCard } from './DiaryEntryCard';
 import { FeedHeader } from './FeedHeader';
 import { FeedPost } from './FeedPost';
 import { FriendsStrip } from './FriendsStrip';
@@ -53,7 +57,14 @@ export const RunnerPanel: React.FC<Props> = ({
       : 'pending';
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const { friends, add: addFriendToList } = useFriends(version);
+  const friendNotes = useFriendNotes(version);
+  const diary = useDiary(version);
   const selfUserId = useMemo(() => getSelfUserId(), []);
+  const notesByFriend = useMemo(() => {
+    const map = new Map<string, FriendNote>();
+    for (const n of friendNotes.notes) map.set(n.friendUserId, n);
+    return map;
+  }, [friendNotes.notes]);
   // Single pass over events instead of two filters; memoize because the
   // filtered counts only change when events array identity changes.
   const { lookCount, stickerCount } = useMemo(() => {
@@ -88,7 +99,7 @@ export const RunnerPanel: React.FC<Props> = ({
         lookCount={lookCount}
         stickerCount={stickerCount}
       />
-      <FriendsStrip friends={friends} onAdd={() => setAddFriendOpen(true)} />
+      <FriendsStrip friends={friends} onAdd={() => setAddFriendOpen(true)} notesByFriend={notesByFriend} />
       <ol className="voce-panel__feed" aria-label="Linha do tempo de identidade">
         {hasEvents
           ? events.map((event) => (
@@ -98,6 +109,13 @@ export const RunnerPanel: React.FC<Props> = ({
               <FeedPost event={emptyEvent} savedCharacter={savedCharacter} />
             )}
       </ol>
+      {diary.entries.length > 0 && (
+        <ol className="voce-panel__diary" aria-label="Diário de corridas">
+          {diary.entries.map((entry) => (
+            <DiaryEntryCard key={entry.id} entry={entry} />
+          ))}
+        </ol>
+      )}
       <div className="voce-panel__actions">
         <MapSocialHookButton onClick={onOpenMap} />
       </div>

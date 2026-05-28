@@ -103,6 +103,10 @@ describe('MapStage', () => {
     act(() => {
       fireEvent.click(screen.getByRole('button', { name: /SALVAR CORRIDA/ }));
     });
+    // DiaryPrompt opens — skip it to finalize save
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: /PULAR/ }));
+    });
     expect(onRunCompleted).toHaveBeenCalledTimes(1);
   });
 
