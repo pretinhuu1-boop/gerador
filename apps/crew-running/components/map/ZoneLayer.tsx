@@ -23,10 +23,29 @@ interface ZonePatternProps {
 
 const ZonePattern: React.FC<ZonePatternProps> = ({ zone, patternId }) => {
   const crew = getCrewBySlug(zone.crewSlug);
+  // territory_pattern.png is full crew artwork (logo + skyline composition),
+  // not a tileable texture. Tile it at 96x96 in userSpaceOnUse and the same
+  // artwork stamps 6–9 times per zone, reading as duplication. Use
+  // objectBoundingBox so the pattern fits each polygon bbox exactly once,
+  // and dial the opacity down so the zone color reads first.
   return (
-    <pattern id={patternId} patternUnits="userSpaceOnUse" width="96" height="96">
-      <rect width="96" height="96" fill={zone.color} fillOpacity="0.55" />
-      <image href={crew.assets.pattern} x="0" y="0" width="96" height="96" preserveAspectRatio="xMidYMid slice" opacity="0.7" />
+    <pattern
+      id={patternId}
+      patternUnits="objectBoundingBox"
+      patternContentUnits="objectBoundingBox"
+      width="1"
+      height="1"
+    >
+      <rect x="0" y="0" width="1" height="1" fill={zone.color} fillOpacity="0.45" />
+      <image
+        href={crew.assets.pattern}
+        x="0"
+        y="0"
+        width="1"
+        height="1"
+        preserveAspectRatio="xMidYMid slice"
+        opacity="0.35"
+      />
     </pattern>
   );
 };
