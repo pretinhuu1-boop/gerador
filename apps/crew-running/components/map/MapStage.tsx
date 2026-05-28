@@ -12,6 +12,7 @@ import {
   type RunXpBreakdown,
   type RunnerProgress,
 } from '../../data/gamification';
+import { applyInkDecay, computeOwnershipFromInk } from '../../data/territoryDecay';
 import type { DiaryMood } from '../../data/diary';
 import { HudOverlay } from './HudOverlay';
 import { LayerRail } from './LayerRail';
@@ -83,14 +84,15 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     return map;
   }, [friendNotes.notes]);
 
-  const ownershipByZone = useMemo(() => {
-    const out: Partial<Record<SpZoneId, number>> = {};
-    for (const zone of SP_ZONE_MAP_FEATURES) {
-      const ink = runnerProgress.inkPerZone[zone.id] ?? 0;
-      out[zone.id] = Math.min(1, ink / INK_PER_FULL_OWNERSHIP);
-    }
-    return out;
-  }, [runnerProgress.inkPerZone]);
+  const ownershipByZone = useMemo(
+    () =>
+      computeOwnershipFromInk(
+        applyInkDecay(runnerProgress.inkPerZone, runnerProgress.inkUpdatedAt, Date.now()),
+        SP_ZONE_MAP_FEATURES,
+        INK_PER_FULL_OWNERSHIP,
+      ),
+    [runnerProgress.inkPerZone, runnerProgress.inkUpdatedAt],
+  );
 
   const handleToggleLayer = useCallback((key: keyof MapLayerState) => {
     setLayers((prev) => {
