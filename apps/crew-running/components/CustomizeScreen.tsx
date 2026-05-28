@@ -1,11 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { buildCrewRenderContext } from '../data/crewRenderContext';
 import {
-  BODY_REFERENCE,
   DEFAULT_RUNNER_PROFILE,
-  RUNNER_SEX_OPTIONS,
   RunnerProfile,
-  RunnerSex,
   normalizeRunnerProfile,
 } from '../data/runnerProfile';
 import { DEFAULT_RUNNER_TYPE, RunnerType } from '../data/runnerTypes';
@@ -24,6 +21,7 @@ import { CartridgeButton } from './CartridgeButton';
 import { CrewBadge } from './CrewBadge';
 import { HandUnderline } from './SvgDefs';
 import { PhotoUpload } from './PhotoUpload';
+import { RunnerProfileForm } from './RunnerProfileForm';
 import { RunnerTypePicker } from './RunnerTypePicker';
 import { SheetPreview } from './SheetPreview';
 import { WardrobePicker } from './WardrobePicker';
@@ -271,107 +269,6 @@ const ApiKeyModal: React.FC<{
 const randomFrom = <Value,>(items: Value[]): Value =>
   items[Math.floor(Math.random() * items.length)];
 
-const RunnerProfileForm: React.FC<{
-  profile: RunnerProfile;
-  onChange: (profile: RunnerProfile) => void;
-}> = ({ profile, onChange }) => {
-  const updateProfile = <Key extends keyof RunnerProfile>(key: Key, value: RunnerProfile[Key]) => {
-    onChange({ ...profile, [key]: value });
-  };
-  const updateNumber = (key: 'heightCm' | 'weightKg', value: string) => {
-    const parsed = Number.parseInt(value, 10);
-    updateProfile(key, Number.isFinite(parsed) ? parsed : DEFAULT_RUNNER_PROFILE[key]);
-  };
-
-  return (
-    <div className="runner-creator__block runner-creator__profile">
-      <div className="runner-creator__block-head">
-        <h3 className="section-label"><span className="section-label__index">02 /</span> FICHA DO RUNNER</h3>
-        <span>base {BODY_REFERENCE.heightCm}cm / {BODY_REFERENCE.weightKg}kg</span>
-      </div>
-      <HandUnderline width={190} className="mb-4 mt-1" />
-
-      <label className="runner-creator__field">
-        <span>NOME</span>
-        <input
-          autoComplete="off"
-          maxLength={24}
-          onChange={(event) => updateProfile('name', event.currentTarget.value)}
-          placeholder="nome do runner"
-          type="text"
-          value={profile.name}
-        />
-      </label>
-
-      <div className="runner-creator__field">
-        <span>SEXO</span>
-        <div className="runner-creator__sex-options" role="group" aria-label="Sexo do runner">
-          {RUNNER_SEX_OPTIONS.map((option) => (
-            <button
-              className={profile.sex === option.value ? 'is-selected' : ''}
-              key={option.value}
-              onClick={() => updateProfile('sex', option.value as RunnerSex)}
-              aria-pressed={profile.sex === option.value}
-              type="button"
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="runner-creator__measure-grid">
-        <label className="runner-creator__field">
-          <span>ALTURA</span>
-          <input
-            inputMode="numeric"
-            max={230}
-            min={120}
-            onChange={(event) => updateNumber('heightCm', event.currentTarget.value)}
-            type="number"
-            value={profile.heightCm}
-          />
-          <small>CM</small>
-        </label>
-        <label className="runner-creator__field">
-          <span>PESO</span>
-          <input
-            inputMode="numeric"
-            max={220}
-            min={35}
-            onChange={(event) => updateNumber('weightKg', event.currentTarget.value)}
-            type="number"
-            value={profile.weightKg}
-          />
-          <small>KG</small>
-        </label>
-      </div>
-
-      <label className="runner-creator__field">
-        <span>PERSONALIDADE</span>
-        <textarea
-          maxLength={120}
-          onChange={(event) => updateProfile('personality', event.currentTarget.value)}
-          placeholder="calmo, competitivo, caótico..."
-          rows={3}
-          value={profile.personality}
-        />
-      </label>
-
-      <div className="runner-creator__body-reference" aria-label="Referência de escala">
-        <div>
-          <span>BASE</span>
-          <strong>{BODY_REFERENCE.heightCm}CM / {BODY_REFERENCE.weightKg}KG</strong>
-        </div>
-        <div>
-          <span>RUNNER</span>
-          <strong>{profile.heightCm || BODY_REFERENCE.heightCm}CM / {profile.weightKg || BODY_REFERENCE.weightKg}KG</strong>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const CrewLockPanel: React.FC<{
   crewContext: ReturnType<typeof buildCrewRenderContext>;
 }> = ({ crewContext }) => (
@@ -602,19 +499,30 @@ export const CustomizeScreen: React.FC<Props> = ({
         backgroundRemoved: true,
       };
       saveCharacter(next);
-      appendIdentityEvent({
-        kind: 'LOOK_SAVED',
-        payload: {
-          crewSlug: next.crewSlug,
-          runnerTypeId: next.runnerTypeId,
-          runnerName: next.profile?.name,
-          slots: next.slots,
-          savedAt: next.savedAt,
-          lookIndex: variant.index,
-        },
-        timestamp: next.savedAt,
-      });
+      // Identity event is a non-blocking side effect — if it fails (quota,
+      // private mode), the look is still saved. Log + continue rather than
+      // surfacing a "save failed" error that misleads the player.
+      try {
+        appendIdentityEvent({
+          kind: 'LOOK_SAVED',
+          payload: {
+            crewSlug: next.crewSlug,
+            runnerTypeId: next.runnerTypeId,
+            runnerName: next.profile?.name,
+            slots: next.slots,
+            savedAt: next.savedAt,
+            lookIndex: variant.index,
+          },
+          timestamp: next.savedAt,
+        });
+      } catch (eventErr) {
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('[CustomizeScreen] appendIdentityEvent failed:', eventErr);
+        }
+      }
       audio.playSfx('equip-snap');
+      // Reset before navigating so we don't setState after unmount.
+      setSavingVariantIndex(null);
       onRunnerCustomized();
     } catch (error) {
       audio.playSfx('error-buzz');
