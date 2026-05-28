@@ -6140,6 +6140,44 @@ button.map-stage-zone-title:hover {
   color: var(--bone);
 }
 
+.run-summary-missions {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--spray-cyan, #00e5ff);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--spray-cyan, #00e5ff) 8%, transparent);
+}
+
+.run-summary-missions__title {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--spray-cyan, #00e5ff);
+  margin-bottom: 6px;
+}
+
+.run-summary-missions__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.run-summary-missions__item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--bone);
+}
+
+.run-summary-missions__xp {
+  font-weight: 700;
+  color: var(--spray-cyan, #00e5ff);
+}
+
 .run-permission-toast {
   position: fixed;
   left: 50%;
@@ -6440,6 +6478,15 @@ button.map-stage-zone-title:hover {
 /* ----- Feed list ----- */
 
 .voce-panel__feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voce-panel__diary {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -7914,3 +7961,431 @@ button.map-stage-zone-title:hover {
 .main-menu__nav-item--sede.is-active {
   border-color: var(--crew-accent, #d97706);
 }
+
+/* ============================================
+   MISSION CARD
+   ============================================ */
+.mission-card {
+  background: var(--char-2);
+  border: 1px solid var(--gray-line);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mission-card--active {
+  border-color: var(--crew-accent, var(--spray-cyan));
+}
+
+.mission-card--completed {
+  opacity: 0.7;
+  border-color: var(--spray-green, #4caf50);
+}
+
+.mission-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mission-card__type-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--gray-mid);
+  color: var(--bone-soft);
+  white-space: nowrap;
+}
+
+.mission-card__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--bone);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mission-card__desc {
+  font-size: 0.75rem;
+  color: var(--bone-soft);
+  line-height: 1.4;
+}
+
+.mission-card__reward {
+  font-size: 0.75rem;
+  color: var(--spray-cyan);
+  font-weight: 600;
+}
+
+.mission-card__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mission-card__progress-text {
+  font-size: 0.75rem;
+  color: var(--bone-soft);
+}
+
+.mission-card__progress-bar {
+  height: 6px;
+  background: var(--gray-mid);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mission-card__progress-fill {
+  height: 100%;
+  background: var(--crew-accent, var(--spray-cyan));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.mission-card__time {
+  font-size: 0.625rem;
+  color: var(--bone-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mission-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mission-card__accept-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--crew-accent, var(--spray-cyan));
+  color: var(--black);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mission-card__abandon-btn {
+  background: none;
+  border: none;
+  color: var(--bone-soft);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 8px;
+  min-height: 44px;
+}
+
+/* ============================================
+   DIARY PROMPT MODAL
+   ============================================ */
+.diary-prompt__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 900;
+  padding: 16px;
+}
+
+.diary-prompt__card {
+  background: var(--char);
+  border: 1px solid var(--gray-line);
+  border-radius: 12px;
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.diary-prompt__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.diary-prompt__eyebrow {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--bone-soft);
+}
+
+.diary-prompt__question {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--bone);
+  margin: 0;
+}
+
+.diary-prompt__close {
+  background: none;
+  border: none;
+  color: var(--bone-soft);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary-prompt__label {
+  font-size: 0.75rem;
+  color: var(--bone-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.diary-prompt__mood-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.diary-prompt__mood-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-line);
+  border-radius: 8px;
+  background: var(--char-2);
+  color: var(--bone-soft);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.diary-prompt__mood-btn--selected {
+  border-color: var(--spray-cyan);
+  background: var(--gray-mid);
+  color: var(--bone);
+}
+
+.diary-prompt__textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid var(--gray-line);
+  border-radius: 8px;
+  background: var(--char-2);
+  color: var(--bone);
+  font-family: inherit;
+  font-size: 0.875rem;
+  resize: vertical;
+}
+
+.diary-prompt__textarea::placeholder {
+  color: var(--bone-soft);
+  opacity: 0.6;
+}
+
+.diary-prompt__counter {
+  font-size: 0.625rem;
+  color: var(--bone-soft);
+  text-align: right;
+}
+
+.diary-prompt__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ============================================
+   DIARY ENTRY CARD (feed)
+   ============================================ */
+.diary-card {
+  background: var(--char-2);
+  border: 1px solid var(--gray-line);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diary-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.diary-card__title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--spray-cyan);
+}
+
+.diary-card__date {
+  font-size: 0.625rem;
+  color: var(--bone-soft);
+}
+
+.diary-card__stats {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--bone);
+}
+
+.diary-card__mood {
+  font-size: 0.75rem;
+  color: var(--bone-soft);
+}
+
+.diary-card__note {
+  font-size: 0.8125rem;
+  color: var(--bone);
+  font-style: italic;
+  padding-left: 8px;
+  border-left: 2px solid var(--gray-line);
+}
+
+.diary-card__footer {
+  font-size: 0.625rem;
+  color: var(--bone-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================
+   FRIEND NOTE (RunnerCard extension + tag badges)
+   ============================================ */
+.runner-card__divider {
+  border: none;
+  border-top: 1px solid var(--gray-line);
+  margin: 8px 0;
+}
+
+.runner-card__note-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.runner-card__tag-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.runner-card__section-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--bone-soft);
+}
+
+.runner-card__note-input {
+  width: 100%;
+  min-height: 60px;
+  padding: 10px;
+  border: 1px solid var(--gray-line);
+  border-radius: 6px;
+  background: var(--char-2);
+  color: var(--bone);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  resize: vertical;
+}
+
+.runner-card__note-input::placeholder {
+  color: var(--bone-soft);
+  opacity: 0.6;
+}
+
+.runner-card__note-counter {
+  font-size: 0.625rem;
+  color: var(--bone-soft);
+  text-align: right;
+}
+
+.runner-card__tag-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.runner-card__tag-btn {
+  min-width: 44px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--gray-line);
+  border-radius: 6px;
+  background: var(--char-2);
+  color: var(--bone-soft);
+  font-size: 0.6875rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.runner-card__tag-btn--selected {
+  border-color: var(--spray-cyan);
+  color: var(--bone);
+}
+
+.runner-card__save-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--spray-cyan);
+  color: var(--black);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.voce-panel__friend-tile-slot {
+  position: relative;
+}
+
+.voce-panel__friend-tag-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 0.5rem;
+  line-height: 1;
+  background: var(--char);
+  border-radius: 50%;
+  padding: 2px;
+  pointer-events: none;
+}
+
+/* --- Zone Leaderboard --- */
+.zone-leaderboard__title { font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.12em; margin-bottom: 12px; opacity: 0.7; }
+.zone-leaderboard__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.zone-leaderboard__row { display: grid; grid-template-columns: 28px 28px 1fr auto auto; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.03); }
+.zone-leaderboard__row.is-self { background: rgba(var(--crew-accent-rgb, 255,255,255), 0.12); outline: 1px solid var(--crew-accent, #fff); }
+.zone-leaderboard__rank { font-family: var(--font-display); font-size: 0.9rem; text-align: center; }
+.zone-leaderboard__badge { width: 24px; height: 24px; border-radius: 50%; }
+.zone-leaderboard__name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zone-leaderboard__km { font-size: 0.75rem; opacity: 0.7; }
+.zone-leaderboard__ink { font-size: 0.75rem; opacity: 0.5; }
+.zone-leaderboard__empty { font-size: 0.8rem; opacity: 0.5; text-align: center; padding: 24px 0; }
+.zone-leaderboard__loading { font-size: 0.8rem; opacity: 0.5; text-align: center; padding: 24px 0; }
