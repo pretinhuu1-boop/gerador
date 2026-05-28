@@ -19,7 +19,7 @@ import {
   generateDemoCharacterSheet,
 } from '../services/crewService';
 import type { SavedCharacter } from '../services/storage';
-import { getApiKey, saveCharacter, setApiKey } from '../services/storage';
+import { appendIdentityEvent, getApiKey, saveCharacter, setApiKey } from '../services/storage';
 import { CartridgeButton } from './CartridgeButton';
 import { CrewBadge } from './CrewBadge';
 import { HandUnderline } from './SvgDefs';
@@ -602,6 +602,18 @@ export const CustomizeScreen: React.FC<Props> = ({
         backgroundRemoved: true,
       };
       saveCharacter(next);
+      appendIdentityEvent({
+        kind: 'LOOK_SAVED',
+        payload: {
+          crewSlug: next.crewSlug,
+          runnerTypeId: next.runnerTypeId,
+          runnerName: next.profile?.name,
+          slots: next.slots,
+          savedAt: next.savedAt,
+          lookIndex: variant.index,
+        },
+        timestamp: next.savedAt,
+      });
       audio.playSfx('equip-snap');
       onRunnerCustomized();
     } catch (error) {

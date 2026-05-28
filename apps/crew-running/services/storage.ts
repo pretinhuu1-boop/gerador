@@ -1,7 +1,14 @@
 import type { RunnerProfile } from '../data/runnerProfile';
+import {
+  buildIdentityEventId,
+  isIdentityEventKind,
+  type IdentityEvent,
+} from '../data/identityEvents';
 
 const API_KEY_STORAGE = 'crew.gemini_api_key';
 const CHARACTER_STORAGE = 'crew.saved_character';
+const IDENTITY_EVENTS_STORAGE = 'crew.identity_events';
+const IDENTITY_EVENTS_MAX = 50;
 const ENV_API_KEY =
   (
     (import.meta as ImportMeta & { env?: { VITE_GEMINI_API_KEY?: string } }).env
@@ -79,3 +86,46 @@ export const saveCharacter = (c: SavedCharacter) =>
   writeItem(CHARACTER_STORAGE, JSON.stringify(c));
 
 export const clearSavedCharacter = () => removeItem(CHARACTER_STORAGE);
+
+const isPersistedIdentityEvent = (value: unknown): value is IdentityEvent => {
+  if (!value || typeof value !== 'object') return false;
+  const ev = value as Record<string, unknown>;
+  return (
+    typeof ev.id === 'string' &&
+    typeof ev.timestamp === 'number' &&
+    isIdentityEventKind(ev.kind) &&
+    typeof ev.payload === 'object' &&
+    ev.payload !== null
+  );
+};
+
+export const getIdentityEvents = (): IdentityEvent[] => {
+  const raw = readItem(IDENTITY_EVENTS_STORAGE);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isPersistedIdentityEvent);
+  } catch {
+    return [];
+  }
+};
+
+export const appendIdentityEvent = (
+  event: Omit<IdentityEvent, 'id'> & { id?: string },
+): IdentityEvent => {
+  const id = event.id ?? buildIdentityEventId(event.kind, event.timestamp);
+  const next: IdentityEvent = {
+    id,
+    kind: event.kind,
+    payload: event.payload,
+    timestamp: event.timestamp,
+  };
+  const existing = getIdentityEvents();
+  if (existing.some((e) => e.id === id)) return next;
+  const merged = [next, ...existing].slice(0, IDENTITY_EVENTS_MAX);
+  writeItem(IDENTITY_EVENTS_STORAGE, JSON.stringify(merged));
+  return next;
+};
+
+export const clearIdentityEvents = () => removeItem(IDENTITY_EVENTS_STORAGE);
