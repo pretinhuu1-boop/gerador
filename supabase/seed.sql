@@ -1,0 +1,5 @@
+-- Seed data — empty by default.
+-- To create a test user locally:
+-- 1. Run `supabase start`
+-- 2. Open http://localhost:54323 (Studio) → Authentication → Add user
+-- 3. The trigger creates a `profiles` row automatically.
