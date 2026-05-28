@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   getLaunchProgress,
+  getRunnerProgress,
   LaunchProgress,
   markCitySignalSeen,
   markConsoleBootSeen,
@@ -16,6 +17,7 @@ import { GuidedOnboarding } from './GuidedOnboarding';
 import { MainMenu } from './MainMenu';
 import { RunnerSavedTeaser } from './RunnerSavedTeaser';
 import { TitleScreen } from './TitleScreen';
+import { MapStage } from '../map/MapStage';
 
 type LaunchScreen =
   | 'consoleBoot'
@@ -24,7 +26,8 @@ type LaunchScreen =
   | 'mainMenu'
   | 'guidedSetup'
   | 'runnerCreator'
-  | 'runnerSaved';
+  | 'runnerSaved'
+  | 'mapHome';
 
 type Props = {
   renderRunnerCreator: (props: {
@@ -181,6 +184,17 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
         selectedCrewSlug={progress.selectedCrewSlug}
         onBackToMenu={goToMainMenu}
         onEditRunner={goToRunnerCreator}
+        onEnterMap={() => setScreen('mapHome')}
+      />
+    );
+  }
+
+  if (screen === 'mapHome') {
+    return (
+      <MapStage
+        runnerProgress={getRunnerProgress()}
+        selectedCrewSlug={progress.selectedCrewSlug}
+        onBackToMenu={goToMainMenu}
       />
     );
   }
@@ -194,6 +208,7 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
       onReplayIntro={() => setScreen('title')}
       onReviewGuidedSetup={handleReviewGuidedSetup}
       onStartGuidedSetup={handleStartGuidedSetup}
+      onOpenMap={progress.runnerCustomized ? () => setScreen('mapHome') : undefined}
     />
   );
 };

@@ -13,6 +13,7 @@ type Props = {
   selectedCrewSlug?: string;
   onBackToMenu: () => void;
   onEditRunner: () => void;
+  onEnterMap?: () => void;
 };
 
 type SectionMotionProps = Pick<HTMLMotionProps<'section'>, 'initial' | 'animate' | 'transition'>;
@@ -24,6 +25,7 @@ export const RunnerSavedTeaser: React.FC<Props> = ({
   selectedCrewSlug,
   onBackToMenu,
   onEditRunner,
+  onEnterMap,
 }) => {
   const reducedMotion = useReducedMotion();
   const savedCharacter = useMemo(() => getSavedCharacter(), []);
@@ -114,7 +116,12 @@ export const RunnerSavedTeaser: React.FC<Props> = ({
             </div>
 
             <div className="runner-saved__actions">
-              <CartridgeButton variant="solid" className="game-command game-command--primary" onClick={onBackToMenu}>
+              {onEnterMap && (
+                <CartridgeButton variant="solid" className="game-command game-command--primary" onClick={onEnterMap}>
+                  ABRIR MAPA
+                </CartridgeButton>
+              )}
+              <CartridgeButton variant={onEnterMap ? 'chalk' : 'solid'} className="game-command" onClick={onBackToMenu}>
                 VOLTAR AO SINAL
               </CartridgeButton>
               <CartridgeButton variant="chalk" className="game-command" onClick={onEditRunner}>

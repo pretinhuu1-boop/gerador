@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <filter id="sticker-rough" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.9"/>
+    </filter>
+  </defs>
+  <g filter="url(#sticker-rough)">
+    <circle cx="24" cy="24" r="20" fill="white" stroke="black" stroke-width="3"/>
+    <circle cx="24" cy="24" r="16" fill="currentColor" stroke="black" stroke-width="1.5"/>
+  </g>
+  <g id="slot" transform="translate(12 12)" />
+</svg>

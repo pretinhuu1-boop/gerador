@@ -128,3 +128,64 @@ export const SP_SIGNAL_ROUTE: LngLat[] = [
 
 export const getZoneByCrewSlug = (crewSlug?: string): SpZoneMapFeature | undefined =>
   SP_ZONE_MAP_FEATURES.find((zone) => zone.crewSlug === crewSlug);
+
+export type MapZoom = 'city' | 'zone' | 'spot';
+
+export const getZoneById = (zoneId?: SpZoneId): SpZoneMapFeature | undefined =>
+  SP_ZONE_MAP_FEATURES.find((zone) => zone.id === zoneId);
+
+export const getSpotsByZone = (zoneId: SpZoneId): SpSpotMapFeature[] =>
+  SP_SPOT_MAP_FEATURES.filter((spot) => spot.zoneId === zoneId);
+
+export const getSpotById = (spotId?: string): SpSpotMapFeature | undefined =>
+  spotId ? SP_SPOT_MAP_FEATURES.find((spot) => spot.id === spotId) : undefined;
+
+const SP_BOUNDS = (() => {
+  const lngs = SP_ZONE_MAP_FEATURES.flatMap((zone) => zone.polygon.map((p) => p.lng));
+  const lats = SP_ZONE_MAP_FEATURES.flatMap((zone) => zone.polygon.map((p) => p.lat));
+  return {
+    minLng: Math.min(...lngs),
+    maxLng: Math.max(...lngs),
+    minLat: Math.min(...lats),
+    maxLat: Math.max(...lats),
+  };
+})();
+
+export interface ProjectionOpts {
+  width: number;
+  height: number;
+  bounds?: { minLng: number; maxLng: number; minLat: number; maxLat: number };
+  padding?: number;
+}
+
+export const projectLngLat = (point: LngLat, opts: ProjectionOpts): { x: number; y: number } => {
+  const bounds = opts.bounds ?? SP_BOUNDS;
+  const padding = opts.padding ?? 0;
+  const usableW = opts.width - padding * 2;
+  const usableH = opts.height - padding * 2;
+  const x = padding + ((point.lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * usableW;
+  const y = padding + ((bounds.maxLat - point.lat) / (bounds.maxLat - bounds.minLat)) * usableH;
+  return { x, y };
+};
+
+export const polygonToPath = (polygon: LngLat[], opts: ProjectionOpts): string => {
+  if (polygon.length === 0) return '';
+  return polygon
+    .map((point, index) => {
+      const { x, y } = projectLngLat(point, opts);
+      return `${index === 0 ? 'M' : 'L'}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(' ') + ' Z';
+};
+
+export const polylineToPath = (points: LngLat[], opts: ProjectionOpts): string => {
+  if (points.length === 0) return '';
+  return points
+    .map((point, index) => {
+      const { x, y } = projectLngLat(point, opts);
+      return `${index === 0 ? 'M' : 'L'}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(' ');
+};
+
+export const SP_MAP_BOUNDS = SP_BOUNDS;

@@ -34,6 +34,7 @@ type Props = {
   onReviewGuidedSetup: () => void;
   onOpenRunnerCreator: () => void;
   onReplayIntro: () => void;
+  onOpenMap?: () => void;
 };
 
 type MenuPanel = 'home' | 'crews' | 'runner' | 'config';
@@ -53,6 +54,7 @@ export const MainMenu: React.FC<Props> = ({
   onReviewGuidedSetup,
   onOpenRunnerCreator,
   onReplayIntro,
+  onOpenMap,
 }) => {
   const reducedMotion = useReducedMotion();
   const [panel, setPanel] = useState<MenuPanel>('home');
@@ -258,6 +260,11 @@ export const MainMenu: React.FC<Props> = ({
           <button className="main-menu__nav-link" type="button" onClick={onReplayIntro}>
             REVER INTRO
           </button>
+          {onOpenMap && (
+            <button className="main-menu__nav-link" type="button" onClick={onOpenMap}>
+              ABRIR MAPA
+            </button>
+          )}
         </nav>
 
         <div className="main-menu__hero">

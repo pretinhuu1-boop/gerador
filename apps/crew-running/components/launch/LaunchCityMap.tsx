@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CREWS } from '../../data/crews';
+import {
+  SP_ZONE_MAP_FEATURES,
+  getZoneByCrewSlug,
+  projectLngLat,
+  type ProjectionOpts,
+} from '../../data/spLiveMap';
 
 type Props = {
   activeSlug?: string;
   mode?: 'intro' | 'menu';
 };
 
+const PROJECTION: ProjectionOpts = { width: 100, height: 100, padding: 8 };
+
 export const LaunchCityMap: React.FC<Props> = ({ activeSlug, mode = 'intro' }) => {
+  const routes = useMemo(() => {
+    const centro = SP_ZONE_MAP_FEATURES.find((z) => z.id === 'centro');
+    if (!centro) return [] as string[];
+    const center = projectLngLat(centro.center, PROJECTION);
+    return SP_ZONE_MAP_FEATURES.filter((z) => z.id !== 'centro').map((zone) => {
+      const target = projectLngLat(zone.center, PROJECTION);
+      const cx = (center.x + target.x) / 2;
+      const cy = (center.y + target.y) / 2;
+      const skew = (target.x - center.x) * 0.18;
+      return `M${center.x.toFixed(2)} ${center.y.toFixed(2)} Q ${(cx + skew).toFixed(2)} ${(cy - skew).toFixed(2)} ${target.x.toFixed(2)} ${target.y.toFixed(2)}`;
+    });
+  }, []);
+
   return (
     <div
       className={`launch-city-map launch-city-map--${mode}`}
@@ -14,11 +35,9 @@ export const LaunchCityMap: React.FC<Props> = ({ activeSlug, mode = 'intro' }) =
     >
       <div className="launch-city-map__grid" aria-hidden />
       <svg className="launch-city-map__routes" viewBox="0 0 100 100" aria-hidden>
-        <path pathLength={1} d="M12 52 C 25 43, 38 43, 50 49 S 70 61, 87 52" />
-        <path pathLength={1} d="M50 49 C 46 38, 46 29, 48 18" />
-        <path pathLength={1} d="M50 50 C 56 59, 58 68, 56 84" />
-        <path pathLength={1} d="M50 49 C 61 43, 70 45, 84 36" />
-        <path pathLength={1} d="M51 49 C 41 56, 30 57, 16 64" />
+        {routes.map((d, idx) => (
+          <path key={idx} pathLength={1} d={d} />
+        ))}
       </svg>
 
       <div className="launch-city-map__scanner" aria-hidden>
@@ -27,12 +46,14 @@ export const LaunchCityMap: React.FC<Props> = ({ activeSlug, mode = 'intro' }) =
 
       {CREWS.map((crew, index) => {
         const isActive = activeSlug ? crew.slug === activeSlug : true;
+        const zone = getZoneByCrewSlug(crew.slug);
+        const projected = zone ? projectLngLat(zone.center, PROJECTION) : { x: 50, y: 50 };
         const style = {
           '--crew-accent': crew.accent,
           '--crew-secondary': crew.secondary,
           '--delay': `${0.24 + index * 0.16}s`,
-          left: `${crew.map.x}%`,
-          top: `${crew.map.y}%`,
+          left: `${projected.x}%`,
+          top: `${projected.y}%`,
         } as React.CSSProperties;
 
         return (

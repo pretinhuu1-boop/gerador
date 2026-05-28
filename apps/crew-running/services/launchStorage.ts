@@ -4,6 +4,9 @@
 // - LEGACY_BOOT_KEY 'crewBootSeen' is the pre-state-machine boot flag.
 // Read paths union both old and new keys; write paths set both so a downgrade
 // would still see the player's progress.
+import type { RunnerProgress } from '../data/gamification';
+import { decayInk, xpToLevel } from '../data/gamification';
+
 export type LaunchProgress = {
   consoleBootSeen: boolean;
   titleSeen: boolean;
@@ -27,6 +30,7 @@ const STORAGE_KEYS = {
   selectedCrewSlug: 'crewSelectedCrewSlug',
   onboardingComplete: 'crewOnboardingComplete',
   runnerCustomized: 'crewRunnerCustomized',
+  runnerProgress: 'crewRunnerProgress',
 } as const;
 
 const LEGACY_BOOT_KEY = 'crewBootSeen';
@@ -157,6 +161,57 @@ export const markGuidedSetupComplete = () => {
 export const markOnboardingComplete = markGuidedSetupComplete;
 
 export const markRunnerCustomized = () => writeBoolean(STORAGE_KEYS.runnerCustomized);
+
+const DEFAULT_RUNNER_PROGRESS: RunnerProgress = {
+  xp: 0,
+  level: 1,
+  streakWeeks: 0,
+  lastRunAt: 0,
+  freezesAvailable: 1,
+  inkPerZone: {},
+  inkUpdatedAt: Date.now(),
+  badgeUnlocks: [],
+  patchesOwned: [],
+};
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+export const getRunnerProgress = (): RunnerProgress => {
+  if (!canUseStorage()) return DEFAULT_RUNNER_PROGRESS;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.runnerProgress);
+    if (!raw) return DEFAULT_RUNNER_PROGRESS;
+    const parsed = JSON.parse(raw) as Partial<RunnerProgress>;
+    const merged: RunnerProgress = { ...DEFAULT_RUNNER_PROGRESS, ...parsed };
+    const now = Date.now();
+    const daysSince = (now - merged.inkUpdatedAt) / MS_PER_DAY;
+    if (daysSince > 0.01) {
+      const inkPerZone = { ...merged.inkPerZone };
+      for (const key of Object.keys(inkPerZone) as Array<keyof typeof inkPerZone>) {
+        const current = inkPerZone[key];
+        if (typeof current === 'number') {
+          inkPerZone[key] = decayInk(current, daysSince);
+        }
+      }
+      merged.inkPerZone = inkPerZone;
+      merged.inkUpdatedAt = now;
+    }
+    merged.level = xpToLevel(merged.xp);
+    return merged;
+  } catch {
+    return DEFAULT_RUNNER_PROGRESS;
+  }
+};
+
+export const saveRunnerProgress = (progress: RunnerProgress): void => {
+  if (!canUseStorage()) return;
+  try {
+    const normalized: RunnerProgress = { ...progress, level: xpToLevel(progress.xp) };
+    window.localStorage.setItem(STORAGE_KEYS.runnerProgress, JSON.stringify(normalized));
+  } catch {
+    // Some browsers block storage in private or restricted contexts.
+  }
+};
 
 export const resetLaunchProgress = () => {
   if (!canUseStorage()) return;
