@@ -192,6 +192,21 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_profiles: {
+        Row: {
+          id: string;
+          organization_id: string;
+        };
+        Insert: {
+          id: string;
+          organization_id: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+        };
+        Relationships: [];
+      };
       runners: {
         Row: {
           created_at: string;
