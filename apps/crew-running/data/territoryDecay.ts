@@ -1,7 +1,7 @@
 import { decayInk } from './gamification';
 import type { SpZoneId } from './spLiveMap';
 
-// Number of whole days elapsed between two epoch timestamps. Negative gaps
+// Fractional days elapsed between two epoch timestamps. Negative gaps
 // (clock skew or future-stored timestamps) clamp to 0 so we never amplify
 // ink by applying a negative exponent.
 const daysBetween = (fromMs: number, toMs: number): number => {
