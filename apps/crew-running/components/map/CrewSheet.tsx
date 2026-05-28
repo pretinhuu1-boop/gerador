@@ -4,10 +4,12 @@ import { getZoneByCrewSlug, SP_SPOT_MAP_FEATURES } from '../../data/spLiveMap';
 import {
   INK_PER_FULL_OWNERSHIP,
   xpToLevel,
+  isoWeekKey,
   type RunnerProgress,
 } from '../../data/gamification';
 import { MapBottomSheet } from './MapBottomSheet';
 import type { FriendRecord } from '../../data/friends';
+import { useCrewTopRunners } from '../../hooks/useLeaderboard';
 
 interface Props {
   crewSlug: string;
@@ -62,6 +64,18 @@ export const CrewSheet: React.FC<Props> = ({ crewSlug, progress, friends, isUser
           </div>
         )}
 
+        <div className="crew-sheet__section">
+          <div className="crew-sheet__leader">
+            <img src={crew.assets.leader ?? crew.assets.badge} alt={`Líder ${crew.name}`} className="crew-sheet__leader-img" />
+            <div>
+              <span className="crew-sheet__section-title">LÍDER DA CREW</span>
+              <strong className="crew-sheet__leader-name">{crew.name}</strong>
+            </div>
+          </div>
+        </div>
+
+        <CrewTopThree crewSlug={crewSlug} accent={crew.accent} />
+
         {crewFriends.length > 0 && (
           <div className="crew-sheet__section">
             <h4 className="crew-sheet__section-title">
@@ -97,3 +111,32 @@ const Stat: React.FC<{ label: string; value: string }> = ({ label, value }) => (
     <span className="crew-sheet__stat-label">{label}</span>
   </div>
 );
+
+const CrewTopThree: React.FC<{ crewSlug: string; accent: string }> = ({ crewSlug, accent }) => {
+  const weekKey = useMemo(() => isoWeekKey(new Date()), []);
+  const { entries, loading } = useCrewTopRunners(crewSlug, weekKey, 3);
+
+  if (loading) return <div className="crew-sheet__section"><p className="crew-sheet__empty">Carregando...</p></div>;
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="crew-sheet__section">
+      <h4 className="crew-sheet__section-title">TOP 3 DA SEMANA</h4>
+      <ol className="crew-sheet__top-list">
+        {entries.map((entry, idx) => (
+          <li key={entry.userId} className="crew-sheet__top-row">
+            <span className="crew-sheet__top-rank">{idx + 1}</span>
+            <img
+              src={`/crews/${crewSlug}/members/member_${idx + 1}.png`}
+              alt=""
+              className="crew-sheet__top-avatar"
+              aria-hidden
+            />
+            <span className="crew-sheet__top-name">{entry.runnerName}</span>
+            <span className="crew-sheet__top-km">{entry.totalKm} km</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+};

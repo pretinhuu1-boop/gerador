@@ -7958,10 +7958,6 @@ button.map-stage-zone-title:hover {
   margin-left: auto;
 }
 
-.main-menu__nav-item--sede.is-active {
-  border-color: var(--crew-accent, #d97706);
-}
-
 /* ============================================
    MISSION CARD
    ============================================ */
@@ -8389,3 +8385,14 @@ button.map-stage-zone-title:hover {
 .zone-leaderboard__ink { font-size: 0.75rem; opacity: 0.5; }
 .zone-leaderboard__empty { font-size: 0.8rem; opacity: 0.5; text-align: center; padding: 24px 0; }
 .zone-leaderboard__loading { font-size: 0.8rem; opacity: 0.5; text-align: center; padding: 24px 0; }
+
+/* --- Crew Sheet enrichments --- */
+.crew-sheet__leader { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+.crew-sheet__leader-img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; border: 2px solid var(--sheet-accent); }
+.crew-sheet__leader-name { display: block; font-family: var(--font-display); font-size: 0.95rem; }
+.crew-sheet__top-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.crew-sheet__top-row { display: grid; grid-template-columns: 24px 36px 1fr auto; align-items: center; gap: 8px; padding: 6px 0; }
+.crew-sheet__top-rank { font-family: var(--font-display); font-size: 0.85rem; text-align: center; }
+.crew-sheet__top-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+.crew-sheet__top-name { font-size: 0.85rem; }
+.crew-sheet__top-km { font-size: 0.75rem; opacity: 0.6; }
