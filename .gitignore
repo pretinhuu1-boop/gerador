@@ -11,6 +11,11 @@ node_modules
 dist
 dist-ssr
 *.local
+.playwright-cli/
+.playwright-mcp/
+
+# Local screenshot artifacts at repo root
+/v*-*.png
 
 # Editor directories and files
 .vscode/*
