@@ -37,13 +37,21 @@ const CONTROL_CHARS = new RegExp('[\\u0000-\\u001F\\u007F]', 'g');
 const PROMPT_BREAKERS = /["`\\]/g;
 const WHITESPACE_RUN = /\s+/g;
 
-export const sanitizePromptInput = (value: string, maxLength: number): string =>
-  value
+// Split by code points (not code units) so ZWJ emoji sequences like
+// 👨‍👩‍👧 don't break apart at the maxLength boundary.
+const truncateGraphemes = (value: string, max: number): string => {
+  const chars = Array.from(value);
+  return chars.length <= max ? value : chars.slice(0, max).join('');
+};
+
+export const sanitizePromptInput = (value: string, maxLength: number): string => {
+  const cleaned = value
     .replace(CONTROL_CHARS, ' ')
     .replace(PROMPT_BREAKERS, '')
     .replace(WHITESPACE_RUN, ' ')
-    .trim()
-    .slice(0, maxLength);
+    .trim();
+  return truncateGraphemes(cleaned, maxLength);
+};
 
 export const normalizeRunnerProfile = (profile: RunnerProfile): RunnerProfile => ({
   name: sanitizePromptInput(profile.name, 40),
