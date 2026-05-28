@@ -8,7 +8,6 @@ import { getRunnerTypeById } from '../../data/runnerTypes';
 import type { LaunchProgress } from '../../services/launchStorage';
 import type { SavedCharacter } from '../../services/storage';
 import { useIdentityFeed } from '../../hooks/useIdentityFeed';
-import { CartridgeButton } from '../CartridgeButton';
 import { FeedHeader } from './FeedHeader';
 import { FeedPost } from './FeedPost';
 import { FriendsStripPlaceholder } from './FriendsStripPlaceholder';
@@ -20,7 +19,6 @@ type Props = {
   progress: LaunchProgress;
   runnerName: string;
   onAdjust: () => void;
-  onReplayGuide: () => void;
   guideDone: boolean;
   version?: number;
 };
@@ -31,7 +29,6 @@ export const RunnerPanel: React.FC<Props> = ({
   progress,
   runnerName,
   onAdjust,
-  onReplayGuide,
   guideDone,
   version = 0,
 }) => {
@@ -85,15 +82,6 @@ export const RunnerPanel: React.FC<Props> = ({
             )}
       </ol>
       <div className="voce-panel__actions">
-        {!savedCharacter && (
-          <CartridgeButton
-            variant="chalk"
-            className="game-command"
-            onClick={onReplayGuide}
-          >
-            {guideDone ? 'REVER GUIA' : 'ABRIR GUIA'}
-          </CartridgeButton>
-        )}
         <MapSocialHookButton />
       </div>
     </div>

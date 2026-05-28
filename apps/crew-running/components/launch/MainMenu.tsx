@@ -70,12 +70,6 @@ export const MainMenu: React.FC<Props> = ({
     setRunnerVersion((v) => v + 1);
   }, [progress.runnerCustomized]);
 
-  useEffect(() => {
-    if (panel !== 'runner') return;
-    setSavedCharacter(getSavedCharacter());
-    setRunnerVersion((v) => v + 1);
-  }, [panel]);
-
   const runnerName = savedCharacter?.profile?.name || 'Runner';
 
   const activeCrew = useMemo(
@@ -446,7 +440,6 @@ export const MainMenu: React.FC<Props> = ({
                   progress={progress}
                   runnerName={runnerName}
                   onAdjust={onOpenRunnerCreator}
-                  onReplayGuide={guideDone ? onReviewGuidedSetup : onStartGuidedSetup}
                   guideDone={guideDone}
                   version={runnerVersion}
                 />
