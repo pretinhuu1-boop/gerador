@@ -225,7 +225,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           newlyUnlocked={controller.pendingSummary.newlyUnlocked ?? []}
           onSave={controller.saveSummary}
           onDiscard={controller.discardSummary}
-          onDismissUnlocks={closeSheet}
+          onDismissUnlocks={controller.dismissUnlocks}
         />
       )}
 

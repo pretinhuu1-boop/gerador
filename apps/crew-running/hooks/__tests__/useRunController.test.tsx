@@ -102,4 +102,47 @@ describe('useRunController', () => {
     startSpy.mockRestore();
     resetSpy.mockRestore();
   });
+
+  it('C-Badge1: stopRun populates pendingSummary.newlyUnlocked with first-blood when prior history is empty', async () => {
+    const { result } = renderHook(() => useRunController(baseProgress, 'downtown-rush'));
+    act(() => result.current.startRun());
+    act(() => result.current.stopRun());
+    expect(result.current.pendingSummary?.newlyUnlocked).toContain('first-blood');
+  });
+
+  it('C-Badge2: saveSummary persists updated run history with totalRuns incremented', async () => {
+    const { loadRunHistoryStats, saveRunHistoryStats } = await import('../../services/storage');
+    const { emptyRunHistoryStats } = await import('../../data/gamification');
+    saveRunHistoryStats(emptyRunHistoryStats()); // baseline
+
+    const { result } = renderHook(() => useRunController(baseProgress, 'downtown-rush'));
+    act(() => result.current.startRun());
+    act(() => result.current.stopRun());
+    act(() => result.current.saveSummary());
+
+    expect(loadRunHistoryStats().totalRuns).toBe(1);
+  });
+
+  it('C-Badge3: saveSummary merges newlyUnlocked into nextProgress.badgeUnlocks via onRunCompleted', async () => {
+    const onRunCompleted = vi.fn();
+    const { result } = renderHook(() =>
+      useRunController(baseProgress, 'downtown-rush', onRunCompleted),
+    );
+    act(() => result.current.startRun());
+    act(() => result.current.stopRun());
+    act(() => result.current.saveSummary());
+
+    expect(onRunCompleted).toHaveBeenCalledOnce();
+    const [next] = onRunCompleted.mock.calls[0];
+    expect(next.badgeUnlocks).toContain('first-blood');
+  });
+
+  it('C-Badge4: dismissUnlocks empties pendingSummary.newlyUnlocked', () => {
+    const { result } = renderHook(() => useRunController(baseProgress, 'downtown-rush'));
+    act(() => result.current.startRun());
+    act(() => result.current.stopRun());
+    expect(result.current.pendingSummary?.newlyUnlocked?.length).toBeGreaterThan(0);
+    act(() => result.current.dismissUnlocks());
+    expect(result.current.pendingSummary?.newlyUnlocked).toEqual([]);
+  });
 });

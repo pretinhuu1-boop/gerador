@@ -7,10 +7,14 @@ import {
   INK_PER_KM,
   breakdownRunXp,
   bumpStreak,
+  isoWeekKey,
   type RunXpBreakdown,
   type RunnerProgress,
   type StreakBumpResult,
 } from '../data/gamification';
+import { evaluateBadgeUnlocks } from '../data/badges';
+import { applyRunToHistory } from '../data/runHistoryUpdate';
+import { loadRunHistoryStats, saveRunHistoryStats } from '../services/storage';
 import { runTracker, type RunSnapshot } from '../services/runTracker';
 import { useRunTracker } from './useRunTracker';
 
@@ -18,6 +22,7 @@ export interface PendingSummary {
   breakdown: RunXpBreakdown;
   streak: StreakBumpResult;
   nextProgress: RunnerProgress;
+  newlyUnlocked?: import('../data/gamification').BadgeId[];
 }
 
 export interface RunController {
@@ -32,6 +37,7 @@ export interface RunController {
   stopRun: () => void;
   saveSummary: () => void;
   discardSummary: () => void;
+  dismissUnlocks: () => void;
   retryPermission: () => void;
   closePermissionToast: () => void;
   resumeStoredRun: () => void;
@@ -97,19 +103,52 @@ export const useRunController = (
       },
       new Date(),
     );
-    setPendingSummary({ breakdown, streak, nextProgress: streak.next });
+    const priorHistory = loadRunHistoryStats();
+    const now = new Date();
+    const newlyUnlocked = evaluateBadgeUnlocks({
+      progress: runnerProgress,
+      history: priorHistory,
+      snapshot: snap,
+      breakdown,
+      now,
+    });
+    setPendingSummary({ breakdown, streak, nextProgress: streak.next, newlyUnlocked });
   }, [runnerProgress]);
 
   const saveSummary = useCallback(() => {
     if (!pendingSummary) return;
-    onRunCompleted?.(pendingSummary.nextProgress, pendingSummary.breakdown);
+    const snap = runTracker.getSnapshot();
+    const priorHistory = loadRunHistoryStats();
+    const now = new Date();
+    const nextHistory = applyRunToHistory({
+      prior: priorHistory,
+      snapshot: snap,
+      breakdown: pendingSummary.breakdown,
+      runWeekKey: isoWeekKey(now),
+      priorWeekKey: runnerProgress.weekKey,
+    });
+    saveRunHistoryStats(nextHistory);
+    const mergedProgress: RunnerProgress = {
+      ...pendingSummary.nextProgress,
+      badgeUnlocks: Array.from(
+        new Set([
+          ...pendingSummary.nextProgress.badgeUnlocks,
+          ...(pendingSummary.newlyUnlocked ?? []),
+        ]),
+      ),
+    };
+    onRunCompleted?.(mergedProgress, pendingSummary.breakdown);
     setPendingSummary(null);
     runTracker.reset();
-  }, [pendingSummary, onRunCompleted]);
+  }, [pendingSummary, onRunCompleted, runnerProgress.weekKey]);
 
   const discardSummary = useCallback(() => {
     setPendingSummary(null);
     runTracker.reset();
+  }, []);
+
+  const dismissUnlocks = useCallback(() => {
+    setPendingSummary((prev) => (prev ? { ...prev, newlyUnlocked: [] } : prev));
   }, []);
 
   const retryPermission = useCallback(() => {
@@ -148,6 +187,7 @@ export const useRunController = (
     stopRun,
     saveSummary,
     discardSummary,
+    dismissUnlocks,
     retryPermission,
     closePermissionToast,
     resumeStoredRun,
