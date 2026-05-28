@@ -32,9 +32,11 @@ export const FeedPost: React.FC<Props> = ({ event, savedCharacter }) => {
       <span className="voce-feed-post__swatch" aria-hidden />
       <div className="voce-feed-post__head">
         <span className="voce-feed-post__headline">{spec.headline}</span>
-        <time className="voce-feed-post__date" dateTime={new Date(event.timestamp).toISOString()}>
-          {dateFmt.format(event.timestamp)}
-        </time>
+        {event.timestamp > 0 && (
+          <time className="voce-feed-post__date" dateTime={new Date(event.timestamp).toISOString()}>
+            {dateFmt.format(event.timestamp)}
+          </time>
+        )}
       </div>
       <p className="voce-feed-post__body">{spec.bodyTemplate(event.payload)}</p>
       {showLook && (
