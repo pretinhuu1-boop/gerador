@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
 import { getCrewBySlug } from '../../data/crews';
 import { getRunnerTypeById } from '../../data/runnerTypes';
-import { LaunchProgress } from '../../services/launchStorage';
+import { INK_PER_FULL_OWNERSHIP } from '../../data/gamification';
+import { SP_ZONE_MAP_FEATURES, type SpZoneId } from '../../data/spLiveMap';
+import { LaunchProgress, getRunnerProgress, setCreatorTab } from '../../services/launchStorage';
 import { getSavedCharacter } from '../../services/storage';
 import { StreetBackdrop } from './StreetBackdrop';
 import { RunnerPanel } from '../voce/RunnerPanel';
@@ -10,12 +12,21 @@ import { HomePanel } from './menu/HomePanel';
 import { CrewsPanel } from './menu/CrewsPanel';
 import { ConfigPanel } from './menu/ConfigPanel';
 import { Passport } from './menu/Passport';
+import { SedeShell } from '../sede/SedeShell';
 import { audio, type CrewSlug } from '../../services/audio';
+
+type MenuPanel = 'home' | 'crews' | 'crewHome' | 'sede' | 'runner' | 'config';
+type RunnerPanelMode = 'profile' | 'creator';
 
 type Props = {
   progress: LaunchProgress;
+  initialPanel?: MenuPanel;
+  initialRunnerMode?: RunnerPanelMode;
+  runnerCreatorPanel?: React.ReactNode;
   selectedCrewSlug?: string;
   onSelectCrew: (slug: string) => void;
+  onOpenWardrobe: () => void;
+  onOpenCrewHome: () => void;
   onStartGuidedSetup: () => void;
   onReviewGuidedSetup: () => void;
   onOpenRunnerCreator: () => void;
@@ -23,7 +34,6 @@ type Props = {
   onOpenMap?: () => void;
 };
 
-type MenuPanel = 'home' | 'crews' | 'runner' | 'config';
 type SectionMotionProps = Pick<HTMLMotionProps<'section'>, 'initial' | 'animate' | 'transition'>;
 type PanelMotionProps = Pick<
   HTMLMotionProps<'div'>,
@@ -34,8 +44,13 @@ const launchEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export const MainMenu: React.FC<Props> = ({
   progress,
+  initialPanel = 'home',
+  initialRunnerMode = 'profile',
+  runnerCreatorPanel,
   selectedCrewSlug,
   onSelectCrew,
+  onOpenWardrobe,
+  onOpenCrewHome,
   onStartGuidedSetup,
   onReviewGuidedSetup,
   onOpenRunnerCreator,
@@ -43,19 +58,43 @@ export const MainMenu: React.FC<Props> = ({
   onOpenMap,
 }) => {
   const reducedMotion = useReducedMotion();
-  const [panel, setPanel] = useState<MenuPanel>('home');
+  const [panel, setPanel] = useState<MenuPanel>(() => initialPanel);
+  const [runnerMode, setRunnerMode] = useState<RunnerPanelMode>(() => initialRunnerMode);
   const [activeCrewSlug, setActiveCrewSlug] = useState(
     () => getCrewBySlug(selectedCrewSlug).slug,
   );
   const [savedCharacter, setSavedCharacter] = useState(() => getSavedCharacter());
   const [runnerVersion, setRunnerVersion] = useState(0);
+  const [creatorPanelVersion, setCreatorPanelVersion] = useState(0);
+  const crewLocked = Boolean(progress.selectedCrewSlug);
 
   useEffect(() => {
     setSavedCharacter(getSavedCharacter());
     setRunnerVersion((v) => v + 1);
   }, [progress.runnerCustomized]);
 
+  useEffect(() => {
+    setPanel(initialPanel);
+  }, [initialPanel]);
+
+  useEffect(() => {
+    setRunnerMode(initialRunnerMode);
+  }, [initialRunnerMode]);
+
   const runnerName = savedCharacter?.profile?.name || 'Runner';
+
+  const ownershipByZone = useMemo(() => {
+    const progress = getRunnerProgress();
+    const out: Partial<Record<SpZoneId, number>> = {};
+    for (const zone of SP_ZONE_MAP_FEATURES) {
+      const ink = progress.inkPerZone[zone.id] ?? 0;
+      out[zone.id] = Math.min(1, ink / INK_PER_FULL_OWNERSHIP);
+    }
+    return out;
+    // runnerVersion bumps when the saved character changes, which is the
+    // closest proxy we have for "the user might have run a new route" —
+    // re-read ink ownership then.
+  }, [runnerVersion]);
 
   const activeCrew = useMemo(
     () => getCrewBySlug(activeCrewSlug),
@@ -83,16 +122,37 @@ export const MainMenu: React.FC<Props> = ({
     audio.layerCrewMotif(activeCrewSlug as CrewSlug);
   }, [activeCrewSlug]);
 
-  const selectPanel = (next: MenuPanel) => {
-    if (next === panel) return;
+  const selectPanel = (next: MenuPanel, nextRunnerMode: RunnerPanelMode = 'profile') => {
+    if (next === panel) {
+      if (next === 'runner') setRunnerMode(nextRunnerMode);
+      return;
+    }
     audio.playSfx('nav-slab');
     setPanel(next);
+    setRunnerMode(next === 'runner' ? nextRunnerMode : 'profile');
   };
 
   const handleSelectCrew = (slug: string) => {
+    if (crewLocked) return;
     setActiveCrewSlug(slug);
     onSelectCrew(slug);
     audio.playSfx('nav-slab');
+  };
+
+  const openWardrobePanel = () => {
+    setCreatorTab('look');
+    setCreatorPanelVersion((version) => version + 1);
+    onOpenWardrobe();
+    selectPanel('home');
+  };
+
+  const openCrewHomePanel = () => {
+    onOpenCrewHome();
+    selectPanel('crewHome');
+  };
+
+  const openSedePanel = () => {
+    selectPanel('sede');
   };
 
   const panelButtonClass = (target: MenuPanel) =>
@@ -121,18 +181,14 @@ export const MainMenu: React.FC<Props> = ({
   const guideDone =
     progress.runnerCustomized || progress.guidedSetupComplete || progress.onboardingComplete;
   const runnerSaved = progress.runnerCustomized && hasSavedCharacter;
-  const primaryAction = guideDone ? onOpenRunnerCreator : onStartGuidedSetup;
-  const primaryLabel = !guideDone
-    ? 'COMEÇAR'
-    : runnerSaved
-      ? 'AJUSTAR RUNNER'
-      : 'MONTAR RUNNER';
+  const primaryAction = onOpenMap ?? (guideDone ? () => selectPanel('runner') : onStartGuidedSetup);
+  const primaryLabel = onOpenMap ? 'ABRIR MAPA' : !guideDone ? 'COMEÇAR' : 'VER VOCÊ';
   const guideStatusLabel = guideDone ? 'FEITO' : 'ABERTO';
-  const runnerStatusLabel = runnerSaved ? 'READY' : guideDone ? 'EM MONTAGEM' : 'PENDENTE';
+  const runnerStatusLabel = runnerSaved ? 'READY' : guideDone ? 'OPCIONAL' : 'PENDENTE';
   const homeCopy = runnerSaved
     ? `${runnerName} pronto no QG da cidade.`
     : guideDone
-      ? 'Guia completo. Falta montar teu runner antes da proxima fase.'
+      ? 'Crew definida. O mapa de gamificacao ja esta liberado.'
       : 'QG aberto. Comece pelo guia da crew antes de montar seu runner.';
   const enterMotion: SectionMotionProps = reducedMotion
     ? {}
@@ -184,12 +240,12 @@ export const MainMenu: React.FC<Props> = ({
             className={panelButtonClass('home')}
             type="button"
             aria-pressed={panel === 'home'}
-            onClick={() => selectPanel('home')}
+            onClick={openWardrobePanel}
             whileHover={reducedMotion ? undefined : { x: 5 }}
             whileTap={reducedMotion ? undefined : { scale: 0.98 }}
           >
             {renderNavCursor('home')}
-            <span>INÍCIO</span>
+            <span>GUARDA ROUPA</span>
           </motion.button>
           <motion.button
             className={panelButtonClass('crews')}
@@ -203,15 +259,26 @@ export const MainMenu: React.FC<Props> = ({
             <span>CREWS PILOTO</span>
           </motion.button>
           <motion.button
+            className={panelButtonClass('sede')}
+            type="button"
+            aria-pressed={panel === 'sede'}
+            onClick={openSedePanel}
+            whileHover={reducedMotion ? undefined : { x: 5 }}
+            whileTap={reducedMotion ? undefined : { scale: 0.98 }}
+          >
+            {renderNavCursor('sede')}
+            <span>SEDE</span>
+          </motion.button>
+          <motion.button
             className={panelButtonClass('runner')}
             type="button"
             aria-pressed={panel === 'runner'}
-            onClick={() => selectPanel('runner')}
+            onClick={() => selectPanel('runner', 'profile')}
             whileHover={reducedMotion ? undefined : { x: 5 }}
             whileTap={reducedMotion ? undefined : { scale: 0.98 }}
           >
             {renderNavCursor('runner')}
-            <span>RUNNER</span>
+            <span>VOCÊ</span>
           </motion.button>
           <motion.button
             className={panelButtonClass('config')}
@@ -227,15 +294,10 @@ export const MainMenu: React.FC<Props> = ({
           <button className="main-menu__nav-link" type="button" onClick={onReplayIntro}>
             REVER INTRO
           </button>
-          {onOpenMap && (
-            <button className="main-menu__nav-link" type="button" onClick={onOpenMap}>
-              ABRIR MAPA
-            </button>
-          )}
         </nav>
 
-        <div className={`main-menu__hero ${panel === 'runner' || panel === 'config' ? 'main-menu__hero--focused' : ''}`}>
-          {(panel === 'home' || panel === 'crews') && (
+        <div className={`main-menu__hero ${panel === 'home' || panel === 'runner' || panel === 'config' || panel === 'sede' ? 'main-menu__hero--focused' : ''}`}>
+          {(panel === 'crewHome' || panel === 'crews') && (
             <Passport
               activeCrew={activeCrew}
               savedCrew={savedCrew}
@@ -244,7 +306,7 @@ export const MainMenu: React.FC<Props> = ({
               runnerType={runnerType}
               runnerSaved={runnerSaved}
               guideDone={guideDone}
-              primaryAction={primaryAction}
+              onOpenGuide={onStartGuidedSetup}
               onShowRunnerPanel={() => selectPanel('runner')}
               reducedMotion={reducedMotion}
             />
@@ -259,6 +321,27 @@ export const MainMenu: React.FC<Props> = ({
             transition={panelMotion.transition}
           >
               {panel === 'home' && (
+                <div className="main-menu__wardrobe-home">
+                  <div className="main-menu__wardrobe-head">
+                    <div>
+                      <span className="main-menu__eyebrow">GUARDA ROUPA</span>
+                      <strong>GUARDA ROUPA</strong>
+                    </div>
+                    <button
+                      className="game-command main-menu__wardrobe-crew-link"
+                      type="button"
+                      onClick={openCrewHomePanel}
+                    >
+                      VER CREW
+                    </button>
+                  </div>
+                  <div key={creatorPanelVersion} className="main-menu__wardrobe-creator">
+                    {runnerCreatorPanel}
+                  </div>
+                </div>
+              )}
+
+              {panel === 'crewHome' && (
                 <HomePanel
                   activeCrew={activeCrew}
                   homeCopy={homeCopy}
@@ -268,8 +351,12 @@ export const MainMenu: React.FC<Props> = ({
                   progress={progress}
                   guideStatusLabel={guideStatusLabel}
                   runnerStatusLabel={runnerStatusLabel}
+                  ownershipByZone={ownershipByZone}
                   onShowRunnerPanel={() => selectPanel('runner')}
                   onShowCrewsPanel={() => selectPanel('crews')}
+                  onSelectCrew={handleSelectCrew}
+                  onOpenWardrobe={openWardrobePanel}
+                  crewLocked={crewLocked}
                 />
               )}
 
@@ -279,21 +366,39 @@ export const MainMenu: React.FC<Props> = ({
                   runnerSaved={runnerSaved}
                   guideDone={guideDone}
                   onSelectCrew={handleSelectCrew}
-                  onPrimaryAction={primaryAction}
+                  onOpenGuide={onStartGuidedSetup}
+                  onOpenSede={openSedePanel}
+                  crewLocked={crewLocked}
                 />
               )}
 
               {panel === 'runner' && (
-                <RunnerPanel
-                  crew={savedCrew}
-                  savedCharacter={savedCharacter}
-                  progress={progress}
-                  runnerName={runnerName}
-                  onAdjust={onOpenRunnerCreator}
-                  onOpenMap={onOpenMap}
-                  guideDone={guideDone}
-                  version={runnerVersion}
-                />
+                runnerMode === 'creator' && runnerCreatorPanel ? (
+                  <div className="main-menu__runner-creator">
+                    <button
+                      className="main-menu__runner-creator-back game-command"
+                      type="button"
+                      onClick={() => setRunnerMode('profile')}
+                    >
+                      VOLTAR AO RUNNER
+                    </button>
+                    {runnerCreatorPanel}
+                  </div>
+                ) : (
+                  <RunnerPanel
+                    crew={savedCrew}
+                    savedCharacter={savedCharacter}
+                    progress={progress}
+                    runnerName={runnerName}
+                    onAdjust={() => {
+                      setRunnerMode('creator');
+                      onOpenRunnerCreator();
+                    }}
+                    onOpenMap={onOpenMap}
+                    guideDone={guideDone}
+                    version={runnerVersion}
+                  />
+                )
               )}
 
               {panel === 'config' && (
@@ -304,6 +409,19 @@ export const MainMenu: React.FC<Props> = ({
                   onReviewGuidedSetup={onReviewGuidedSetup}
                   onStartGuidedSetup={onStartGuidedSetup}
                   onPrimaryAction={primaryAction}
+                />
+              )}
+
+              {panel === 'sede' && (
+                <SedeShell
+                  crew={activeCrew}
+                  viewer={
+                    !progress.selectedCrewSlug || progress.selectedCrewSlug === activeCrew.slug
+                      ? 'member'
+                      : 'visitor'
+                  }
+                  onBack={() => selectPanel('home')}
+                  onSwitchCrew={() => selectPanel('crews')}
                 />
               )}
           </motion.div>

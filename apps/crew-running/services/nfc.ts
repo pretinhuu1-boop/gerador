@@ -49,13 +49,14 @@ export const writeNfcTag = async (
   );
 };
 
+const NFC_READ_TIMEOUT_MS = 30_000;
+
 export const readNfcTag = async (signal?: AbortSignal): Promise<string> => {
   if (!isNfcSupported()) {
     throw new Error('Web NFC não suportado neste browser.');
   }
   const Reader = window.NDEFReader!;
   const reader = new Reader();
-  const localController = new AbortController();
   const composed = new AbortController();
   const abortHandler = () => composed.abort();
   if (signal) {
@@ -65,13 +66,14 @@ export const readNfcTag = async (signal?: AbortSignal): Promise<string> => {
   await reader.scan({ signal: composed.signal });
   return new Promise<string>((resolve, reject) => {
     let settled = false;
+    const timer = setTimeout(() => composed.abort(), NFC_READ_TIMEOUT_MS);
     const finish = (resolveValue: string | null, error: Error | null) => {
       if (settled) return;
       settled = true;
+      clearTimeout(timer);
       reader.removeEventListener('reading', listener);
       composed.signal.removeEventListener('abort', onAbort);
       signal?.removeEventListener('abort', abortHandler);
-      localController.abort();
       if (error) reject(error);
       else if (resolveValue !== null) resolve(resolveValue);
     };

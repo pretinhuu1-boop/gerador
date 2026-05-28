@@ -1,12 +1,8 @@
 import React, { useCallback, useId, useMemo, useState } from 'react';
 import {
-  SP_SIGNAL_ROUTE,
   SP_SPOT_MAP_FEATURES,
   SP_ZONE_MAP_FEATURES,
   getZoneById,
-  polylineToPath,
-  projectLngLat,
-  type ProjectionOpts,
   type SpZoneId,
 } from '../../data/spLiveMap';
 import { getCrewBySlug } from '../../data/crews';
@@ -16,31 +12,35 @@ import {
   type RunXpBreakdown,
   type RunnerProgress,
 } from '../../data/gamification';
-import { ZoneLayer } from './ZoneLayer';
-import { SpotLayer } from './SpotLayer';
-import { MissionLayer } from './MissionLayer';
+import type { DiaryMood } from '../../data/diary';
 import { HudOverlay } from './HudOverlay';
 import { LayerRail } from './LayerRail';
-import { TrailLayer } from './TrailLayer';
 import { RunHud } from './RunHud';
 import { RunSummary } from './RunSummary';
-import { FriendPings } from './FriendPings';
 import { CrewRadioOverlay } from './CrewRadioOverlay';
+import { MapLibreCanvas } from './MapLibreCanvas';
+import { ZoneSheet } from './ZoneSheet';
+import { SpotSheet } from './SpotSheet';
+import { CrewSheet } from './CrewSheet';
+import { RunnerCard } from './RunnerCard';
+import { DiaryPrompt } from '../voce/DiaryPrompt';
+import { RunnerProfileScreen } from '../profile/RunnerProfileScreen';
 import { type MapLayerState, type MapView } from './mapTypes';
 import { getMapLayerPrefs, saveMapLayerPrefs } from '../../services/mapLayerStorage';
 import { useRunController } from '../../hooks/useRunController';
 import { useFriends } from '../../hooks/useFriends';
+import { useFriendNotes } from '../../hooks/useFriendNotes';
+import { useDiary } from '../../hooks/useDiary';
+import { useInitialPosition } from '../../hooks/useInitialPosition';
 import { getSavedCharacter, getSelfUserId } from '../../services/storage';
+import type { FriendNote, FriendTag } from '../../data/friendNotes';
 
-const VIEWBOX_W = 800;
-const VIEWBOX_H = 700;
-const PADDING = 40;
-
-const PROJECTION: ProjectionOpts = {
-  width: VIEWBOX_W,
-  height: VIEWBOX_H,
-  padding: PADDING,
-};
+type SheetState =
+  | { type: 'zone'; zoneId: SpZoneId }
+  | { type: 'spot'; spotId: string }
+  | { type: 'crew'; crewSlug: string }
+  | { type: 'runner'; friendUserId: string }
+  | null;
 
 interface Props {
   runnerProgress: RunnerProgress;
@@ -58,18 +58,30 @@ const getInitialZoneForCrew = (slug?: string): SpZoneId | undefined => {
 export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, onBackToMenu, onRunCompleted }) => {
   const [view, setView] = useState<MapView>(() => ({ zoom: 'city' }));
   const [layers, setLayers] = useState<MapLayerState>(() => getMapLayerPrefs());
-  const svgId = useId();
-  const svgDomId = `map-stage-svg-${svgId.replace(/[^\w-]/g, '')}`;
+  const [sheet, setSheet] = useState<SheetState>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const canvasId = useId();
+  const canvasDomId = `map-stage-canvas-${canvasId.replace(/[^\w-]/g, '')}`;
 
   const controller = useRunController(runnerProgress, selectedCrewSlug, onRunCompleted);
   const userCrew = getCrewBySlug(selectedCrewSlug);
   const userZoneId = getInitialZoneForCrew(selectedCrewSlug);
   const { friends } = useFriends();
+  const friendNotes = useFriendNotes();
+  const diary = useDiary();
+  const [diaryPromptOpen, setDiaryPromptOpen] = useState(false);
+  const initialPos = useInitialPosition();
   const selfUserId = useMemo(() => getSelfUserId(), []);
   const selfRunnerName = useMemo(
     () => getSavedCharacter()?.profile?.name || 'Runner',
     [],
   );
+
+  const notesByFriend = useMemo(() => {
+    const map = new Map<string, FriendNote>();
+    for (const n of friendNotes.notes) map.set(n.friendUserId, n);
+    return map;
+  }, [friendNotes.notes]);
 
   const ownershipByZone = useMemo(() => {
     const out: Partial<Record<SpZoneId, number>> = {};
@@ -83,9 +95,6 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const handleToggleLayer = useCallback((key: keyof MapLayerState) => {
     setLayers((prev) => {
       const next = { ...prev, [key]: !prev[key] };
-      // Refuse the toggle that would leave every layer off — the map would
-      // become empty with no obvious way back. Persisted recovery still kicks
-      // in via getMapLayerPrefs, but blocking it at the UI is cheaper.
       const anyOn = next.territory || next.live || next.missions || next.history;
       if (!anyOn) return prev;
       saveMapLayerPrefs(next);
@@ -93,15 +102,8 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     });
   }, []);
 
-  const handleSelectZone = useCallback((zoneId: SpZoneId) => {
-    setView({ zoom: 'zone', zoneId });
-  }, []);
-
-  const handleSelectSpot = useCallback((spotId: string) => {
-    setView((prev) => ({ ...prev, zoom: 'spot', spotId }));
-  }, []);
-
   const handleBackZoom = useCallback(() => {
+    setSheet(null);
     setView((prev) => {
       if (prev.zoom === 'spot') return { zoom: 'zone', zoneId: prev.zoneId };
       if (prev.zoom === 'zone') return { zoom: 'city' };
@@ -109,23 +111,69 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     });
   }, []);
 
-  const userZone = userZoneId ? getZoneById(userZoneId) : undefined;
-  const userPos = userZone ? projectLngLat(userZone.center, PROJECTION) : null;
-  const signalPath = polylineToPath(SP_SIGNAL_ROUTE, PROJECTION);
-  // Missions relevant to the current view, regardless of toggle state. The
-  // toggle controls render visibility; this list drives chip availability so
-  // the Missions chip stays clickable as long as data exists for this view.
+  const closeSheet = useCallback(() => setSheet(null), []);
+
+  const handleCrewMarkerClick = useCallback((slug: string) => {
+    setSheet({ type: 'crew', crewSlug: slug });
+  }, []);
+
+  const handleSpotClick = useCallback((spotId: string) => {
+    setView((prev) => ({ ...prev, zoom: 'spot', spotId }));
+    setSheet({ type: 'spot', spotId });
+  }, []);
+
+  const handleFriendClick = useCallback((userId: string) => {
+    setSheet({ type: 'runner', friendUserId: userId });
+  }, []);
+
+  const handleRunSummarySave = useCallback(() => {
+    setDiaryPromptOpen(true);
+  }, []);
+
+  const handleDiarySave = useCallback(
+    (mood?: DiaryMood, note?: string) => {
+      const snap = controller.snapshot;
+      const summary = controller.pendingSummary;
+      if (summary) {
+        diary.append({
+          snapshot: snap,
+          xpEarned: summary.breakdown.total,
+          missionsCompleted: (summary.missionsCompleted ?? []).map((m) => m.missionId),
+          note,
+          mood,
+        });
+      }
+      setDiaryPromptOpen(false);
+      controller.saveSummary();
+    },
+    [controller, diary],
+  );
+
+  const handleDiarySkip = useCallback(() => {
+    setDiaryPromptOpen(false);
+    controller.saveSummary();
+  }, [controller]);
+
+  const handleSaveFriendNote = useCallback(
+    (friendUserId: string, text: string, tag?: FriendTag) => {
+      if (text.trim()) {
+        friendNotes.save(friendUserId, text, tag);
+      } else {
+        friendNotes.remove(friendUserId);
+      }
+    },
+    [friendNotes],
+  );
+
+  const handleZoneBannerClick = useCallback(() => {
+    if (view.zoneId) setSheet({ type: 'zone', zoneId: view.zoneId });
+  }, [view.zoneId]);
+
   const missionsForView = SAMPLE_MISSIONS.filter(
     (m) => view.zoom === 'spot' || !view.zoneId || m.zoneId === view.zoneId,
   );
   const visibleMissions = layers.missions ? missionsForView : [];
   const activeZone = view.zoneId ? getZoneById(view.zoneId) : undefined;
-  const liveBadges = view.zoom === 'city' && layers.live
-    ? SP_ZONE_MAP_FEATURES.map((zone) => ({
-        zone,
-        center: projectLngLat(zone.center, PROJECTION),
-      }))
-    : [];
 
   const layerAvailability: Partial<Record<keyof MapLayerState, boolean>> = {
     missions: missionsForView.length > 0,
@@ -137,82 +185,47 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   return (
     <section
       className={`map-stage map-stage--${view.zoom}${trackerActive ? ' is-tracking' : ''}`}
+      style={{ '--crew-accent': userCrew.accent } as React.CSSProperties}
       aria-label={`Mapa Crew Running - ${activeZone ? activeZone.label : 'cidade'}`}
     >
       <h2 className="sr-only">Mapa vivo da cidade</h2>
-      <HudOverlay progress={runnerProgress} crewSlug={selectedCrewSlug} />
+      <HudOverlay
+        progress={runnerProgress}
+        crewSlug={selectedCrewSlug}
+        onOpenProfile={() => setProfileOpen(true)}
+      />
 
       <div className="map-stage-canvas">
-        <svg
-          id={svgDomId}
-          viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
-          preserveAspectRatio="xMidYMid meet"
-          className="map-stage-svg"
-          role="img"
-          aria-label={`Mapa de Sao Paulo - zoom ${view.zoom}`}
-        >
-          {layers.territory && (
-            <ZoneLayer
-              projection={PROJECTION}
-              activeZoneId={view.zoneId}
-              ownershipByZone={ownershipByZone}
-              onSelectZone={view.zoom === 'city' ? handleSelectZone : undefined}
-            />
-          )}
-
-          {view.zoom !== 'city' && layers.live && (
-            <path d={signalPath} className="map-signal-route" fill="none" strokeDasharray="6 4" />
-          )}
-
-          <SpotLayer
-            projection={PROJECTION}
-            zoom={view.zoom}
+        <div id={canvasDomId} className="map-stage-tiles">
+          <MapLibreCanvas
+            center={initialPos.center}
+            layers={layers}
+            activeCrewSlug={selectedCrewSlug}
+            userPosition={snapshot.points[snapshot.points.length - 1] ?? null}
+            trail={snapshot.points}
+            zoom={view.zoom === 'city' ? 11 : view.zoom === 'zone' ? 13 : 15}
+            mapZoom={view.zoom}
+            ownershipByZone={ownershipByZone}
             activeZoneId={view.zoneId}
             activeSpotId={view.spotId}
-            onSelectSpot={view.zoom === 'zone' ? handleSelectSpot : undefined}
+            trailColor={userCrew.accent}
+            onSelectSpot={view.zoom === 'zone' ? handleSpotClick : undefined}
+            onSelectCrew={handleCrewMarkerClick}
+            onSelectFriend={handleFriendClick}
+            missions={visibleMissions}
+            friends={friends}
+            trackerActive={trackerActive}
           />
-
-          {layers.missions && <MissionLayer projection={PROJECTION} zoom={view.zoom} missions={visibleMissions} />}
-
-          {trackerActive && (
-            <TrailLayer points={snapshot.points} projection={PROJECTION} color={userCrew.accent} />
-          )}
-
-          {liveBadges.map(({ zone, center }) => (
-            <g key={`live-${zone.id}`} className="map-live-pulse" transform={`translate(${center.x} ${center.y})`}>
-              <circle r={10} className="map-live-halo" stroke={zone.color} />
-              <image href={getCrewBySlug(zone.crewSlug).assets.badge} x={-14} y={-14} width={28} height={28} />
-            </g>
-          ))}
-
-          {userPos && !trackerActive && (
-            <g className="map-user-pin" transform={`translate(${userPos.x} ${userPos.y})`}>
-              <circle r={14} fill="white" stroke={userCrew.accent} strokeWidth={3} />
-              <image href={userCrew.assets.badge} x={-10} y={-10} width={20} height={20} />
-            </g>
-          )}
-
-          {view.zoom === 'city' && !trackerActive && (
-            <FriendPings friends={friends} projection={PROJECTION} />
-          )}
-        </svg>
+        </div>
       </div>
-
-      {!trackerActive && (
-        <CrewRadioOverlay
-          crewSlug={selectedCrewSlug}
-          selfUserId={selfUserId}
-          selfRunnerName={selfRunnerName}
-        />
-      )}
 
       {view.zoom !== 'city' && activeZone && !trackerActive && (
         <header className="map-stage-zone-banner">
           <button type="button" className="map-back" onClick={handleBackZoom} aria-label="Voltar zoom">←</button>
-          <div className="map-stage-zone-title">
+          <button type="button" className="map-stage-zone-title" onClick={handleZoneBannerClick} aria-label={`Detalhes ${activeZone.label}`}>
             <span className="map-stage-zone-label">{activeZone.label}</span>
             <span className="map-stage-zone-mission">{getCrewBySlug(activeZone.crewSlug).mission}</span>
-          </div>
+          </button>
         </header>
       )}
 
@@ -221,7 +234,15 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           layers={layers}
           onToggle={handleToggleLayer}
           availability={layerAvailability}
-          controlsId={svgDomId}
+          controlsId={canvasDomId}
+        />
+      )}
+
+      {!trackerActive && (
+        <CrewRadioOverlay
+          crewSlug={selectedCrewSlug}
+          selfUserId={selfUserId}
+          selfRunnerName={selfRunnerName}
         />
       )}
 
@@ -233,7 +254,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           <button
             type="button"
             className="map-action-secondary"
-            onClick={onBackToMenu}
+            onClick={onBackToMenu ?? undefined}
             disabled={!onBackToMenu}
             aria-disabled={!onBackToMenu}
           >
@@ -253,17 +274,26 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
         />
       )}
 
-      {controller.pendingSummary && (
+      {controller.pendingSummary && !diaryPromptOpen && (
         <RunSummary
           snapshot={snapshot}
           breakdown={controller.pendingSummary.breakdown}
           streakBumped={controller.pendingSummary.streak.streakBumped}
           streakBroken={controller.pendingSummary.streak.streakBroken}
           freezeUsed={controller.pendingSummary.streak.freezeUsed}
-          onSave={controller.saveSummary}
+          newlyUnlocked={controller.pendingSummary.newlyUnlocked ?? []}
+          missionsCompleted={controller.pendingSummary.missionsCompleted}
+          onSave={handleRunSummarySave}
           onDiscard={controller.discardSummary}
+          onDismissUnlocks={controller.dismissUnlocks}
         />
       )}
+
+      <DiaryPrompt
+        open={diaryPromptOpen}
+        onSave={handleDiarySave}
+        onSkip={handleDiarySkip}
+      />
 
       {controller.permissionToastOpen && (
         <div className="run-permission-toast" role="alert">
@@ -291,6 +321,50 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           </div>
         </div>
       )}
+
+      {profileOpen && (
+        <RunnerProfileScreen
+          progress={runnerProgress}
+          crewSlug={selectedCrewSlug}
+          onClose={() => setProfileOpen(false)}
+        />
+      )}
+
+      {sheet?.type === 'zone' && (
+        <ZoneSheet
+          zoneId={sheet.zoneId}
+          progress={runnerProgress}
+          friends={friends}
+          currentUserId={selfUserId}
+          open
+          onClose={closeSheet}
+        />
+      )}
+      {sheet?.type === 'spot' && (
+        <SpotSheet spotId={sheet.spotId} open onClose={closeSheet} />
+      )}
+      {sheet?.type === 'crew' && (
+        <CrewSheet
+          crewSlug={sheet.crewSlug}
+          progress={runnerProgress}
+          friends={friends}
+          isUserCrew={sheet.crewSlug === selectedCrewSlug}
+          open
+          onClose={closeSheet}
+        />
+      )}
+      {sheet?.type === 'runner' && (() => {
+        const friend = friends.find((f) => f.userId === sheet.friendUserId);
+        return friend ? (
+          <RunnerCard
+            friend={friend}
+            open
+            onClose={closeSheet}
+            note={notesByFriend.get(sheet.friendUserId)}
+            onSaveNote={handleSaveFriendNote}
+          />
+        ) : null;
+      })()}
     </section>
   );
 };

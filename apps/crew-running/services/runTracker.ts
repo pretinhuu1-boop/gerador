@@ -196,6 +196,12 @@ class RunTracker {
     this.emit();
   }
 
+  clearPermissionDenied(): void {
+    if (!this.snapshot.permissionDenied) return;
+    this.snapshot = { ...this.snapshot, permissionDenied: false };
+    this.emit();
+  }
+
   // Hydrates the tracker from localStorage. Caller (MapStage) invokes once on
   // mount so a refreshed browser can pick up an in-progress run. Returns the
   // snapshot for the caller to inspect (resume vs discard prompt).

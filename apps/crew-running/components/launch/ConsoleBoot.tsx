@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { CREWS, getCrewBySlug } from '../../data/crews';
 import { CrewBadge } from '../CrewBadge';
-import { StreetBackdrop } from './StreetBackdrop';
+import { Sp3DMapBackground } from './Sp3DMapBackground';
 import { audio } from '../../services/audio';
 
 type Props = {
@@ -80,7 +80,7 @@ export const ConsoleBoot: React.FC<Props> = ({ onComplete }) => {
 
   return (
     <section className={`launch-screen console-boot ${leaving ? 'is-leaving' : ''}`}>
-      <StreetBackdrop variant="boot" />
+      <Sp3DMapBackground tone="ambient" />
 
       <button
         className="launch-skip"

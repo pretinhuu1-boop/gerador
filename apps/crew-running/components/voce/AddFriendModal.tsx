@@ -10,6 +10,7 @@ import {
 } from '../../data/friends';
 import { isNfcSupported, readNfcTag, writeNfcTag } from '../../services/nfc';
 import { encodeQrDataUrl } from '../../services/qrcode';
+import { isCameraAvailable, startQrScan, type QrScanController } from '../../services/qrScan';
 
 type Props = {
   open: boolean;
@@ -21,7 +22,7 @@ type Props = {
   onAddFriend: (friend: FriendRecord) => void;
 };
 
-type Mode = 'menu' | 'share' | 'scan' | 'handle';
+type Mode = 'menu' | 'share' | 'scan' | 'qr-scan' | 'handle';
 
 const buildSelfPayload = (props: Props): FriendExchangePayload => ({
   v: FRIEND_EXCHANGE_VERSION,
@@ -34,26 +35,34 @@ const buildSelfPayload = (props: Props): FriendExchangePayload => ({
 export const AddFriendModal: React.FC<Props> = (props) => {
   const { open, selfUserId, onClose, onAddFriend } = props;
   const [mode, setMode] = useState<Mode>('menu');
-  const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [handleInput, setHandleInput] = useState('');
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const nfcAbortRef = useRef<AbortController | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const qrScanRef = useRef<QrScanController | null>(null);
 
-  const selfPayloadJson = useMemo(() => encodeFriendPayload(buildSelfPayload(props)), [props]);
+  const selfPayloadJson = useMemo(
+    () => encodeFriendPayload(buildSelfPayload(props)),
+    [selfUserId, props.selfRunnerName, props.selfCrewSlug, props.selfRunnerTypeId],
+  );
   const nfcSupported = useMemo(() => isNfcSupported(), []);
+  const cameraAvailable = useMemo(() => isCameraAvailable(), []);
 
   useEffect(() => {
     if (!open) {
       setMode('menu');
-      setError(null);
+      setFeedback(null);
       setBusy(false);
       setQrDataUrl(null);
       setHandleInput('');
       nfcAbortRef.current?.abort();
       nfcAbortRef.current = null;
+      qrScanRef.current?.stop();
+      qrScanRef.current = null;
     } else {
       closeBtnRef.current?.focus();
     }
@@ -93,7 +102,7 @@ export const AddFriendModal: React.FC<Props> = (props) => {
     encodeQrDataUrl(selfPayloadJson).then((url) => {
       if (!cancelled) setQrDataUrl(url);
     }).catch((e) => {
-      if (!cancelled) setError(e?.message || 'Falha gerando QR.');
+      if (!cancelled) setFeedback({ msg: e?.message || 'Falha gerando QR.', ok: false });
     });
     return () => {
       cancelled = true;
@@ -103,7 +112,7 @@ export const AddFriendModal: React.FC<Props> = (props) => {
   const acceptFriend = useCallback(
     (payload: FriendExchangePayload, method: FriendAddMethod) => {
       if (payload.userId === selfUserId) {
-        setError('Esse convite é teu. Pede o convite do outro runner.');
+        setFeedback({ msg: 'Esse convite é teu. Pede o convite do outro runner.', ok: false });
         return;
       }
       const friend: FriendRecord = {
@@ -120,14 +129,48 @@ export const AddFriendModal: React.FC<Props> = (props) => {
     [selfUserId, onAddFriend, onClose],
   );
 
+  useEffect(() => {
+    if (mode !== 'qr-scan') {
+      qrScanRef.current?.stop();
+      qrScanRef.current = null;
+      return;
+    }
+    const vid = videoRef.current;
+    if (!vid) return;
+    setBusy(true);
+    setFeedback(null);
+    let handled = false;
+    const ctrl = startQrScan(
+      vid,
+      (data) => {
+        if (handled) return;
+        handled = true;
+        ctrl.stop();
+        setBusy(false);
+        const payload = decodeFriendPayload(data);
+        if (payload) {
+          acceptFriend(payload, 'qr');
+        } else {
+          setFeedback({ msg: 'QR inválido. Peça o convite do outro runner.', ok: false });
+        }
+      },
+      (err) => {
+        setBusy(false);
+        setFeedback({ msg: err.message || 'Câmera indisponível.', ok: false });
+      },
+    );
+    qrScanRef.current = ctrl;
+    return () => ctrl.stop();
+  }, [mode, acceptFriend]);
+
   const handleNfcWrite = useCallback(async () => {
     setBusy(true);
-    setError(null);
+    setFeedback(null);
     try {
       await writeNfcTag(selfPayloadJson);
-      setError('Escrito na tag. Aproxime para parear.');
+      setFeedback({ msg: 'Escrito na tag. Aproxime para parear.', ok: true });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha NFC.');
+      setFeedback({ msg: e instanceof Error ? e.message : 'Falha NFC.', ok: false });
     } finally {
       setBusy(false);
     }
@@ -138,7 +181,7 @@ export const AddFriendModal: React.FC<Props> = (props) => {
     const controller = new AbortController();
     nfcAbortRef.current = controller;
     setBusy(true);
-    setError(null);
+    setFeedback(null);
     try {
       const raw = await readNfcTag(controller.signal);
       const payload = decodeFriendPayload(raw);
@@ -146,7 +189,7 @@ export const AddFriendModal: React.FC<Props> = (props) => {
       acceptFriend(payload, 'nfc');
     } catch (e) {
       if (!controller.signal.aborted) {
-        setError(e instanceof Error ? e.message : 'Falha NFC.');
+        setFeedback({ msg: e instanceof Error ? e.message : 'Falha NFC.', ok: false });
       }
     } finally {
       setBusy(false);
@@ -155,15 +198,15 @@ export const AddFriendModal: React.FC<Props> = (props) => {
   }, [acceptFriend]);
 
   const handleManualAdd = useCallback(() => {
-    setError(null);
+    setFeedback(null);
     const trimmed = handleInput.trim();
     if (!trimmed) {
-      setError('Cole o convite ou handle.');
+      setFeedback({ msg: 'Cole o convite ou handle.', ok: false });
       return;
     }
     const payload = decodeFriendPayload(trimmed);
     if (!payload) {
-      setError('Convite inválido. Cole o JSON completo do amigo.');
+      setFeedback({ msg: 'Convite inválido. Cole o JSON completo do amigo.', ok: false });
       return;
     }
     acceptFriend(payload, 'handle');
@@ -173,12 +216,12 @@ export const AddFriendModal: React.FC<Props> = (props) => {
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(selfPayloadJson);
-        setError('Convite copiado. Cole no outro dispositivo.');
+        setFeedback({ msg: 'Convite copiado. Cole no outro dispositivo.', ok: true });
       } else {
-        setError('Clipboard indisponível. Selecione o texto manualmente.');
+        setFeedback({ msg: 'Clipboard indisponível. Selecione o texto manualmente.', ok: false });
       }
     } catch {
-      setError('Falha copiando.');
+      setFeedback({ msg: 'Falha copiando.', ok: false });
     }
   }, [selfPayloadJson]);
 
@@ -230,6 +273,15 @@ export const AddFriendModal: React.FC<Props> = (props) => {
               aria-disabled={!nfcSupported || undefined}
             >
               {nfcSupported ? 'ENCOSTAR NFC' : 'NFC NÃO SUPORTADO'}
+            </CartridgeButton>
+            <CartridgeButton
+              variant="chalk"
+              className="game-command"
+              onClick={() => setMode('qr-scan')}
+              disabled={!cameraAvailable}
+              aria-disabled={!cameraAvailable || undefined}
+            >
+              {cameraAvailable ? 'ESCANEAR QR' : 'CÂMERA INDISPONÍVEL'}
             </CartridgeButton>
             <CartridgeButton
               variant="chalk"
@@ -302,6 +354,25 @@ export const AddFriendModal: React.FC<Props> = (props) => {
           </div>
         )}
 
+        {mode === 'qr-scan' && (
+          <div className="add-friend-modal__qr-scan">
+            <p className="add-friend-modal__hint">
+              Aponte a câmera para o QR code do outro runner.
+            </p>
+            <video
+              ref={videoRef}
+              className="add-friend-modal__camera"
+              playsInline
+              muted
+              aria-label="Câmera para escanear QR"
+            />
+            {busy && <span className="add-friend-modal__scan-status">Escaneando…</span>}
+            <CartridgeButton variant="link" onClick={() => setMode('menu')}>
+              VOLTAR
+            </CartridgeButton>
+          </div>
+        )}
+
         {mode === 'handle' && (
           <div className="add-friend-modal__handle">
             <label className="add-friend-modal__label" htmlFor="add-friend-input">
@@ -328,15 +399,13 @@ export const AddFriendModal: React.FC<Props> = (props) => {
           </div>
         )}
 
-        <p
-          className="add-friend-modal__error"
-          role="alert"
-          aria-live="assertive"
-          aria-atomic="true"
-          hidden={!error}
-        >
-          {error}
-        </p>
+        <div aria-live="assertive" aria-atomic="true">
+          {feedback && (
+            <p className={`add-friend-modal__feedback ${feedback.ok ? 'is-ok' : ''}`} role="alert">
+              {feedback.msg}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

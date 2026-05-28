@@ -28,10 +28,10 @@ export const WARDROBE: Record<SlotKey, WardrobeItem[]> = {
     { id: 'sho_runners_blk',  label: 'Runners Preto',   prompt: 'all-black trail running shoes with reflective details', iconUrl: '/wardrobe/shoes/sho_runners_blk.png' },
   ],
   accessory: [
-    { id: 'acc_reflective_armband', label: 'Braçadeira', prompt: 'single reflective runner armband on one upper arm' },
-    { id: 'acc_hydration_belt', label: 'Cinto Hidratação', prompt: 'compact hydration belt with small soft flasks around the waist' },
-    { id: 'acc_crossbody_pack', label: 'Pochete Sling', prompt: 'small low-profile crossbody runner pouch with thin strap' },
-    { id: 'acc_blank_bib', label: 'Bib Sem Texto', prompt: 'blank race bib pinned to the shirt with no numbers and no readable text' },
+    { id: 'acc_reflective_armband', label: 'Braçadeira', prompt: 'single reflective runner armband on one upper arm', iconUrl: '/wardrobe/accessory/acc_reflective_armband.png' },
+    { id: 'acc_hydration_belt', label: 'Cinto Hidratação', prompt: 'compact hydration belt with small soft flasks around the waist', iconUrl: '/wardrobe/accessory/acc_hydration_belt.png' },
+    { id: 'acc_crossbody_pack', label: 'Pochete Sling', prompt: 'small low-profile crossbody runner pouch with thin strap', iconUrl: '/wardrobe/accessory/acc_crossbody_pack.png' },
+    { id: 'acc_blank_bib', label: 'Bib Sem Texto', prompt: 'blank race bib pinned to the shirt with no numbers and no readable text', iconUrl: '/wardrobe/accessory/acc_blank_bib.png' },
   ],
 };
 

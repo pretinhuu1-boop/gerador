@@ -15,6 +15,7 @@ import {
   isExpired,
   type CrewRadioMessage,
 } from '../data/crewRadio';
+import { emptyRunHistoryStats, type RunHistoryStats } from '../data/gamification';
 
 const API_KEY_STORAGE = 'crew.gemini_api_key';
 const CHARACTER_STORAGE = 'crew.saved_character';
@@ -23,6 +24,7 @@ const IDENTITY_EVENTS_MAX = 50;
 const FRIENDS_STORAGE = 'crew.friends';
 const CREW_RADIO_STORAGE = 'crew.crew_radio';
 const SELF_USER_ID_STORAGE = 'crew.self_user_id';
+const RUN_HISTORY_STATS_STORAGE = 'crew.run_history_stats';
 const FRIEND_AVATAR_MAX_BYTES = 10 * 1024;
 const ENV_API_KEY =
   (
@@ -103,7 +105,10 @@ export const getSavedCharacter = (): SavedCharacter | null => {
   try { return JSON.parse(raw) as SavedCharacter; } catch { return null; }
 };
 
-export const saveCharacter = (c: SavedCharacter) =>
+// Returns true when the write hit localStorage, false when quota/private
+// mode rejected it. Callers in the save path should surface false as a
+// user-facing error instead of silently pretending the save succeeded.
+export const saveCharacter = (c: SavedCharacter): boolean =>
   writeItem(CHARACTER_STORAGE, JSON.stringify(c));
 
 export const clearSavedCharacter = () => removeItem(CHARACTER_STORAGE);
@@ -132,21 +137,41 @@ export const getIdentityEvents = (): IdentityEvent[] => {
   }
 };
 
+const materializeIdentityEvent = (
+  event: Omit<IdentityEvent, 'id'> & { id?: string },
+): IdentityEvent => ({
+  id: event.id ?? buildIdentityEventId(event.kind, event.timestamp),
+  kind: event.kind,
+  payload: event.payload,
+  timestamp: event.timestamp,
+});
+
 export const appendIdentityEvent = (
   event: Omit<IdentityEvent, 'id'> & { id?: string },
 ): IdentityEvent => {
-  const id = event.id ?? buildIdentityEventId(event.kind, event.timestamp);
-  const next: IdentityEvent = {
-    id,
-    kind: event.kind,
-    payload: event.payload,
-    timestamp: event.timestamp,
-  };
+  const next = materializeIdentityEvent(event);
   const existing = getIdentityEvents();
-  if (existing.some((e) => e.id === id)) return next;
+  if (existing.some((e) => e.id === next.id)) return next;
   const merged = [next, ...existing].slice(0, IDENTITY_EVENTS_MAX);
   writeItem(IDENTITY_EVENTS_STORAGE, JSON.stringify(merged));
   return next;
+};
+
+// Batch variant — single localStorage write, idempotent per-id. Use when
+// you have multiple events to persist atomically (e.g. backfill synthesis)
+// so concurrent readers never see a half-written intermediate array.
+export const appendIdentityEventsBatch = (
+  events: ReadonlyArray<Omit<IdentityEvent, 'id'> & { id?: string }>,
+): IdentityEvent[] => {
+  if (events.length === 0) return [];
+  const materialized = events.map(materializeIdentityEvent);
+  const existing = getIdentityEvents();
+  const existingIds = new Set(existing.map((e) => e.id));
+  const fresh = materialized.filter((e) => !existingIds.has(e.id));
+  if (fresh.length === 0) return materialized;
+  const merged = [...fresh, ...existing].slice(0, IDENTITY_EVENTS_MAX);
+  writeItem(IDENTITY_EVENTS_STORAGE, JSON.stringify(merged));
+  return materialized;
 };
 
 export const clearIdentityEvents = () => removeItem(IDENTITY_EVENTS_STORAGE);
@@ -286,3 +311,18 @@ export const pruneCrewRadio = (): number => {
 };
 
 export const clearCrewRadio = () => removeItem(CREW_RADIO_STORAGE);
+
+export const loadRunHistoryStats = (): RunHistoryStats => {
+  const raw = readItem(RUN_HISTORY_STATS_STORAGE);
+  if (!raw) return emptyRunHistoryStats();
+  try {
+    const parsed = JSON.parse(raw) as Partial<RunHistoryStats>;
+    return { ...emptyRunHistoryStats(), ...parsed };
+  } catch {
+    return emptyRunHistoryStats();
+  }
+};
+
+export const saveRunHistoryStats = (stats: RunHistoryStats): void => {
+  writeItem(RUN_HISTORY_STATS_STORAGE, JSON.stringify(stats));
+};

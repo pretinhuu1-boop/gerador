@@ -7,10 +7,15 @@ import {
   INK_PER_KM,
   breakdownRunXp,
   bumpStreak,
+  isoWeekKey,
+  type BadgeId,
   type RunXpBreakdown,
   type RunnerProgress,
   type StreakBumpResult,
 } from '../data/gamification';
+import { evaluateBadgeUnlocks } from '../data/badges';
+import { applyRunToHistory } from '../data/runHistoryUpdate';
+import { loadRunHistoryStats, saveRunHistoryStats } from '../services/storage';
 import { runTracker, type RunSnapshot } from '../services/runTracker';
 import { useRunTracker } from './useRunTracker';
 
@@ -18,6 +23,7 @@ export interface PendingSummary {
   breakdown: RunXpBreakdown;
   streak: StreakBumpResult;
   nextProgress: RunnerProgress;
+  newlyUnlocked?: BadgeId[];
 }
 
 export interface RunController {
@@ -32,6 +38,7 @@ export interface RunController {
   stopRun: () => void;
   saveSummary: () => void;
   discardSummary: () => void;
+  dismissUnlocks: () => void;
   retryPermission: () => void;
   closePermissionToast: () => void;
   resumeStoredRun: () => void;
@@ -97,19 +104,52 @@ export const useRunController = (
       },
       new Date(),
     );
-    setPendingSummary({ breakdown, streak, nextProgress: streak.next });
+    const priorHistory = loadRunHistoryStats();
+    const now = new Date();
+    const newlyUnlocked = evaluateBadgeUnlocks({
+      progress: streak.next,
+      history: priorHistory,
+      snapshot: snap,
+      breakdown,
+      now,
+    });
+    // Merge newly-unlocked badges into nextProgress at stop time so the save
+    // path stays trivial — dismissing the unlock toast later can never strip
+    // badges that the user actually earned (BadgeUnlockToast stacks on top of
+    // RunSummary and must be dismissed before SAVE is reachable).
+    const nextProgress: RunnerProgress = {
+      ...streak.next,
+      badgeUnlocks: Array.from(
+        new Set([...streak.next.badgeUnlocks, ...newlyUnlocked]),
+      ),
+    };
+    setPendingSummary({ breakdown, streak, nextProgress, newlyUnlocked });
   }, [runnerProgress]);
 
   const saveSummary = useCallback(() => {
     if (!pendingSummary) return;
+    const snap = runTracker.getSnapshot();
+    const now = new Date();
+    const nextHistory = applyRunToHistory({
+      prior: loadRunHistoryStats(),
+      snapshot: snap,
+      breakdown: pendingSummary.breakdown,
+      runWeekKey: isoWeekKey(now),
+      priorWeekKey: runnerProgress.weekKey,
+    });
+    saveRunHistoryStats(nextHistory);
     onRunCompleted?.(pendingSummary.nextProgress, pendingSummary.breakdown);
     setPendingSummary(null);
     runTracker.reset();
-  }, [pendingSummary, onRunCompleted]);
+  }, [pendingSummary, onRunCompleted, runnerProgress.weekKey]);
 
   const discardSummary = useCallback(() => {
     setPendingSummary(null);
     runTracker.reset();
+  }, []);
+
+  const dismissUnlocks = useCallback(() => {
+    setPendingSummary((prev) => (prev ? { ...prev, newlyUnlocked: [] } : prev));
   }, []);
 
   const retryPermission = useCallback(() => {
@@ -121,7 +161,10 @@ export const useRunController = (
     }
   }, [selectedCrewSlug]);
 
-  const closePermissionToast = useCallback(() => setPermissionToastOpen(false), []);
+  const closePermissionToast = useCallback(() => {
+    setPermissionToastOpen(false);
+    runTracker.clearPermissionDenied();
+  }, []);
 
   const resumeStoredRun = useCallback(() => {
     setResumePromptOpen(false);
@@ -145,6 +188,7 @@ export const useRunController = (
     stopRun,
     saveSummary,
     discardSummary,
+    dismissUnlocks,
     retryPermission,
     closePermissionToast,
     resumeStoredRun,

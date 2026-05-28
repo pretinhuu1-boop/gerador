@@ -451,7 +451,14 @@ export const CustomizeScreen: React.FC<Props> = ({
         savedAt: Date.now(),
         backgroundRemoved: true,
       };
-      saveCharacter(next);
+      const saved = saveCharacter(next);
+      if (!saved) {
+        // Quota exceeded or private mode rejected the write. Surface a
+        // distinct user-facing error so the player knows the look did
+        // NOT persist (vs an event-log glitch which would still let
+        // the character through).
+        throw new Error('Sem espaço de armazenamento — libere algum espaço e tente de novo.');
+      }
       // Identity event is a non-blocking side effect — if it fails (quota,
       // private mode), the look is still saved. Log + continue rather than
       // surfacing a "save failed" error that misleads the player.

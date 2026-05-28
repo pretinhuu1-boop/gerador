@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   getLaunchProgress,
   getRunnerProgress,
+  type CreatorTabId,
   LaunchProgress,
   markCitySignalSeen,
   markConsoleBootSeen,
@@ -10,6 +11,7 @@ import {
   markRunnerCustomized,
   markTitleSeen,
   saveRunnerProgress,
+  setCreatorTab,
   setSelectedCrewSlug,
 } from '../../services/launchStorage';
 import { type RunnerProgress } from '../../data/gamification';
@@ -17,7 +19,6 @@ import { CitySignalEntry } from './CitySignalEntry';
 import { ConsoleBoot } from './ConsoleBoot';
 import { GuidedOnboarding } from './GuidedOnboarding';
 import { MainMenu } from './MainMenu';
-import { RunnerSavedTeaser } from './RunnerSavedTeaser';
 import { TitleScreen } from './TitleScreen';
 import { MapStage } from '../map/MapStage';
 
@@ -27,12 +28,14 @@ type LaunchScreen =
   | 'citySignal'
   | 'mainMenu'
   | 'guidedSetup'
-  | 'runnerCreator'
-  | 'runnerSaved'
   | 'mapHome';
+
+type MainMenuPanel = 'home' | 'crews' | 'crewHome' | 'sede' | 'runner' | 'config';
+type RunnerPanelMode = 'profile' | 'creator';
 
 type Props = {
   renderRunnerCreator: (props: {
+    creatorKey: number;
     onBackToMenu: () => void;
     onRunnerSaved: () => void;
     selectedCrewSlug: string;
@@ -61,6 +64,9 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
     getInitialScreen(getLaunchProgress()),
   );
   const [runnerProgress, setRunnerProgress] = useState<RunnerProgress>(() => getRunnerProgress());
+  const [preferredMainPanel, setPreferredMainPanel] = useState<MainMenuPanel>('home');
+  const [preferredRunnerMode, setPreferredRunnerMode] = useState<RunnerPanelMode>('profile');
+  const [creatorEntryNonce, setCreatorEntryNonce] = useState(0);
 
   const syncProgress = () => {
     const next = getLaunchProgress();
@@ -74,17 +80,40 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
     return nextSlug;
   };
 
-  const goToMainMenu = () => {
+  const goToMainMenu = (
+    panel: MainMenuPanel = 'home',
+    runnerMode: RunnerPanelMode = 'profile',
+  ) => {
     persistSelectedCrew();
     markMainMenuSeen();
+    setPreferredMainPanel(panel);
+    setPreferredRunnerMode(runnerMode);
     syncProgress();
     setScreen('mainMenu');
   };
 
-  const goToRunnerCreator = () => {
+  const openCreatorAt = (tab: CreatorTabId) => {
+    setCreatorTab(tab);
+    setCreatorEntryNonce((nonce) => nonce + 1);
+  };
+
+  const goToWardrobe = () => {
+    openCreatorAt('look');
+    goToMainMenu('home', 'profile');
+  };
+
+  const goToCrewHome = () => {
+    goToMainMenu('crewHome', 'profile');
+  };
+
+  const goToRunnerCreator = (tab: CreatorTabId = 'foto') => {
+    openCreatorAt(tab);
     persistSelectedCrew();
+    markMainMenuSeen();
+    setPreferredMainPanel('runner');
+    setPreferredRunnerMode('creator');
     syncProgress();
-    setScreen('runnerCreator');
+    setScreen('mainMenu');
   };
 
   const handleSelectCrew = (slug: string) => {
@@ -121,19 +150,22 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
     persistSelectedCrew();
     markGuidedSetupComplete();
     syncProgress();
-    goToRunnerCreator();
+    goToRunnerCreator('foto');
   };
 
   const handleRunnerSaved = () => {
     markRunnerCustomized();
-    syncProgress();
-    setScreen('runnerSaved');
+    goToMainMenu('runner', 'profile');
   };
 
   const handleStartGuidedSetup = () => {
     persistSelectedCrew();
     const next = syncProgress();
-    setScreen(next.guidedSetupComplete ? 'runnerCreator' : 'guidedSetup');
+    if (next.guidedSetupComplete) {
+      goToRunnerCreator('foto');
+      return;
+    }
+    setScreen('guidedSetup');
   };
 
   const handleReviewGuidedSetup = () => {
@@ -166,28 +198,8 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
       <GuidedOnboarding
         initialStep={progress.onboardingStep}
         selectedCrewSlug={progress.selectedCrewSlug}
-        onBackToMenu={goToMainMenu}
+        onBackToMenu={() => goToMainMenu('home')}
         onComplete={handleGuidedSetupComplete}
-      />
-    );
-  }
-
-  if (screen === 'runnerCreator') {
-    return renderRunnerCreator({
-      onBackToMenu: goToMainMenu,
-      onRunnerSaved: handleRunnerSaved,
-      selectedCrewSlug: progress.selectedCrewSlug || DEFAULT_CREW_SLUG,
-    });
-  }
-
-  if (screen === 'runnerSaved') {
-    return (
-      <RunnerSavedTeaser
-        progress={progress}
-        selectedCrewSlug={progress.selectedCrewSlug}
-        onBackToMenu={goToMainMenu}
-        onEditRunner={goToRunnerCreator}
-        onEnterMap={() => setScreen('mapHome')}
       />
     );
   }
@@ -202,7 +214,7 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
         runnerProgress={runnerProgress}
         selectedCrewSlug={progress.selectedCrewSlug}
         onRunCompleted={handleRunCompleted}
-        onBackToMenu={goToMainMenu}
+        onBackToMenu={goToCrewHome}
       />
     );
   }
@@ -210,13 +222,23 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
   return (
     <MainMenu
       progress={progress}
+      initialPanel={preferredMainPanel}
+      initialRunnerMode={preferredRunnerMode}
+      runnerCreatorPanel={renderRunnerCreator({
+        creatorKey: creatorEntryNonce,
+        onBackToMenu: () => goToMainMenu('home'),
+        onRunnerSaved: handleRunnerSaved,
+        selectedCrewSlug: progress.selectedCrewSlug || DEFAULT_CREW_SLUG,
+      })}
       selectedCrewSlug={progress.selectedCrewSlug}
       onSelectCrew={handleSelectCrew}
-      onOpenRunnerCreator={goToRunnerCreator}
+      onOpenWardrobe={goToWardrobe}
+      onOpenCrewHome={goToCrewHome}
+      onOpenRunnerCreator={() => goToRunnerCreator('look')}
       onReplayIntro={() => setScreen('title')}
       onReviewGuidedSetup={handleReviewGuidedSetup}
       onStartGuidedSetup={handleStartGuidedSetup}
-      onOpenMap={progress.runnerCustomized ? () => setScreen('mapHome') : undefined}
+      onOpenMap={() => setScreen('mapHome')}
     />
   );
 };

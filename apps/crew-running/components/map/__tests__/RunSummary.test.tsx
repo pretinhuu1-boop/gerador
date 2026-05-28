@@ -34,11 +34,13 @@ describe('RunSummary', () => {
         streakBumped={false}
         streakBroken={false}
         freezeUsed={false}
+        newlyUnlocked={[]}
         onSave={() => undefined}
         onDiscard={() => undefined}
+        onDismissUnlocks={() => undefined}
       />,
     );
-    const dialog = screen.getByRole('dialog');
+    const dialog = screen.getByRole('dialog', { name: /resumo da corrida/i });
     expect(dialog.getAttribute('aria-modal')).toBe('true');
   });
 
@@ -50,8 +52,10 @@ describe('RunSummary', () => {
         streakBumped={false}
         streakBroken={false}
         freezeUsed={false}
+        newlyUnlocked={[]}
         onSave={() => undefined}
         onDiscard={() => undefined}
+        onDismissUnlocks={() => undefined}
       />,
     );
     expect(screen.getByText('+105 XP')).toBeTruthy();
@@ -65,8 +69,10 @@ describe('RunSummary', () => {
         streakBumped={true}
         streakBroken={false}
         freezeUsed={false}
+        newlyUnlocked={[]}
         onSave={() => undefined}
         onDiscard={() => undefined}
+        onDismissUnlocks={() => undefined}
       />,
     );
     expect(screen.getByText('Streak +1!')).toBeTruthy();
@@ -80,8 +86,10 @@ describe('RunSummary', () => {
         streakBumped={false}
         streakBroken={true}
         freezeUsed={false}
+        newlyUnlocked={[]}
         onSave={() => undefined}
         onDiscard={() => undefined}
+        onDismissUnlocks={() => undefined}
       />,
     );
     expect(screen.getByText('Streak quebrado.')).toBeTruthy();
@@ -95,8 +103,10 @@ describe('RunSummary', () => {
         streakBumped={false}
         streakBroken={false}
         freezeUsed={true}
+        newlyUnlocked={[]}
         onSave={() => undefined}
         onDiscard={() => undefined}
+        onDismissUnlocks={() => undefined}
       />,
     );
     expect(screen.getByText(/Freeze usado/i)).toBeTruthy();
@@ -111,8 +121,10 @@ describe('RunSummary', () => {
         streakBumped={false}
         streakBroken={false}
         freezeUsed={false}
+        newlyUnlocked={[]}
         onSave={onSave}
         onDiscard={() => undefined}
+        onDismissUnlocks={() => undefined}
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: /SALVAR/ }));
@@ -128,15 +140,17 @@ describe('RunSummary', () => {
         streakBumped={false}
         streakBroken={false}
         freezeUsed={false}
+        newlyUnlocked={[]}
         onSave={() => undefined}
         onDiscard={onDiscard}
+        onDismissUnlocks={() => undefined}
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: /DESCARTAR/ }));
     expect(onDiscard).toHaveBeenCalledTimes(1);
   });
 
-  it('RS8: hides Loop multiplier line when loopMult=1', () => {
+  it('RS8: hides Loop multiplier chip when loopMult=1', () => {
     render(
       <RunSummary
         snapshot={{ ...snap, closedLoop: false }}
@@ -144,10 +158,47 @@ describe('RunSummary', () => {
         streakBumped={false}
         streakBroken={false}
         freezeUsed={false}
+        newlyUnlocked={[]}
         onSave={() => undefined}
         onDiscard={() => undefined}
+        onDismissUnlocks={() => undefined}
       />,
     );
     expect(screen.queryByText(/^Loop ×/)).toBeNull();
+  });
+
+  it('RS9: renders multiplier chip explanation when loop multiplier is active', () => {
+    render(
+      <RunSummary
+        snapshot={snap}
+        breakdown={baseBreakdown}
+        streakBumped={false}
+        streakBroken={false}
+        freezeUsed={false}
+        newlyUnlocked={[]}
+        onSave={() => undefined}
+        onDiscard={() => undefined}
+        onDismissUnlocks={() => undefined}
+      />,
+    );
+    expect(screen.getByText(/loop ×1.5/i)).toBeInTheDocument();
+    expect(screen.getByText(/fechou volta/i)).toBeInTheDocument();
+  });
+
+  it('RS10: renders badge unlock toast when newlyUnlocked is non-empty', () => {
+    render(
+      <RunSummary
+        snapshot={snap}
+        breakdown={baseBreakdown}
+        streakBumped={false}
+        streakBroken={false}
+        freezeUsed={false}
+        newlyUnlocked={['first-blood']}
+        onSave={() => undefined}
+        onDiscard={() => undefined}
+        onDismissUnlocks={() => undefined}
+      />,
+    );
+    expect(screen.getByText(/primeira sangue/i)).toBeInTheDocument();
   });
 });
