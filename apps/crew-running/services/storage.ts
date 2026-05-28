@@ -103,7 +103,10 @@ export const getSavedCharacter = (): SavedCharacter | null => {
   try { return JSON.parse(raw) as SavedCharacter; } catch { return null; }
 };
 
-export const saveCharacter = (c: SavedCharacter) =>
+// Returns true when the write hit localStorage, false when quota/private
+// mode rejected it. Callers in the save path should surface false as a
+// user-facing error instead of silently pretending the save succeeded.
+export const saveCharacter = (c: SavedCharacter): boolean =>
   writeItem(CHARACTER_STORAGE, JSON.stringify(c));
 
 export const clearSavedCharacter = () => removeItem(CHARACTER_STORAGE);
