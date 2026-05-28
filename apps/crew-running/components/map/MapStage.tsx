@@ -117,7 +117,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   }, [view.zoneId]);
 
   const missionsForView = SAMPLE_MISSIONS.filter(
-    (m) => !view.zoneId || m.zoneId === view.zoneId,
+    (m) => view.zoom === 'spot' || !view.zoneId || m.zoneId === view.zoneId,
   );
   const visibleMissions = layers.missions ? missionsForView : [];
   const activeZone = view.zoneId ? getZoneById(view.zoneId) : undefined;
