@@ -16,7 +16,7 @@ import {
   generateDemoCharacterSheet,
 } from '../services/crewService';
 import type { SavedCharacter } from '../services/storage';
-import { appendIdentityEvent, getApiKey, saveCharacter, setApiKey } from '../services/storage';
+import { appendIdentityEvent, getApiKey, saveCharacter } from '../services/storage';
 import { CartridgeButton } from './CartridgeButton';
 import { CrewBadge } from './CrewBadge';
 import { HandUnderline } from './SvgDefs';
@@ -25,6 +25,7 @@ import { RunnerProfileForm } from './RunnerProfileForm';
 import { RunnerTypePicker } from './RunnerTypePicker';
 import { SheetPreview } from './SheetPreview';
 import { WardrobePicker } from './WardrobePicker';
+import { ApiKeyModal } from './ApiKeyModal';
 import { audio } from '../services/audio';
 
 type Photo = PhotoInput & { previewUrl: string };
@@ -216,54 +217,6 @@ type Props = {
   onApiKeyReady: (key: string) => void;
   onBackToMenu: () => void;
   onRunnerCustomized: () => void;
-};
-
-const ApiKeyModal: React.FC<{
-  onCancel: () => void;
-  onDemo: () => void;
-  onReady: (key: string) => void;
-}> = ({ onCancel, onDemo, onReady }) => {
-  const [value, setValue] = useState('');
-
-  const handleSave = () => {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    setApiKey(trimmed);
-    onReady(trimmed);
-  };
-
-  return (
-    <div className="api-key-modal" role="dialog" aria-modal="true" aria-label="Ajuste do estúdio">
-      <div className="api-key-modal__panel">
-        <span>ESTÚDIO INTERNO</span>
-        <h2>Credencial local</h2>
-        <p>Use a chave real ou rode uma sheet local para QA do fluxo.</p>
-        <div className="input-wrap">
-          <input
-            autoFocus
-            className="input-board"
-            onChange={(event) => setValue(event.target.value)}
-            onKeyDown={(event) => event.key === 'Enter' && handleSave()}
-            placeholder="credencial"
-            type="password"
-            value={value}
-          />
-        </div>
-        <div className="api-key-modal__actions">
-          <CartridgeButton variant="chalk" onClick={onCancel}>
-            VOLTAR
-          </CartridgeButton>
-          <CartridgeButton variant="chalk" onClick={onDemo}>
-            TESTAR LOCAL
-          </CartridgeButton>
-          <CartridgeButton variant="solid" disabled={!value.trim()} onClick={handleSave}>
-            SALVAR
-          </CartridgeButton>
-        </div>
-        <small className="api-key-modal__hint">TESTE LOCAL NAO CHAMA GEMINI</small>
-      </div>
-    </div>
-  );
 };
 
 const randomFrom = <Value,>(items: Value[]): Value =>
