@@ -1431,6 +1431,60 @@ body::after {
   white-space: nowrap;
 }
 
+/* When the map is in menu mode, pings become real buttons. Reset the UA
+ * button chrome and surface ownership tier as a ring around the icon. */
+button.launch-city-map__ping {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+button.launch-city-map__ping:hover {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+button.launch-city-map__ping:focus-visible {
+  outline: 2px solid var(--crew-accent);
+  outline-offset: 6px;
+  border-radius: 999px;
+}
+
+button.launch-city-map__ping.is-status-owned img {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--crew-accent) 72%, transparent);
+}
+
+button.launch-city-map__ping.is-status-contested img {
+  box-shadow: 0 0 0 2px rgba(240, 195, 60, 0.7);
+}
+
+button.launch-city-map__ping.is-status-neutral img {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.main-menu__city-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin: 14px 0 18px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--crew-accent) 28%, transparent);
+  background: rgba(8, 6, 4, 0.55);
+}
+
+.main-menu__city-map .launch-city-map {
+  position: absolute;
+  inset: 0;
+}
+
 .crew-pilot-preview__item span {
   color: var(--spray-cyan-bright);
   font-family: var(--mono);

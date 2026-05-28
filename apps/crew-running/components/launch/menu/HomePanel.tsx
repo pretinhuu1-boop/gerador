@@ -1,9 +1,11 @@
 import React from 'react';
 import type { CrewZone } from '../../../data/crews';
+import type { SpZoneId } from '../../../data/spLiveMap';
 import type { LaunchProgress } from '../../../services/launchStorage';
 import type { SavedCharacter } from '../../../services/storage';
 import { CartridgeButton } from '../../CartridgeButton';
 import { CrewBadge } from '../../CrewBadge';
+import { LaunchCityMap } from '../LaunchCityMap';
 
 type Props = {
   activeCrew: CrewZone;
@@ -14,8 +16,10 @@ type Props = {
   progress: LaunchProgress;
   guideStatusLabel: string;
   runnerStatusLabel: string;
+  ownershipByZone?: Partial<Record<SpZoneId, number>>;
   onShowRunnerPanel: () => void;
   onShowCrewsPanel: () => void;
+  onSelectCrew?: (slug: string) => void;
   onOpenWardrobe: () => void;
   crewLocked?: boolean;
 };
@@ -29,8 +33,10 @@ export const HomePanel: React.FC<Props> = ({
   progress,
   guideStatusLabel,
   runnerStatusLabel,
+  ownershipByZone,
   onShowRunnerPanel,
   onShowCrewsPanel,
+  onSelectCrew,
   onOpenWardrobe,
   crewLocked = false,
 }) => (
@@ -45,6 +51,14 @@ export const HomePanel: React.FC<Props> = ({
     </div>
     <h1>{activeCrew.name}</h1>
     <p>{homeCopy}</p>
+    <div className="main-menu__city-map">
+      <LaunchCityMap
+        mode="menu"
+        activeSlug={activeCrew.slug}
+        ownershipByZone={ownershipByZone}
+        onSelectCrew={onSelectCrew}
+      />
+    </div>
     {runnerSaved && (
       <div className="main-menu__runner-pass">
         <div className="main-menu__runner-portrait">

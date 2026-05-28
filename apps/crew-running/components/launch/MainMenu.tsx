@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
 import { getCrewBySlug } from '../../data/crews';
 import { getRunnerTypeById } from '../../data/runnerTypes';
-import { LaunchProgress, setCreatorTab } from '../../services/launchStorage';
+import { INK_PER_FULL_OWNERSHIP } from '../../data/gamification';
+import { SP_ZONE_MAP_FEATURES, type SpZoneId } from '../../data/spLiveMap';
+import { LaunchProgress, getRunnerProgress, setCreatorTab } from '../../services/launchStorage';
 import { getSavedCharacter } from '../../services/storage';
 import { Sp3DMapBackground } from './Sp3DMapBackground';
 import { RunnerPanel } from '../voce/RunnerPanel';
@@ -79,6 +81,19 @@ export const MainMenu: React.FC<Props> = ({
   }, [initialRunnerMode]);
 
   const runnerName = savedCharacter?.profile?.name || 'Runner';
+
+  const ownershipByZone = useMemo(() => {
+    const progress = getRunnerProgress();
+    const out: Partial<Record<SpZoneId, number>> = {};
+    for (const zone of SP_ZONE_MAP_FEATURES) {
+      const ink = progress.inkPerZone[zone.id] ?? 0;
+      out[zone.id] = Math.min(1, ink / INK_PER_FULL_OWNERSHIP);
+    }
+    return out;
+    // runnerVersion bumps when the saved character changes, which is the
+    // closest proxy we have for "the user might have run a new route" —
+    // re-read ink ownership then.
+  }, [runnerVersion]);
 
   const activeCrew = useMemo(
     () => getCrewBySlug(activeCrewSlug),
@@ -320,8 +335,10 @@ export const MainMenu: React.FC<Props> = ({
                   progress={progress}
                   guideStatusLabel={guideStatusLabel}
                   runnerStatusLabel={runnerStatusLabel}
+                  ownershipByZone={ownershipByZone}
                   onShowRunnerPanel={() => selectPanel('runner')}
                   onShowCrewsPanel={() => selectPanel('crews')}
+                  onSelectCrew={handleSelectCrew}
                   onOpenWardrobe={openWardrobePanel}
                   crewLocked={crewLocked}
                 />
