@@ -64,6 +64,7 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
   const [screen, setScreen] = useState<LaunchScreen>(() =>
     getInitialScreen(getLaunchProgress()),
   );
+  const [runnerProgress, setRunnerProgress] = useState<RunnerProgress>(() => getRunnerProgress());
 
   const syncProgress = () => {
     const next = getLaunchProgress();
@@ -196,8 +197,10 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
   }
 
   if (screen === 'mapHome') {
+    // Demo run stub — exercises the storage round-trip and gives the player a
+    // visible XP nudge until real GPS tracking lands. Does NOT increment streak
+    // (intentional: streaks come from weekly aggregates, not one-off taps).
     const handleStartDemoRun = () => {
-      const current = getRunnerProgress();
       const zone = getZoneByCrewSlug(progress.selectedCrewSlug);
       const earned = computeRunXp({
         distanceKm: 1,
@@ -206,22 +209,24 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
         closedLoop: false,
         isInvasion: false,
       });
-      const next: RunnerProgress = {
-        ...current,
-        xp: current.xp + earned,
-        lastRunAt: Date.now(),
-        inkPerZone: zone
-          ? { ...current.inkPerZone, [zone.id]: (current.inkPerZone[zone.id] ?? 0) + earned }
-          : current.inkPerZone,
-        inkUpdatedAt: Date.now(),
-      };
-      saveRunnerProgress(next);
-      setProgress(getLaunchProgress());
-      setScreen('mapHome');
+      const now = Date.now();
+      setRunnerProgress((prev) => {
+        const next: RunnerProgress = {
+          ...prev,
+          xp: prev.xp + earned,
+          lastRunAt: now,
+          inkPerZone: zone
+            ? { ...prev.inkPerZone, [zone.id]: (prev.inkPerZone[zone.id] ?? 0) + earned }
+            : prev.inkPerZone,
+          inkUpdatedAt: now,
+        };
+        saveRunnerProgress(next);
+        return next;
+      });
     };
     return (
       <MapStage
-        runnerProgress={getRunnerProgress()}
+        runnerProgress={runnerProgress}
         selectedCrewSlug={progress.selectedCrewSlug}
         onStartRun={handleStartDemoRun}
         onBackToMenu={goToMainMenu}

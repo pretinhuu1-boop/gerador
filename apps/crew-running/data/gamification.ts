@@ -54,6 +54,10 @@ export const STREAK_BREAK_PENALTY = 0.8;
 export const INK_DECAY_PER_DAY = 0.033;
 export const INK_OWNERSHIP_OWNED = 0.6;
 export const INK_OWNERSHIP_CONTESTED = 0.4;
+// Ink scale conversion: this many points of accumulated "ink" in a zone equals
+// 100% ownership for one runner. Picked so a few committed weeks of in-territory
+// running visibly tilt the heatmap without being trivial to max out.
+export const INK_PER_FULL_OWNERSHIP = 1000;
 
 export const xpRequiredForLevel = (level: number): number => {
   if (level <= 1) return 0;
@@ -93,12 +97,12 @@ export const decayInk = (ink: number, daysSince: number): number => {
 export const BADGE_DEFS: BadgeDef[] = [
   { id: 'first-blood', name: 'Primeira Sangue', hint: 'Sua primeira corrida.' },
   { id: 'night-owl', name: 'Madrugador', hint: '10 corridas entre 22h e 04h.' },
-  { id: 'invader', name: 'Invasor', hint: '5 invasoes bem-sucedidas.' },
-  { id: 'cartographer', name: 'Cartografo', hint: 'Toque todos os 11 spots.' },
-  { id: 'urban-marathon', name: 'Maratona Urbana', hint: '42km numa unica semana.' },
+  { id: 'invader', name: 'Invasor', hint: '5 invasões bem-sucedidas.' },
+  { id: 'cartographer', name: 'Cartógrafo', hint: 'Toque todos os 11 spots.' },
+  { id: 'urban-marathon', name: 'Maratona Urbana', hint: '42km numa única semana.' },
   { id: 'local-legend', name: 'Local Legend', hint: 'Captain de zone por 4 semanas seguidas.' },
   { id: 'streak-12', name: 'Streak 12', hint: '12 semanas mantendo o streak.' },
-  { id: 'solo-wolf', name: 'Solo Wolf', hint: '50km solo no proprio territorio.' },
+  { id: 'solo-wolf', name: 'Solo Wolf', hint: '50km solo no próprio território.' },
   { id: 'pace-setter', name: 'Pace Setter', hint: '5x top-3 da crew na semana.' },
   { id: 'season-captain', name: 'Season Captain', hint: 'Top 10 individuais ao final da temporada.' },
 ];
@@ -108,7 +112,7 @@ export const SAMPLE_MISSIONS: MissionDef[] = [
     id: 'm-spot-hunt-centro',
     type: 'spot-hunt',
     title: 'Spot Hunt Centro',
-    description: 'Toque Vale, Republica e Luz em 48h.',
+    description: 'Toque Vale, República e Luz em 48h.',
     rewardXp: 200,
     windowHours: 48,
     zoneId: 'centro',
@@ -125,7 +129,7 @@ export const SAMPLE_MISSIONS: MissionDef[] = [
   {
     id: 'm-invasion-leste',
     type: 'invasion',
-    title: 'Invasao Leste',
+    title: 'Invasão Leste',
     description: '5km na zona East Burners.',
     rewardXp: 300,
     windowHours: 24,

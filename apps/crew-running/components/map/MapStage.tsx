@@ -5,18 +5,22 @@ import {
   getZoneById,
   polylineToPath,
   projectLngLat,
-  type MapZoom,
   type ProjectionOpts,
   type SpZoneId,
 } from '../../data/spLiveMap';
 import { getCrewBySlug } from '../../data/crews';
-import { SAMPLE_MISSIONS, type RunnerProgress } from '../../data/gamification';
+import {
+  INK_PER_FULL_OWNERSHIP,
+  SAMPLE_MISSIONS,
+  type RunnerProgress,
+} from '../../data/gamification';
 import { ZoneLayer } from './ZoneLayer';
 import { SpotLayer } from './SpotLayer';
 import { MissionLayer } from './MissionLayer';
 import { HudOverlay } from './HudOverlay';
 import { LayerRail } from './LayerRail';
-import { DEFAULT_MAP_LAYERS, type MapLayerState, type MapView } from './mapTypes';
+import { type MapLayerState, type MapView } from './mapTypes';
+import { getMapLayerPrefs, saveMapLayerPrefs } from '../../services/launchStorage';
 
 const VIEWBOX_W = 800;
 const VIEWBOX_H = 700;
@@ -43,7 +47,7 @@ const getInitialZoneForCrew = (slug?: string): SpZoneId | undefined => {
 
 export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, onStartRun, onBackToMenu }) => {
   const [view, setView] = useState<MapView>(() => ({ zoom: 'city' }));
-  const [layers, setLayers] = useState<MapLayerState>(DEFAULT_MAP_LAYERS);
+  const [layers, setLayers] = useState<MapLayerState>(() => getMapLayerPrefs());
 
   const userCrew = getCrewBySlug(selectedCrewSlug);
   const userZoneId = getInitialZoneForCrew(selectedCrewSlug);
@@ -52,13 +56,17 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     const out: Partial<Record<SpZoneId, number>> = {};
     for (const zone of SP_ZONE_MAP_FEATURES) {
       const ink = runnerProgress.inkPerZone[zone.id] ?? 0;
-      out[zone.id] = Math.min(1, ink / 1000);
+      out[zone.id] = Math.min(1, ink / INK_PER_FULL_OWNERSHIP);
     }
     return out;
   }, [runnerProgress.inkPerZone]);
 
   const handleToggleLayer = useCallback((key: keyof MapLayerState) => {
-    setLayers((prev) => ({ ...prev, [key]: !prev[key] }));
+    setLayers((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      saveMapLayerPrefs(next);
+      return next;
+    });
   }, []);
 
   const handleSelectZone = useCallback((zoneId: SpZoneId) => {
@@ -77,7 +85,8 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     });
   }, []);
 
-  const userPos = userZoneId ? projectLngLat(getZoneById(userZoneId)!.center, PROJECTION) : null;
+  const userZone = userZoneId ? getZoneById(userZoneId) : undefined;
+  const userPos = userZone ? projectLngLat(userZone.center, PROJECTION) : null;
   const signalPath = polylineToPath(SP_SIGNAL_ROUTE, PROJECTION);
   const visibleMissions = layers.missions
     ? SAMPLE_MISSIONS.filter((m) => view.zoom === 'spot' || !view.zoneId || m.zoneId === view.zoneId)
@@ -91,7 +100,11 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     : [];
 
   return (
-    <section className={`map-stage map-stage--${view.zoom}`}>
+    <section
+      className={`map-stage map-stage--${view.zoom}`}
+      aria-label={`Mapa Crew Running - ${activeZone ? activeZone.label : 'cidade'}`}
+    >
+      <h2 className="sr-only">Mapa vivo da cidade</h2>
       <HudOverlay progress={runnerProgress} crewSlug={selectedCrewSlug} />
 
       <div className="map-stage-canvas">

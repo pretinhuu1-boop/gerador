@@ -31,6 +31,7 @@ const STORAGE_KEYS = {
   onboardingComplete: 'crewOnboardingComplete',
   runnerCustomized: 'crewRunnerCustomized',
   runnerProgress: 'crewRunnerProgress',
+  mapLayers: 'crewMapLayers',
 } as const;
 
 const LEGACY_BOOT_KEY = 'crewBootSeen';
@@ -200,6 +201,41 @@ export const getRunnerProgress = (): RunnerProgress => {
     return merged;
   } catch {
     return DEFAULT_RUNNER_PROGRESS;
+  }
+};
+
+export interface MapLayerPrefs {
+  territory: boolean;
+  live: boolean;
+  missions: boolean;
+  history: boolean;
+}
+
+const DEFAULT_MAP_LAYERS: MapLayerPrefs = {
+  territory: true,
+  live: true,
+  missions: false,
+  history: false,
+};
+
+export const getMapLayerPrefs = (): MapLayerPrefs => {
+  if (!canUseStorage()) return DEFAULT_MAP_LAYERS;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.mapLayers);
+    if (!raw) return DEFAULT_MAP_LAYERS;
+    const parsed = JSON.parse(raw) as Partial<MapLayerPrefs>;
+    return { ...DEFAULT_MAP_LAYERS, ...parsed };
+  } catch {
+    return DEFAULT_MAP_LAYERS;
+  }
+};
+
+export const saveMapLayerPrefs = (prefs: MapLayerPrefs): void => {
+  if (!canUseStorage()) return;
+  try {
+    window.localStorage.setItem(STORAGE_KEYS.mapLayers, JSON.stringify(prefs));
+  } catch {
+    // ignored
   }
 };
 

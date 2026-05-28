@@ -7,10 +7,10 @@ interface Props {
 }
 
 const LABELS: Array<{ key: keyof MapLayerState; label: string }> = [
-  { key: 'territory', label: 'Territorio' },
+  { key: 'territory', label: 'Território' },
   { key: 'live', label: 'Live' },
-  { key: 'missions', label: 'Missoes' },
-  { key: 'history', label: 'Historia' },
+  { key: 'missions', label: 'Missões' },
+  { key: 'history', label: 'História' },
 ];
 
 export const LayerRail: React.FC<Props> = ({ layers, onToggle }) => (

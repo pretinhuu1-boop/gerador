@@ -8,7 +8,9 @@
     "check:creator-contract": "node scripts/check-creator-contract.mjs",
     "smoke:creator": "node scripts/smoke-creator.mjs",
     "typecheck": "tsc --noEmit",
-    "validate": "npm run check:creator-contract && npm run typecheck && npm run build && npm run smoke:creator",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate": "npm run check:creator-contract && npm run typecheck && npm run test && npm run build && npm run smoke:creator",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -28,6 +30,7 @@
     "postcss": "^8.5.15",
     "tailwindcss": "^3.4.13",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vitest": "^4.1.7"
   }
 }
