@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CartridgeButton } from '../CartridgeButton';
 import {
   FRIEND_EXCHANGE_VERSION,
@@ -32,12 +32,15 @@ const buildSelfPayload = (props: Props): FriendExchangePayload => ({
 });
 
 export const AddFriendModal: React.FC<Props> = (props) => {
-  const { open, onClose, onAddFriend } = props;
+  const { open, selfUserId, onClose, onAddFriend } = props;
   const [mode, setMode] = useState<Mode>('menu');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [handleInput, setHandleInput] = useState('');
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const nfcAbortRef = useRef<AbortController | null>(null);
 
   const selfPayloadJson = useMemo(() => encodeFriendPayload(buildSelfPayload(props)), [props]);
   const nfcSupported = useMemo(() => isNfcSupported(), []);
@@ -49,8 +52,40 @@ export const AddFriendModal: React.FC<Props> = (props) => {
       setBusy(false);
       setQrDataUrl(null);
       setHandleInput('');
+      nfcAbortRef.current?.abort();
+      nfcAbortRef.current = null;
+    } else {
+      closeBtnRef.current?.focus();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, onClose]);
 
   useEffect(() => {
     if (mode !== 'share') return;
@@ -67,6 +102,10 @@ export const AddFriendModal: React.FC<Props> = (props) => {
 
   const acceptFriend = useCallback(
     (payload: FriendExchangePayload, method: FriendAddMethod) => {
+      if (payload.userId === selfUserId) {
+        setError('Esse convite é teu. Pede o convite do outro runner.');
+        return;
+      }
       const friend: FriendRecord = {
         userId: payload.userId,
         runnerName: payload.runnerName,
@@ -78,7 +117,7 @@ export const AddFriendModal: React.FC<Props> = (props) => {
       onAddFriend(friend);
       onClose();
     },
-    [onAddFriend, onClose],
+    [selfUserId, onAddFriend, onClose],
   );
 
   const handleNfcWrite = useCallback(async () => {
@@ -95,17 +134,23 @@ export const AddFriendModal: React.FC<Props> = (props) => {
   }, [selfPayloadJson]);
 
   const handleNfcRead = useCallback(async () => {
+    nfcAbortRef.current?.abort();
+    const controller = new AbortController();
+    nfcAbortRef.current = controller;
     setBusy(true);
     setError(null);
     try {
-      const raw = await readNfcTag();
+      const raw = await readNfcTag(controller.signal);
       const payload = decodeFriendPayload(raw);
       if (!payload) throw new Error('Tag NFC sem identidade válida.');
       acceptFriend(payload, 'nfc');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha NFC.');
+      if (!controller.signal.aborted) {
+        setError(e instanceof Error ? e.message : 'Falha NFC.');
+      }
     } finally {
       setBusy(false);
+      if (nfcAbortRef.current === controller) nfcAbortRef.current = null;
     }
   }, [acceptFriend]);
 
@@ -139,9 +184,22 @@ export const AddFriendModal: React.FC<Props> = (props) => {
 
   if (!open) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
   return (
-    <div className="add-friend-modal__backdrop" role="dialog" aria-modal="true" aria-label="Adicionar amigo">
-      <div className="add-friend-modal mission-ticket">
+    <div
+      className="add-friend-modal__backdrop"
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="add-friend-modal mission-ticket"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Adicionar amigo"
+        ref={dialogRef}
+      >
         <header className="add-friend-modal__head">
           <span className="add-friend-modal__eyebrow">PAREAR RUNNERS</span>
           <button
@@ -149,6 +207,7 @@ export const AddFriendModal: React.FC<Props> = (props) => {
             className="add-friend-modal__close"
             onClick={onClose}
             aria-label="Fechar"
+            ref={closeBtnRef}
           >
             ×
           </button>

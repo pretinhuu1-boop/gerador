@@ -5653,11 +5653,13 @@ body::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px;
   border: 0;
   background: transparent;
   cursor: pointer;
-  margin-left: -8px;
+  margin-left: -10px;
 }
 
 .voce-panel__friend-tile-button:first-child {
@@ -5690,15 +5692,16 @@ body::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  margin-left: -8px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px;
+  margin-left: -4px;
   border: 2px solid var(--crew-accent, #2ec4b6);
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.6);
   color: var(--crew-accent, #2ec4b6);
   font-family: 'Bowlby One', sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   transition: transform 0.18s ease, background 0.18s ease;
@@ -5752,12 +5755,13 @@ body::after {
 }
 
 .add-friend-modal__close {
-  width: 32px;
-  height: 32px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px;
   border: 0;
   background: transparent;
   color: var(--ink-cream, #f0ebe0);
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1;
   cursor: pointer;
   border-radius: 4px;
