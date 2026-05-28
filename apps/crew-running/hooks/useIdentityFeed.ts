@@ -69,7 +69,7 @@ const sortNewestFirst = (events: IdentityEvent[]): IdentityEvent[] =>
 
 export const useIdentityFeed = (options: UseIdentityFeedOptions = {}): IdentityEvent[] => {
   const { version = 0, progress, savedCharacter } = options;
-  const [events, setEvents] = useState<IdentityEvent[]>([]);
+  const [events, setEvents] = useState<IdentityEvent[]>(getIdentityEvents);
 
   const crewSlug = progress?.selectedCrewSlug;
   const citySignalSeen = progress?.citySignalSeen ?? false;

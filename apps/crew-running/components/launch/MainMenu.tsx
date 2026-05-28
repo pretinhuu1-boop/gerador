@@ -275,7 +275,8 @@ export const MainMenu: React.FC<Props> = ({
           )}
         </nav>
 
-        <div className="main-menu__hero">
+        <div className={`main-menu__hero ${panel === 'runner' || panel === 'config' ? 'main-menu__hero--focused' : ''}`}>
+          {(panel === 'home' || panel === 'crews') && (
           <div
             className={`main-menu__leader main-menu__passport ${
               runnerSaved ? 'is-saved' : 'is-pending'
@@ -345,14 +346,16 @@ export const MainMenu: React.FC<Props> = ({
               </div>
             </div>
           </div>
+          )}
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${panel}-${activeCrew.slug}`}
-              className="main-menu__panel mission-ticket"
-              style={panelStyle}
-              {...panelMotion}
-            >
+          <motion.div
+            key={panel}
+            className="main-menu__panel mission-ticket"
+            style={panelStyle}
+            initial={panelMotion.initial}
+            animate={panelMotion.animate}
+            transition={panelMotion.transition}
+          >
               {panel === 'home' && (
                 <>
                   <div className="main-menu__panel-head">
@@ -472,8 +475,7 @@ export const MainMenu: React.FC<Props> = ({
                   </div>
                 </>
               )}
-            </motion.div>
-          </AnimatePresence>
+          </motion.div>
         </div>
       </div>
     </motion.section>

@@ -153,5 +153,15 @@ export const CREWS: CrewZone[] = [
   },
 ];
 
+/**
+ * Lookup a crew by slug.
+ *
+ * Always returns a CrewZone — falls back to CREWS[0] (Downtown Rush) when slug
+ * is undefined or doesn't match a known crew. This fallback is intentional so
+ * callers can render unconditionally; an unmatched slug indicates either a
+ * cold-start launch (no crew picked yet) or stale localStorage from a removed
+ * crew. Surface a console warning at the call site if you need to detect the
+ * second case explicitly.
+ */
 export const getCrewBySlug = (slug?: string): CrewZone =>
   CREWS.find((crew) => crew.slug === slug) ?? CREWS[0];
