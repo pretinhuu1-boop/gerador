@@ -12,6 +12,7 @@ import {
   type RunXpBreakdown,
   type RunnerProgress,
 } from '../../data/gamification';
+import type { DiaryMood } from '../../data/diary';
 import { HudOverlay } from './HudOverlay';
 import { LayerRail } from './LayerRail';
 import { RunHud } from './RunHud';
@@ -22,13 +23,17 @@ import { ZoneSheet } from './ZoneSheet';
 import { SpotSheet } from './SpotSheet';
 import { CrewSheet } from './CrewSheet';
 import { RunnerCard } from './RunnerCard';
+import { DiaryPrompt } from '../voce/DiaryPrompt';
 import { RunnerProfileScreen } from '../profile/RunnerProfileScreen';
 import { type MapLayerState, type MapView } from './mapTypes';
 import { getMapLayerPrefs, saveMapLayerPrefs } from '../../services/mapLayerStorage';
 import { useRunController } from '../../hooks/useRunController';
 import { useFriends } from '../../hooks/useFriends';
+import { useFriendNotes } from '../../hooks/useFriendNotes';
+import { useDiary } from '../../hooks/useDiary';
 import { useInitialPosition } from '../../hooks/useInitialPosition';
 import { getSavedCharacter, getSelfUserId } from '../../services/storage';
+import type { FriendNote, FriendTag } from '../../data/friendNotes';
 
 type SheetState =
   | { type: 'zone'; zoneId: SpZoneId }
@@ -62,12 +67,21 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const userCrew = getCrewBySlug(selectedCrewSlug);
   const userZoneId = getInitialZoneForCrew(selectedCrewSlug);
   const { friends } = useFriends();
+  const friendNotes = useFriendNotes();
+  const diary = useDiary();
+  const [diaryPromptOpen, setDiaryPromptOpen] = useState(false);
   const initialPos = useInitialPosition();
   const selfUserId = useMemo(() => getSelfUserId(), []);
   const selfRunnerName = useMemo(
     () => getSavedCharacter()?.profile?.name || 'Runner',
     [],
   );
+
+  const notesByFriend = useMemo(() => {
+    const map = new Map<string, FriendNote>();
+    for (const n of friendNotes.notes) map.set(n.friendUserId, n);
+    return map;
+  }, [friendNotes.notes]);
 
   const ownershipByZone = useMemo(() => {
     const out: Partial<Record<SpZoneId, number>> = {};
@@ -111,6 +125,45 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const handleFriendClick = useCallback((userId: string) => {
     setSheet({ type: 'runner', friendUserId: userId });
   }, []);
+
+  const handleRunSummarySave = useCallback(() => {
+    setDiaryPromptOpen(true);
+  }, []);
+
+  const handleDiarySave = useCallback(
+    (mood?: DiaryMood, note?: string) => {
+      const snap = controller.snapshot;
+      const summary = controller.pendingSummary;
+      if (summary) {
+        diary.append({
+          snapshot: snap,
+          xpEarned: summary.breakdown.total,
+          missionsCompleted: (summary.missionsCompleted ?? []).map((m) => m.missionId),
+          note,
+          mood,
+        });
+      }
+      setDiaryPromptOpen(false);
+      controller.saveSummary();
+    },
+    [controller, diary],
+  );
+
+  const handleDiarySkip = useCallback(() => {
+    setDiaryPromptOpen(false);
+    controller.saveSummary();
+  }, [controller]);
+
+  const handleSaveFriendNote = useCallback(
+    (friendUserId: string, text: string, tag?: FriendTag) => {
+      if (text.trim()) {
+        friendNotes.save(friendUserId, text, tag);
+      } else {
+        friendNotes.remove(friendUserId);
+      }
+    },
+    [friendNotes],
+  );
 
   const handleZoneBannerClick = useCallback(() => {
     if (view.zoneId) setSheet({ type: 'zone', zoneId: view.zoneId });
@@ -221,7 +274,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
         />
       )}
 
-      {controller.pendingSummary && (
+      {controller.pendingSummary && !diaryPromptOpen && (
         <RunSummary
           snapshot={snapshot}
           breakdown={controller.pendingSummary.breakdown}
@@ -229,11 +282,18 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           streakBroken={controller.pendingSummary.streak.streakBroken}
           freezeUsed={controller.pendingSummary.streak.freezeUsed}
           newlyUnlocked={controller.pendingSummary.newlyUnlocked ?? []}
-          onSave={controller.saveSummary}
+          missionsCompleted={controller.pendingSummary.missionsCompleted}
+          onSave={handleRunSummarySave}
           onDiscard={controller.discardSummary}
           onDismissUnlocks={controller.dismissUnlocks}
         />
       )}
+
+      <DiaryPrompt
+        open={diaryPromptOpen}
+        onSave={handleDiarySave}
+        onSkip={handleDiarySkip}
+      />
 
       {controller.permissionToastOpen && (
         <div className="run-permission-toast" role="alert">
@@ -275,6 +335,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
           zoneId={sheet.zoneId}
           progress={runnerProgress}
           friends={friends}
+          currentUserId={selfUserId}
           open
           onClose={closeSheet}
         />
@@ -294,7 +355,15 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
       )}
       {sheet?.type === 'runner' && (() => {
         const friend = friends.find((f) => f.userId === sheet.friendUserId);
-        return friend ? <RunnerCard friend={friend} open onClose={closeSheet} /> : null;
+        return friend ? (
+          <RunnerCard
+            friend={friend}
+            open
+            onClose={closeSheet}
+            note={notesByFriend.get(sheet.friendUserId)}
+            onSaveNote={handleSaveFriendNote}
+          />
+        ) : null;
       })()}
     </section>
   );

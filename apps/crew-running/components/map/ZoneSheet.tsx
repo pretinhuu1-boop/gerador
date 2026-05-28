@@ -6,14 +6,17 @@ import {
   territoryStatus,
   SAMPLE_MISSIONS,
   type RunnerProgress,
+  isoWeekKey,
 } from '../../data/gamification';
 import { MapBottomSheet } from './MapBottomSheet';
 import type { FriendRecord } from '../../data/friends';
+import { ZoneLeaderboard } from './ZoneLeaderboard';
 
 interface Props {
   zoneId: SpZoneId;
   progress: RunnerProgress;
   friends: FriendRecord[];
+  currentUserId: string;
   open: boolean;
   onClose: () => void;
 }
@@ -24,7 +27,7 @@ const STATUS_LABELS: Record<string, string> = {
   neutral: 'NEUTRA',
 };
 
-export const ZoneSheet: React.FC<Props> = ({ zoneId, progress, friends, open, onClose }) => {
+export const ZoneSheet: React.FC<Props> = ({ zoneId, progress, friends, currentUserId, open, onClose }) => {
   const zone = getZoneById(zoneId);
   if (!zone) return null;
 
@@ -121,6 +124,13 @@ export const ZoneSheet: React.FC<Props> = ({ zoneId, progress, friends, open, on
             </div>
           </div>
         )}
+        <div className="zone-sheet__ranking">
+          <ZoneLeaderboard
+            zoneId={zoneId}
+            weekKey={isoWeekKey(new Date())}
+            currentUserId={currentUserId}
+          />
+        </div>
       </div>
     </MapBottomSheet>
   );
