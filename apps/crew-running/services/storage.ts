@@ -15,6 +15,7 @@ import {
   isExpired,
   type CrewRadioMessage,
 } from '../data/crewRadio';
+import { emptyRunHistoryStats, type RunHistoryStats } from '../data/gamification';
 
 const API_KEY_STORAGE = 'crew.gemini_api_key';
 const CHARACTER_STORAGE = 'crew.saved_character';
@@ -23,6 +24,7 @@ const IDENTITY_EVENTS_MAX = 50;
 const FRIENDS_STORAGE = 'crew.friends';
 const CREW_RADIO_STORAGE = 'crew.crew_radio';
 const SELF_USER_ID_STORAGE = 'crew.self_user_id';
+const RUN_HISTORY_STATS_STORAGE = 'crew.run_history_stats';
 const FRIEND_AVATAR_MAX_BYTES = 10 * 1024;
 const ENV_API_KEY =
   (
@@ -309,3 +311,18 @@ export const pruneCrewRadio = (): number => {
 };
 
 export const clearCrewRadio = () => removeItem(CREW_RADIO_STORAGE);
+
+export const loadRunHistoryStats = (): RunHistoryStats => {
+  const raw = readItem(RUN_HISTORY_STATS_STORAGE);
+  if (!raw) return emptyRunHistoryStats();
+  try {
+    const parsed = JSON.parse(raw) as Partial<RunHistoryStats>;
+    return { ...emptyRunHistoryStats(), ...parsed };
+  } catch {
+    return emptyRunHistoryStats();
+  }
+};
+
+export const saveRunHistoryStats = (stats: RunHistoryStats): void => {
+  writeItem(RUN_HISTORY_STATS_STORAGE, JSON.stringify(stats));
+};

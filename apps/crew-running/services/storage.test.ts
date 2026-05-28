@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IdentityEvent } from '../data/identityEvents';
+import { emptyRunHistoryStats } from '../data/gamification';
 
 const STORAGE_KEY = 'crew.identity_events';
 
@@ -154,5 +155,25 @@ describe('localStorage unavailable', () => {
     const s = await loadStorage();
     expect(s.getIdentityEvents()).toEqual([]);
     expect(() => s.appendIdentityEvent(sampleEvent())).not.toThrow();
+  });
+});
+
+describe('runHistoryStats persistence', () => {
+  it('returns empty baseline when nothing stored', async () => {
+    mem.removeItem('crew.run_history_stats');
+    const s = await loadStorage();
+    expect(s.loadRunHistoryStats()).toEqual(emptyRunHistoryStats());
+  });
+
+  it('round-trips written stats', async () => {
+    const s = await loadStorage();
+    const stats = {
+      ...emptyRunHistoryStats(),
+      totalRuns: 3,
+      totalKm: 12.5,
+      uniqueSpotsTouched: ['spot-vale', 'spot-republica'],
+    };
+    s.saveRunHistoryStats(stats);
+    expect(s.loadRunHistoryStats()).toEqual(stats);
   });
 });
