@@ -35,11 +35,13 @@ const memoryStorage = {
 const {
   clearActiveRun,
   getActiveRun,
+  getCreatorTab,
   getMapLayerPrefs,
   getRunnerProgress,
   saveActiveRun,
   saveMapLayerPrefs,
   saveRunnerProgress,
+  setCreatorTab,
 } = await import('./launchStorage');
 
 beforeEach(() => {
@@ -153,5 +155,72 @@ describe('ActiveRun round-trip', () => {
   it('returns null on corrupt JSON', () => {
     window.localStorage.setItem(STORAGE_KEY_ACTIVE, 'not json');
     expect(getActiveRun()).toBeNull();
+  });
+
+  it('E4: corrupt inkPerZone NaN falls back to defaults', () => {
+    window.localStorage.setItem(
+      STORAGE_KEY_RUNNER,
+      JSON.stringify({
+        xp: Number.NaN,
+        inkPerZone: 'not-an-object',
+        badgeUnlocks: 'not-an-array',
+      }),
+    );
+    const progress = getRunnerProgress();
+    expect(progress.xp).toBe(0);
+    expect(progress.inkPerZone).toEqual({});
+    expect(progress.badgeUnlocks).toEqual([]);
+  });
+
+  it('E5: schema with wrong field types falls back to defaults', () => {
+    window.localStorage.setItem(
+      STORAGE_KEY_RUNNER,
+      JSON.stringify({ xp: 'ten', level: 'one', streakWeeks: 'two' }),
+    );
+    const progress = getRunnerProgress();
+    expect(progress.xp).toBe(0);
+    expect(progress.streakWeeks).toBe(0);
+  });
+
+  it('E6: extra unknown fields are dropped (whitelist merge)', () => {
+    window.localStorage.setItem(
+      STORAGE_KEY_RUNNER,
+      JSON.stringify({
+        xp: 50,
+        level: 1,
+        streakWeeks: 0,
+        lastRunAt: 0,
+        freezesAvailable: 1,
+        inkPerZone: {},
+        inkUpdatedAt: 0,
+        badgeUnlocks: [],
+        patchesOwned: [],
+        weekKey: '',
+        runsThisWeek: 0,
+        legacyJunk: 'should-not-survive',
+        otherJunk: 42,
+      }),
+    );
+    const progress = getRunnerProgress();
+    expect(progress.xp).toBe(50);
+    const asRecord = progress as unknown as Record<string, unknown>;
+    expect(asRecord.legacyJunk).toBeUndefined();
+    expect(asRecord.otherJunk).toBeUndefined();
+  });
+});
+
+describe('Creator tab persistence', () => {
+  it('returns null when no creator tab stored', () => {
+    expect(getCreatorTab()).toBeNull();
+  });
+
+  it('persists and restores creator tab', () => {
+    setCreatorTab('look');
+    expect(getCreatorTab()).toBe('look');
+  });
+
+  it('ignores corrupt tab value', () => {
+    window.localStorage.setItem('crewCreatorTab', 'garbage');
+    expect(getCreatorTab()).toBeNull();
   });
 });

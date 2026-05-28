@@ -35,6 +35,7 @@ const STORAGE_KEYS = {
   selectedCrewSlug: 'crewSelectedCrewSlug',
   onboardingComplete: 'crewOnboardingComplete',
   runnerCustomized: 'crewRunnerCustomized',
+  creatorTab: 'crewCreatorTab',
 } as const;
 
 const LEGACY_BOOT_KEY = 'crewBootSeen';
@@ -165,6 +166,20 @@ export const resetLaunchProgress = () => {
     // Ignore storage failures.
   }
 };
+
+export type CreatorTabId = 'foto' | 'perfil' | 'look' | 'ficha';
+
+const VALID_CREATOR_TABS: ReadonlySet<CreatorTabId> = new Set([
+  'foto', 'perfil', 'look', 'ficha',
+]);
+
+export const getCreatorTab = (): CreatorTabId | null => {
+  const raw = readString(STORAGE_KEYS.creatorTab);
+  return VALID_CREATOR_TABS.has(raw as CreatorTabId) ? (raw as CreatorTabId) : null;
+};
+
+export const setCreatorTab = (tab: CreatorTabId): void =>
+  writeString(STORAGE_KEYS.creatorTab, tab);
 
 // Back-compat re-exports so existing callers don't need to change imports
 // in this PR. New code should import from the dedicated modules.
