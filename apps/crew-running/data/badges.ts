@@ -16,12 +16,20 @@ export interface BadgeEvalInput {
 
 type Condition = (input: BadgeEvalInput) => boolean;
 
+const isNightWindow = (startedAtMs: number): boolean => {
+  const hour = new Date(startedAtMs).getHours();
+  return hour >= 22 || hour < 4;
+};
+
 const CONDITIONS: Record<BadgeId, Condition> = {
   'first-blood': ({ history }) => history.totalRuns === 0,
-  'night-owl': () => false,
+  'night-owl': ({ history, snapshot }) => {
+    const counting = isNightWindow(snapshot.startedAt) ? 1 : 0;
+    return history.nightRuns + counting >= 10;
+  },
   invader: () => false,
-  cartographer: () => false,
-  'urban-marathon': () => false,
+  cartographer: ({ history }) => history.uniqueSpotsTouched.length >= 11,
+  'urban-marathon': ({ history }) => history.kmThisWeek >= 42,
   'local-legend': () => false,
   'streak-12': () => false,
   'solo-wolf': () => false,

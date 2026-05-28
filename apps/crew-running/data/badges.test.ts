@@ -64,3 +64,95 @@ describe('evaluateBadgeUnlocks — first-blood', () => {
     expect(unlocks).not.toContain('first-blood');
   });
 });
+
+describe('evaluateBadgeUnlocks — night-owl', () => {
+  it('unlocks when nightRuns reaches 10 (counting this run if started between 22h-04h local)', () => {
+    const unlocks = evaluateBadgeUnlocks({
+      progress: baseProgress(),
+      history: { ...emptyRunHistoryStats(), totalRuns: 9, nightRuns: 9 },
+      snapshot: { ...baseSnapshot(), startedAt: new Date('2026-05-28T03:30:00').getTime() },
+      breakdown: breakdownRunXp({
+        distanceKm: 1,
+        kmInTerritory: 0,
+        spotsTouched: 0,
+        closedLoop: false,
+        isInvasion: false,
+      }),
+      now: new Date('2026-05-28T04:00:00'),
+    });
+    expect(unlocks).toContain('night-owl');
+  });
+
+  it('does not unlock when nightRuns < 10', () => {
+    const unlocks = evaluateBadgeUnlocks({
+      progress: baseProgress(),
+      history: { ...emptyRunHistoryStats(), totalRuns: 5, nightRuns: 5 },
+      snapshot: { ...baseSnapshot(), startedAt: new Date('2026-05-28T03:30:00').getTime() },
+      breakdown: breakdownRunXp({
+        distanceKm: 1,
+        kmInTerritory: 0,
+        spotsTouched: 0,
+        closedLoop: false,
+        isInvasion: false,
+      }),
+      now: new Date('2026-05-28T04:00:00'),
+    });
+    expect(unlocks).not.toContain('night-owl');
+  });
+});
+
+describe('evaluateBadgeUnlocks — cartographer', () => {
+  it('unlocks when uniqueSpotsTouched reaches 11', () => {
+    const elevenIds = Array.from({ length: 11 }, (_, i) => `spot-${i}`);
+    const unlocks = evaluateBadgeUnlocks({
+      progress: baseProgress(),
+      history: { ...emptyRunHistoryStats(), totalRuns: 1, uniqueSpotsTouched: elevenIds },
+      snapshot: baseSnapshot(),
+      breakdown: breakdownRunXp({
+        distanceKm: 1,
+        kmInTerritory: 0,
+        spotsTouched: 0,
+        closedLoop: false,
+        isInvasion: false,
+      }),
+      now: new Date('2026-05-28T10:00:00Z'),
+    });
+    expect(unlocks).toContain('cartographer');
+  });
+});
+
+describe('evaluateBadgeUnlocks — urban-marathon', () => {
+  it('unlocks when kmThisWeek reaches 42', () => {
+    const unlocks = evaluateBadgeUnlocks({
+      progress: baseProgress(),
+      history: { ...emptyRunHistoryStats(), totalRuns: 4, kmThisWeek: 42.1 },
+      snapshot: baseSnapshot(),
+      breakdown: breakdownRunXp({
+        distanceKm: 1,
+        kmInTerritory: 0,
+        spotsTouched: 0,
+        closedLoop: false,
+        isInvasion: false,
+      }),
+      now: new Date('2026-05-28T10:00:00Z'),
+    });
+    expect(unlocks).toContain('urban-marathon');
+  });
+
+  it('does not unlock under 42km', () => {
+    const unlocks = evaluateBadgeUnlocks({
+      progress: baseProgress(),
+      history: { ...emptyRunHistoryStats(), totalRuns: 4, kmThisWeek: 41.9 },
+      snapshot: baseSnapshot(),
+      breakdown: breakdownRunXp({
+        distanceKm: 1,
+        kmInTerritory: 0,
+        spotsTouched: 0,
+        closedLoop: false,
+        isInvasion: false,
+      }),
+      now: new Date('2026-05-28T10:00:00Z'),
+    });
+    expect(unlocks).not.toContain('urban-marathon');
+  });
+});
