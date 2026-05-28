@@ -8399,3 +8399,51 @@ button.map-stage-zone-title:hover {
 
 /* --- Theme Toggle --- */
 .map-theme-toggle { position: absolute; top: 56px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--ui-border, rgba(255,255,255,0.1)); background: var(--ui-chrome, #0a0a0a); color: var(--ui-text, #e8e8e8); font-size: 1.1rem; display: grid; place-items: center; cursor: pointer; }
+
+/* --- Cloud Sync Badge --- */
+.cloud-sync-badge {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 12px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  min-height: 36px;
+  border: 1px solid rgba(240, 235, 224, 0.18);
+  background: rgba(8, 8, 8, 0.78);
+  color: rgba(240, 235, 224, 0.78);
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+.cloud-sync-badge:hover,
+.cloud-sync-badge:focus-visible {
+  border-color: rgba(240, 235, 224, 0.4);
+  color: var(--white, #f0ebe0);
+  outline: none;
+}
+.cloud-sync-badge__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(240, 235, 224, 0.32);
+}
+.cloud-sync-badge--on {
+  color: var(--spray-cyan-bright, #6cf0d6);
+  border-color: rgba(108, 240, 214, 0.42);
+}
+.cloud-sync-badge--on .cloud-sync-badge__dot {
+  background: var(--spray-cyan-bright, #6cf0d6);
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* --- District Badge Overlay --- */
+.district-badge-overlay { width: 48px; height: 48px; animation: district-conquest-pulse 1.2s ease-in-out; }
+.district-badge-overlay__img { width: 100%; height: 100%; border-radius: 50%; }
+@keyframes district-conquest-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
