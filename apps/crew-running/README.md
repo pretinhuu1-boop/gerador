@@ -88,3 +88,16 @@ Latest QA also covered:
 ## Public Assets
 
 Runtime assets under `public/backgrounds/` and `public/ui/` must be committed with the UI. QA artifacts under `output/` are ignored.
+
+## Browser support
+
+This app targets evergreen browsers released in 2023 or later:
+
+- Safari 16.4+ (March 2023)
+- Chrome / Edge 111+ (March 2023)
+- Firefox 113+ (May 2023)
+
+CSS features in use that require these versions: `color-mix(in srgb, ...)`,
+modern `@media (prefers-reduced-motion: reduce)` semantics, `aspect-ratio`,
+and `mix-blend-mode`. Older browsers will render with degraded accents
+(elements that mix into crew colors fall back to plain black).
