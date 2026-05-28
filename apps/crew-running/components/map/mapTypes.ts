@@ -24,3 +24,11 @@ export const DEFAULT_MAP_LAYERS: MapLayerState = {
   missions: false,
   history: false,
 };
+
+// MapaCidade unified component variants. See vault blueprint
+// 2026-05-28-mapa-cidade-gamificado-blueprint.md.
+//   menu    — home panel surface: pings interactive, gamification light
+//   run     — fullscreen run controller: pings + missions + HUD + friends
+//   signal  — city-signal-entry crew picker: pings only, no gamification
+//   ambient — decorative background: aria-hidden, no interactivity
+export type MapaCidadeVariant = 'menu' | 'run' | 'signal' | 'ambient';
