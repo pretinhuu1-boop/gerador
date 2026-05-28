@@ -94,18 +94,16 @@ describe('MapaCidade phase B static layers', () => {
     expect(container.querySelector('.map-spot-layer')).toBeNull();
   });
 
-  it('hides the SVG from a11y when variant=ambient', () => {
-    const { container } = render(<MapaCidade variant="ambient" />);
-    const svg = container.querySelector('svg.mapa-cidade__svg') as SVGElement;
-    expect(svg.getAttribute('aria-hidden')).toBe('true');
-  });
-
-  it('exposes a meaningful SVG label on interactive variants', () => {
-    const { container } = render(<MapaCidade variant="menu" />);
-    const svg = container.querySelector('svg.mapa-cidade__svg') as SVGElement;
-    expect(svg.getAttribute('aria-label')).toMatch(/Sao Paulo/i);
-    expect(svg.getAttribute('aria-hidden')).toBeNull();
-  });
+  it.each<MapaCidadeVariant>(['menu', 'run', 'signal', 'ambient'])(
+    'keeps the inner SVG presentational so AT does not double-announce on variant %s',
+    (variant) => {
+      const { container } = render(<MapaCidade variant={variant} />);
+      const svg = container.querySelector('svg.mapa-cidade__svg') as SVGElement;
+      expect(svg.getAttribute('role')).toBe('presentation');
+      expect(svg.getAttribute('aria-hidden')).toBe('true');
+      expect(svg.getAttribute('aria-label')).toBeNull();
+    },
+  );
 
   it('passes ownershipByZone through to ZonesLayer', () => {
     const { container } = render(

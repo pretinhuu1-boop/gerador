@@ -21,7 +21,7 @@ export const RoadsLayer: React.FC<Props> = ({ projection }) => {
   );
 
   return (
-    <g className="mapa-cidade__roads" role="presentation" aria-hidden="true">
+    <g className="mapa-cidade__roads" aria-hidden="true">
       {roads.map((d, idx) => (
         <path key={idx} d={d} className="mapa-cidade__road" />
       ))}

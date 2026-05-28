@@ -61,13 +61,15 @@ export const MapaCidade: React.FC<Props> = ({
     >
       <div className="mapa-cidade__layers" role="presentation">
         <AsphaltLayer />
+        {/* The outer div already carries the role+label for this group.
+         * Treat the SVG itself as presentational so AT doesn't announce
+         * two map labels back-to-back. */}
         <svg
           className="mapa-cidade__svg"
           viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
           preserveAspectRatio="xMidYMid meet"
-          role="img"
-          aria-label={decorative ? '' : 'Mapa de Sao Paulo'}
-          aria-hidden={decorative ? true : undefined}
+          role="presentation"
+          aria-hidden="true"
         >
           <RoadsLayer projection={PROJECTION} />
           <ZonesLayer projection={PROJECTION} ownershipByZone={ownershipByZone} />
