@@ -6,14 +6,17 @@ const DOWNTOWN = 'downtown-rush';
 
 beforeEach(() => {
   __resetRunTrackerForTests();
-  // jsdom navigator has no geolocation; the start() path checks for it. We
-  // ingest synthetic positions through the test seam instead of mocking the
-  // Geolocation API itself. To exercise the start() guard, we attach a stub.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (navigator as any).geolocation = {
-    watchPosition: () => 0,
-    clearWatch: () => undefined,
-  };
+  // happy-dom defines navigator.geolocation as a getter-only property, so
+  // direct assignment throws. Use defineProperty to swap in a stub that
+  // satisfies the start() guard; synthetic positions still go through the
+  // test seam, not the Geolocation API itself.
+  Object.defineProperty(navigator, 'geolocation', {
+    configurable: true,
+    value: {
+      watchPosition: () => 0,
+      clearWatch: () => undefined,
+    },
+  });
 });
 
 describe('runTracker state machine', () => {
@@ -52,14 +55,14 @@ describe('runTracker accumulators', () => {
 
   it('drops noisy points with poor accuracy', () => {
     runTracker.start(DOWNTOWN);
-    runTracker.ingestPosition({ ...vale.coordinate, accuracy: 80, t: 0 });
+    runTracker.__ingestPositionForTests({ ...vale.coordinate, accuracy: 80, t: 0 });
     expect(runTracker.getSnapshot().points).toHaveLength(0);
   });
 
   it('drops sub-step points to filter stationary noise', () => {
     runTracker.start(DOWNTOWN);
-    runTracker.ingestPosition({ ...vale.coordinate, accuracy: 8, t: 0 });
-    runTracker.ingestPosition({
+    runTracker.__ingestPositionForTests({ ...vale.coordinate, accuracy: 8, t: 0 });
+    runTracker.__ingestPositionForTests({
       lng: vale.coordinate.lng + 0.000001,
       lat: vale.coordinate.lat,
       accuracy: 8,
@@ -70,14 +73,14 @@ describe('runTracker accumulators', () => {
 
   it('accumulates total distance across valid steps', () => {
     runTracker.start(DOWNTOWN);
-    runTracker.ingestPosition({ ...vale.coordinate, accuracy: 8, t: 0 });
-    runTracker.ingestPosition({
+    runTracker.__ingestPositionForTests({ ...vale.coordinate, accuracy: 8, t: 0 });
+    runTracker.__ingestPositionForTests({
       lng: vale.coordinate.lng + 0.001,
       lat: vale.coordinate.lat,
       accuracy: 8,
       t: 5000,
     });
-    runTracker.ingestPosition({
+    runTracker.__ingestPositionForTests({
       lng: vale.coordinate.lng + 0.002,
       lat: vale.coordinate.lat,
       accuracy: 8,
@@ -89,29 +92,29 @@ describe('runTracker accumulators', () => {
   it('counts territory meters when midpoint is inside home zone polygon', () => {
     runTracker.start(DOWNTOWN);
     // Two points clearly inside the centro polygon
-    runTracker.ingestPosition({ lng: -46.638, lat: -23.545, accuracy: 8, t: 0 });
-    runTracker.ingestPosition({ lng: -46.637, lat: -23.546, accuracy: 8, t: 5000 });
+    runTracker.__ingestPositionForTests({ lng: -46.638, lat: -23.545, accuracy: 8, t: 0 });
+    runTracker.__ingestPositionForTests({ lng: -46.637, lat: -23.546, accuracy: 8, t: 5000 });
     expect(runTracker.getSnapshot().metersInTerritory).toBeGreaterThan(0);
     expect(downtownZone.id).toBe('centro');
   });
 
   it('marks spots when within proximity', () => {
     runTracker.start(DOWNTOWN);
-    runTracker.ingestPosition({ ...vale.coordinate, accuracy: 8, t: 0 });
+    runTracker.__ingestPositionForTests({ ...vale.coordinate, accuracy: 8, t: 0 });
     expect(runTracker.getSnapshot().touchedSpotIds).toContain('spot-vale');
   });
 
   it('detects closed loop when start ≈ end', () => {
     runTracker.start(DOWNTOWN);
-    runTracker.ingestPosition({ ...vale.coordinate, accuracy: 8, t: 0 });
-    runTracker.ingestPosition({
+    runTracker.__ingestPositionForTests({ ...vale.coordinate, accuracy: 8, t: 0 });
+    runTracker.__ingestPositionForTests({
       lng: vale.coordinate.lng + 0.001,
       lat: vale.coordinate.lat,
       accuracy: 8,
       t: 5000,
     });
     // Returning to start (offset < 80m)
-    runTracker.ingestPosition({
+    runTracker.__ingestPositionForTests({
       lng: vale.coordinate.lng + 0.0001,
       lat: vale.coordinate.lat,
       accuracy: 8,
@@ -123,8 +126,8 @@ describe('runTracker accumulators', () => {
 
   it('does not mark closed loop for open routes', () => {
     runTracker.start(DOWNTOWN);
-    runTracker.ingestPosition({ ...vale.coordinate, accuracy: 8, t: 0 });
-    runTracker.ingestPosition({
+    runTracker.__ingestPositionForTests({ ...vale.coordinate, accuracy: 8, t: 0 });
+    runTracker.__ingestPositionForTests({
       lng: vale.coordinate.lng + 0.01,
       lat: vale.coordinate.lat,
       accuracy: 8,
