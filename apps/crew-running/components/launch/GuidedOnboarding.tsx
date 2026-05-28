@@ -49,8 +49,13 @@ export const GuidedOnboarding: React.FC<Props> = ({
 
   useEffect(() => {
     setOnboardingStep(step);
+    // Debounce 200ms per 04_VOICE_MAP spec — prevents voice overlap when
+    // user rapid-clicks PRÓXIMO. Latest step wins.
     const cue = `guided/step-${step}` as VoiceCue;
-    void audio.playVoice(cue);
+    const handle = window.setTimeout(() => {
+      void audio.playVoice(cue);
+    }, 200);
+    return () => window.clearTimeout(handle);
   }, [step]);
 
   useEffect(() => {
