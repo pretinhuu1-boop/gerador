@@ -22,6 +22,7 @@ type Props = {
   progress: LaunchProgress;
   runnerName: string;
   onAdjust: () => void;
+  onOpenMap?: () => void;
   guideDone: boolean;
   version?: number;
 };
@@ -32,6 +33,7 @@ export const RunnerPanel: React.FC<Props> = ({
   progress,
   runnerName,
   onAdjust,
+  onOpenMap,
   guideDone,
   version = 0,
 }) => {
@@ -88,7 +90,7 @@ export const RunnerPanel: React.FC<Props> = ({
             )}
       </ol>
       <div className="voce-panel__actions">
-        <MapSocialHookButton />
+        <MapSocialHookButton onClick={onOpenMap} />
       </div>
       <AddFriendModal
         open={addFriendOpen}

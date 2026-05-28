@@ -24,9 +24,13 @@ import { LayerRail } from './LayerRail';
 import { TrailLayer } from './TrailLayer';
 import { RunHud } from './RunHud';
 import { RunSummary } from './RunSummary';
+import { FriendPings } from './FriendPings';
+import { CrewRadioOverlay } from './CrewRadioOverlay';
 import { type MapLayerState, type MapView } from './mapTypes';
 import { getMapLayerPrefs, saveMapLayerPrefs } from '../../services/mapLayerStorage';
 import { useRunController } from '../../hooks/useRunController';
+import { useFriends } from '../../hooks/useFriends';
+import { getSavedCharacter, getSelfUserId } from '../../services/storage';
 
 const VIEWBOX_W = 800;
 const VIEWBOX_H = 700;
@@ -60,6 +64,12 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const controller = useRunController(runnerProgress, selectedCrewSlug, onRunCompleted);
   const userCrew = getCrewBySlug(selectedCrewSlug);
   const userZoneId = getInitialZoneForCrew(selectedCrewSlug);
+  const { friends } = useFriends();
+  const selfUserId = useMemo(() => getSelfUserId(), []);
+  const selfRunnerName = useMemo(
+    () => getSavedCharacter()?.profile?.name || 'Runner',
+    [],
+  );
 
   const ownershipByZone = useMemo(() => {
     const out: Partial<Record<SpZoneId, number>> = {};
@@ -172,8 +182,20 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
               <image href={userCrew.assets.badge} x={-10} y={-10} width={20} height={20} />
             </g>
           )}
+
+          {view.zoom === 'city' && !trackerActive && (
+            <FriendPings friends={friends} projection={PROJECTION} />
+          )}
         </svg>
       </div>
+
+      {!trackerActive && (
+        <CrewRadioOverlay
+          crewSlug={selectedCrewSlug}
+          selfUserId={selfUserId}
+          selfRunnerName={selfRunnerName}
+        />
+      )}
 
       {view.zoom !== 'city' && activeZone && !trackerActive && (
         <header className="map-stage-zone-banner">
