@@ -55,12 +55,12 @@ const renderPanel = (overrides: Partial<React.ComponentProps<typeof RunnerPanel>
   );
 
 describe('RunnerPanel composition', () => {
-  it('always renders the FeedHeader, FriendsStripPlaceholder, and MapSocialHookButton', () => {
+  it('always renders the FeedHeader, FriendsStrip, and MapSocialHookButton', () => {
     const { container } = renderPanel();
     expect(container.querySelector('.voce-feed-header')).not.toBeNull();
     expect(container.querySelector('.voce-panel__friends-strip')).not.toBeNull();
     expect(container.querySelector('.voce-panel__map-hook, [class*="map-hook"]')).not.toBeNull();
-    expect(screen.getByText(/MAPA SOCIAL · EM BREVE/)).toBeInTheDocument();
+    expect(screen.getByText(/MAPA SOCIAL/)).toBeInTheDocument();
   });
 
   it('uses an <ol> with an accessible label for the feed list', () => {

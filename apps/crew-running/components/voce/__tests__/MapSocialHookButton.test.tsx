@@ -15,12 +15,16 @@ describe('MapSocialHookButton', () => {
     expect(btn).toHaveAttribute('aria-disabled', 'true');
   });
 
-  it('does not fire any click handler when clicked', () => {
-    const clickSpy = vi.fn();
-    render(<MapSocialHookButton />);
-    const btn = screen.getByRole('button');
-    btn.addEventListener('click', clickSpy);
-    btn.click();
-    expect(clickSpy).not.toHaveBeenCalled();
+  it('renders enabled label when onClick is provided', () => {
+    render(<MapSocialHookButton onClick={() => {}} />);
+    expect(screen.getByText(/ABRIR MAPA SOCIAL/)).toBeInTheDocument();
+    expect(screen.getByRole('button')).not.toBeDisabled();
+  });
+
+  it('fires onClick when enabled and clicked', () => {
+    const spy = vi.fn();
+    render(<MapSocialHookButton onClick={spy} />);
+    screen.getByRole('button').click();
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

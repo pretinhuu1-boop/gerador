@@ -16,17 +16,15 @@ export const FriendsStrip: React.FC<Props> = ({ friends, onAdd }) => {
       </span>
       <div className="voce-panel__friends-tiles">
         {friends.slice(0, 6).map((friend) => (
-          <button
+          <span
             key={friend.userId}
-            type="button"
-            className="voce-panel__friend-tile-button"
+            className="voce-panel__friend-tile-slot"
             title={`${friend.runnerName} · ${friend.addMethod.toUpperCase()}`}
-            aria-label={`Amigo ${friend.runnerName}`}
           >
             {friend.avatarDataUrl ? (
               <img
                 src={friend.avatarDataUrl}
-                alt=""
+                alt={friend.runnerName}
                 className="voce-panel__friend-tile"
               />
             ) : (
@@ -36,7 +34,7 @@ export const FriendsStrip: React.FC<Props> = ({ friends, onAdd }) => {
                 className="voce-panel__friend-tile"
               />
             )}
-          </button>
+          </span>
         ))}
         <button
           type="button"
