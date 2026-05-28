@@ -5768,7 +5768,12 @@ button.mapa-cidade__ping:focus-visible {
   fill: var(--black);
 }
 
-.map-user-pin {
+.map-user-pin,
+.map-live-pulse,
+.map-trail-layer,
+.map-signal-route,
+.map-friend-pings,
+.map-radio-overlay {
   pointer-events: none;
 }
 

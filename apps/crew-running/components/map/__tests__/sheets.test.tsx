@@ -38,6 +38,7 @@ describe('ZoneSheet', () => {
         zoneId="centro"
         progress={baseProgress}
         friends={[fakeFriend]}
+        currentUserId="user-self"
         open
         onClose={() => {}}
       />,
@@ -55,6 +56,7 @@ describe('ZoneSheet', () => {
         zoneId="centro"
         progress={baseProgress}
         friends={[]}
+        currentUserId="user-self"
         open
         onClose={() => {}}
       />,
@@ -78,6 +80,7 @@ describe('ZoneSheet', () => {
         zoneId="centro"
         progress={baseProgress}
         friends={[fakeFriend, otherCrewFriend]}
+        currentUserId="user-self"
         open
         onClose={() => {}}
       />,
@@ -92,6 +95,7 @@ describe('ZoneSheet', () => {
         zoneId="centro"
         progress={baseProgress}
         friends={[]}
+        currentUserId="user-self"
         open
         onClose={() => {}}
       />,
@@ -206,6 +210,7 @@ describe('Edge cases — invalid IDs', () => {
         zoneId={'nonexistent' as SpZoneId}
         progress={baseProgress}
         friends={[]}
+        currentUserId="user-self"
         open
         onClose={() => {}}
       />,
