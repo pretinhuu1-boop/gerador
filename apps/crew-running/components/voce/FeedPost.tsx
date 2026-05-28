@@ -19,7 +19,7 @@ const dateFmt = new Intl.DateTimeFormat('pt-BR', {
   minute: '2-digit',
 });
 
-export const FeedPost: React.FC<Props> = ({ event, savedCharacter }) => {
+const FeedPostBase: React.FC<Props> = ({ event, savedCharacter }) => {
   const spec = IDENTITY_EVENT_VARIANTS[event.kind];
   const style = {
     ['--rail-color' as string]: spec.railToken,
@@ -60,3 +60,12 @@ export const FeedPost: React.FC<Props> = ({ event, savedCharacter }) => {
     </li>
   );
 };
+
+// Feed items are immutable per id; memo skips re-render when parent rebuilds
+// the events array but the entry itself didn't change.
+export const FeedPost = React.memo(FeedPostBase, (prev, next) =>
+  prev.event.id === next.event.id &&
+  prev.event.timestamp === next.event.timestamp &&
+  prev.savedCharacter?.imageDataUrl === next.savedCharacter?.imageDataUrl &&
+  prev.savedCharacter?.profile?.name === next.savedCharacter?.profile?.name,
+);

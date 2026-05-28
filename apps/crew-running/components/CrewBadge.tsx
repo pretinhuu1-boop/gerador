@@ -24,8 +24,9 @@ export const CrewBadge: React.FC<Props> = ({
   const resolved = typeof crew === 'string' || crew == null ? getCrewBySlug(crew) : crew;
   const px = sizePx[size];
   // Treat the image as decorative whenever no meaningful alt text was supplied.
-  // `alt === undefined` and `alt === ''` both indicate "not screen-reader-content".
-  const isDecorative = !alt;
+  // `alt === undefined`, `alt === ''`, and whitespace-only strings all map to
+  // "not screen-reader-content" — trim so " " alone doesn't toggle it on.
+  const isDecorative = !alt?.trim();
   return (
     <img
       src={resolved.assets.badge}
