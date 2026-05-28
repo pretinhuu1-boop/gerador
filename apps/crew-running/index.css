@@ -5170,6 +5170,11 @@ button.mapa-cidade__ping:focus-visible {
 
 .maplibre-friend-ping[role="button"] {
   cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── Map Bottom Sheet ─────────────────────────── */
@@ -5223,6 +5228,9 @@ button.mapa-cidade__ping:focus-visible {
   font-size: 18px;
   color: var(--bone);
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .map-bottom-sheet__close {
   background: none;
@@ -6816,8 +6824,7 @@ button.map-stage-zone-title:hover {
 }
 
 .add-friend-modal__camera {
-  width: 100%;
-  max-width: 280px;
+  width: clamp(240px, 90%, 280px);
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 8px;
