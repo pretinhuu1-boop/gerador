@@ -80,7 +80,7 @@ describe('decay + ownership pipeline', () => {
     expect(ownershipDecayed.centro).toBeLessThan(0.01);
   });
 
-  it('one week of idle takes a fully owned zone to ~contested', () => {
+  it('~half-life of idle (21 days) takes a fully owned zone to ~contested', () => {
     // INK_OWNERSHIP_CONTESTED is 0.4 per gamification.ts. With INK_DECAY_PER_DAY
     // 0.033, 1000 ink after 7 days is ~792 -> 0.79 ownership. Still owned.
     // After 21 days (≈ half-life) it should drop to ~0.5 — borderline owned.
