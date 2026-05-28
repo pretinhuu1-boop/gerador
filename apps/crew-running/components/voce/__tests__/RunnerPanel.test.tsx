@@ -3,7 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { RunnerPanel } from '../RunnerPanel';
 import { CREWS } from '../../../data/crews';
 import type { LaunchProgress } from '../../../services/launchStorage';
-import { appendIdentityEvent, clearIdentityEvents, type SavedCharacter } from '../../../services/storage';
+import {
+  appendIdentityEvent,
+  clearIdentityEvents,
+  getIdentityEvents,
+  type SavedCharacter,
+} from '../../../services/storage';
 
 const crew = CREWS[0];
 
@@ -33,7 +38,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  clearIdentityEvents();
   clearIdentityEvents();
 });
 
@@ -83,11 +87,20 @@ describe('RunnerPanel with saved character', () => {
       savedCharacter: savedFixture,
       progress: { ...baseProgress, runnerCustomized: true },
     });
-    await waitFor(() => {
-      expect(container.textContent).toMatch(/JERSEY BLACK/);
-    });
-    const posts = container.querySelectorAll('.voce-feed-post');
-    expect(posts.length).toBeGreaterThanOrEqual(1);
+    // Structural check: backfill writes events to storage, hook reads them,
+    // panel renders a FeedPost per event. Assert on the LOOK_SAVED card
+    // existence + its embedded RunnerLookCard, not on slot-formatting text
+    // (that lives in identityEvents.ts and would silently rot this test).
+    await waitFor(
+      () => {
+        const headlines = Array.from(container.querySelectorAll('.voce-feed-post__headline'))
+          .map((el) => el.textContent?.trim());
+        expect(headlines).toContain('LOOK SALVO');
+      },
+      { timeout: 1000 },
+    );
+    expect(container.querySelector('.voce-feed-post .runner-look-card')).not.toBeNull();
+    expect(getIdentityEvents().some((e) => e.kind === 'LOOK_SAVED')).toBe(true);
   });
 });
 
@@ -104,9 +117,12 @@ describe('RunnerPanel with pre-seeded events', () => {
       payload: { stickerId: 'tag-01' },
     });
     const { container } = renderPanel({ savedCharacter: savedFixture });
-    await waitFor(() => {
-      expect(container.querySelectorAll('.voce-feed-post').length).toBeGreaterThanOrEqual(2);
-    });
+    await waitFor(
+      () => {
+        expect(container.querySelectorAll('.voce-feed-post').length).toBeGreaterThanOrEqual(2);
+      },
+      { timeout: 1000 },
+    );
     const headlines = Array.from(container.querySelectorAll('.voce-feed-post__headline')).map((el) =>
       el.textContent?.trim(),
     );
@@ -128,11 +144,14 @@ describe('RunnerPanel with pre-seeded events', () => {
       payload: { stickerId: 'b' },
     });
     const { container } = renderPanel({ savedCharacter: savedFixture });
-    await waitFor(() => {
-      const stickerStat = container
-        .querySelectorAll('.voce-feed-header__stats li')[1]
-        ?.querySelector('strong')?.textContent;
-      expect(stickerStat).toBe('2');
-    });
+    await waitFor(
+      () => {
+        const stickerStat = container
+          .querySelectorAll('.voce-feed-header__stats li')[1]
+          ?.querySelector('strong')?.textContent;
+        expect(stickerStat).toBe('2');
+      },
+      { timeout: 1000 },
+    );
   });
 });

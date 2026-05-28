@@ -20,7 +20,7 @@ if (hasDom) {
       return this.map.get(k) ?? null;
     }
     setItem(k: string, v: string) {
-      this.map.set(k, String(v));
+      this.map.set(k, v);
     }
     removeItem(k: string) {
       this.map.delete(k);

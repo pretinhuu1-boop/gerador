@@ -22,7 +22,7 @@ Multiple agents (parallel cavecrew, gemini, codex sessions) regularly work on th
 ### Validation gates
 
 - `npm run validate` (in `apps/crew-running/`) runs contract + typecheck + tests + build + smoke.
-- The vitest cache (`node_modules/.vite`, `node_modules/.vitest`) occasionally returns stale failures across agent sessions. If a test fails with a stack trace pointing to line numbers that don't match the current file, wipe the cache and re-run.
+- The vitest cache (`node_modules/.vite/vitest` and `node_modules/.vite-temp`) occasionally returns stale failures across agent sessions. If a test fails with a stack trace pointing to line numbers that don't match the current file, wipe `node_modules/.vite` and re-run.
 
 ### Test environments
 
