@@ -30,7 +30,7 @@ describe('syncQueue', () => {
   it('enqueues an item and reads it back', async () => {
     const { enqueue, peekQueue } = await import('../syncQueue');
     enqueue('leaderboard', { zoneId: 'centro', km: 5 });
-    const items = peekQueue('leaderboard');
+    const items = peekQueue<{ zoneId: string; km: number }>('leaderboard');
     expect(items).toHaveLength(1);
     expect(items[0].payload.zoneId).toBe('centro');
   });
