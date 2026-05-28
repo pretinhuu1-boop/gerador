@@ -1,5 +1,7 @@
 # Crew Running - Asset Prompts
 
+> Legacy note, 2026-05-28: this file is historical asset-generation context for the original customize pack. The current Runner Creator contract is `vault/CREATOR_CONTRACT.md`; do not copy old MVP/prototype wording, hair slots, style picker assets or `public/styles/*` inputs into runtime UI or generation.
+
 Prompts for generating the MVP asset pack for **The Crew Running - Customize**.
 The direction is based on the provided mobile UI references: dark runner-crew
 game screens, rough chalk/graffiti typography, gritty map overlays, inventory

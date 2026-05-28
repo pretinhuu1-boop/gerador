@@ -5,11 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "check:creator-contract": "node scripts/check-creator-contract.mjs",
+    "smoke:creator": "node scripts/smoke-creator.mjs",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run check:creator-contract && npm run typecheck && npm run build && npm run smoke:creator",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
+    "framer-motion": "^12.40.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
@@ -19,6 +24,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.5.0",
+    "playwright": "^1.60.0",
     "postcss": "^8.5.15",
     "tailwindcss": "^3.4.13",
     "typescript": "~5.8.2",

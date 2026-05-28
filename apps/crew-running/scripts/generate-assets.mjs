@@ -3,6 +3,16 @@ import sharp from 'sharp';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+if (process.env.ALLOW_LEGACY_CREATOR_ASSET_GENERATOR !== 'true') {
+  console.error([
+    'This asset generator is legacy and does not match the current Runner Creator contract.',
+    'Do not use it for the active creator: it still contains old hair/style asset jobs.',
+    'Read vault/CREATOR_CONTRACT.md first.',
+    'Set ALLOW_LEGACY_CREATOR_ASSET_GENERATOR=true only for historical asset recovery.',
+  ].join('\n'));
+  process.exit(1);
+}
+
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const ROOT = path.resolve('public');
 
@@ -330,12 +340,19 @@ async function generate(job) {
   }
 }
 
+let failures = 0;
 for (const job of jobs) {
   try {
     await generate(job);
   } catch (e) {
+    failures++;
     console.error(`   FAIL ${job.name}: ${e.message}`);
   }
+}
+
+if (failures > 0) {
+  console.error(`done with ${failures} failure(s)`);
+  process.exit(1);
 }
 
 console.log('done');

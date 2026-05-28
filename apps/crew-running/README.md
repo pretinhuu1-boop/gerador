@@ -1,10 +1,28 @@
-# The Crew Running — Customize
+# The Crew Running
 
-Mini-app de customização de personagem que recebe uma foto da pessoa
-e gera um character sheet 2×2 com 4 looks (cabelo + top + bottom + tênis)
-usando Gemini 2.5 Flash Image.
+Game-first launch and runner identity creator for The Crew Running.
 
-## Como rodar
+This app currently stops at runner creation. It does not start a real run, ask for location permission, track movement, publish routes, rank runners, or create a post-run recap.
+
+Core line:
+
+> O app nao abre. A cidade liga.
+
+## Current Flow
+
+```text
+Cold Boot
+  -> Title / Open
+  -> City Signal Entry
+  -> Main Menu / QG
+  -> Guided Setup
+  -> Runner Creator
+  -> Runner Saved / City Ready teaser
+```
+
+Returning players with a saved runner go back to the QG with `RUNNER: SALVO`.
+
+## How To Run
 
 ```bash
 cd apps/crew-running
@@ -12,40 +30,61 @@ npm install
 npm run dev
 ```
 
-Abre em `http://localhost:3100`. Cole sua Gemini API key (gratuita em
-`aistudio.google.com/apikey`) — ela fica só no `localStorage` do navegador.
+The dev server usually runs on Vite's available port. In this session it was validated on `http://127.0.0.1:3104`.
 
-## Fluxo
+For real runner generation, set:
 
-1. Cola a API key.
-2. Faz upload de uma selfie.
-3. Escolhe um dos 4 estilos (Street Comic, Graffiti Poster, Anime Runner, Bold Mascot).
-4. Opcional: trava itens específicos do guarda-roupa (ex: "quero esse hoodie").
-5. Clica **GERAR SHEET 2×2** → 1 chamada à API devolve 1 imagem com 4 variações.
-6. Clica no look favorito → salva no `localStorage` como "Seu Personagem".
+```bash
+VITE_GEMINI_API_KEY=...
+```
 
-## Arquitetura
+The fallback studio modal stores a local credential in browser `localStorage`; it is not the primary player surface.
 
-- `data/wardrobe.ts` — catálogo de 4 itens por slot (hair/top/bottom/shoes).
-- `data/styles.ts` — 4 estilos de arte.
-- `services/crewService.ts` — monta prompt mestre + chama `gemini-2.5-flash-image`.
-- `services/storage.ts` — wrappers de localStorage.
-- `components/*` — UI desacoplada por seção.
+## Runner Creator
 
-## Deploy na Vercel (projeto separado)
+The creator uses:
 
-Esse app tem o próprio `vercel.json`. Pra publicar como projeto Vercel
-independente do gerador de flyer:
+- a required face photo used only as broad physical-characteristics reference;
+- runner profile: name, sex, height, weight and personality;
+- runner type: Sprint, Long Run, Night Run, Crew Pace or Urban Trail;
+- selected crew render context, locked to that crew's assets and palette;
+- wardrobe slots: top, bottom, shoes and accessory.
 
-1. No dashboard da Vercel: **Add New → Project → Import** este repo.
-2. Em **Root Directory**, clique **Edit** e selecione `apps/crew-running`.
-3. Framework Preset = **Vite** (auto-detectado).
-4. Build Command, Output Directory e Install Command já vêm do `vercel.json`.
-5. Deploy. O preview por PR vai apontar pra este app a partir daí.
+Generation returns a 2x2 character sheet. Choosing a look crops the selected cell, removes the neutral background and saves a PNG in `localStorage` as `crew.saved_character`.
 
-## Por que 2×2 numa chamada só?
+## Key Files
 
-Gemini 2.5 Flash Image entrega 1 imagem por requisição. Pedir um "character
-sheet 2×2" coloca 4 variações na mesma resposta — economiza 75% das chamadas
-em relação a gerar uma imagem por look. Acima de 3×3 a qualidade dos detalhes
-de roupa cai.
+- `App.tsx` - top-level shell and lazy runner creator.
+- `components/launch/*` - boot, title, city signal, QG, guide and saved teaser.
+- `components/CustomizeScreen.tsx` - Runner Creator.
+- `components/RunnerTypePicker.tsx` - runner type selection.
+- `data/crews.ts` - crew metadata and asset paths.
+- `data/crewRenderContext.ts` - crew asset/palette lock for generation.
+- `data/runnerProfile.ts` - name, sex, height, weight and personality model.
+- `data/runnerTypes.ts` - runner type metadata.
+- `data/wardrobe.ts` - wardrobe slots and prompts.
+- `services/crewService.ts` - Gemini sheet generation and local fallback.
+- `services/launchStorage.ts` - onboarding and legacy `crewBootSeen` compatibility.
+- `services/storage.ts` - studio credential and saved runner persistence.
+
+## Validation
+
+```bash
+npm run check:creator-contract
+npm run smoke:creator
+npx tsc --noEmit
+npm run build
+```
+
+Latest QA also covered:
+
+- real Gemini generation from an uploaded QA image;
+- `Equipar look` save path;
+- `crewRunnerCustomized=true`;
+- `RUNNER READY / CIDADE PRONTA` teaser;
+- returning QG with saved runner;
+- mobile reduced motion with zero active animations.
+
+## Public Assets
+
+Runtime assets under `public/backgrounds/` and `public/ui/` must be committed with the UI. QA artifacts under `output/` are ignored.

@@ -1,5 +1,7 @@
 # Codex hand-off prompt — Crew Running asset generation
 
+> Legacy note, 2026-05-28: this hand-off targets the older asset generation pass. The current Runner Creator contract is `vault/CREATOR_CONTRACT.md`; do not copy old hair/style slots, StylePicker assets or `public/styles/*` inputs into runtime UI or generation.
+
 Cole o bloco abaixo no Codex / outro agente. Ele é **autocontido**:
 contém o contexto do app, o URL do repo, a branch, e o script pronto
 pra gerar todas as sheets via OpenAI `gpt-image-1`, fatiar e commitar.

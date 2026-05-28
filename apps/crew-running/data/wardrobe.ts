@@ -4,15 +4,11 @@ export type WardrobeItem = {
   prompt: string;
   iconUrl?: string;
 };
-export type SlotKey = 'hair' | 'top' | 'bottom' | 'shoes';
+export type SlotKey = 'top' | 'bottom' | 'shoes' | 'accessory';
+
+export const SLOT_KEYS: SlotKey[] = ['top', 'bottom', 'shoes', 'accessory'];
 
 export const WARDROBE: Record<SlotKey, WardrobeItem[]> = {
-  hair: [
-    { id: 'hair_pony_teal',   label: 'Rabo Teal',     prompt: 'long ponytail dyed teal blue with side-shaved fade', iconUrl: '/wardrobe/hair/hair_pony_teal.png' },
-    { id: 'hair_dreads',      label: 'Dreads',        prompt: 'medium-length dark dreadlocks tied back', iconUrl: '/wardrobe/hair/hair_dreads.png' },
-    { id: 'hair_cap_curls',   label: 'Boné + Cachos', prompt: 'red snapback cap worn backwards over short curly hair', iconUrl: '/wardrobe/hair/hair_cap_curls.png' },
-    { id: 'hair_buzz_blonde', label: 'Buzz Loiro',    prompt: 'short buzz-cut with bleached blonde top', iconUrl: '/wardrobe/hair/hair_buzz_blonde.png' },
-  ],
   top: [
     { id: 'top_hoodie_graf',  label: 'Hoodie Graffiti', prompt: 'cropped hoodie with orange graffiti tag print over dark navy fabric', iconUrl: '/wardrobe/top/top_hoodie_graf.png' },
     { id: 'top_tank_black',   label: 'Regata Preta',    prompt: 'fitted black athletic tank top with white trim', iconUrl: '/wardrobe/top/top_tank_black.png' },
@@ -31,11 +27,17 @@ export const WARDROBE: Record<SlotKey, WardrobeItem[]> = {
     { id: 'sho_sneak_white',  label: 'Sneaker Branco',  prompt: 'clean white low-top sneakers with orange accents', iconUrl: '/wardrobe/shoes/sho_sneak_white.png' },
     { id: 'sho_runners_blk',  label: 'Runners Preto',   prompt: 'all-black trail running shoes with reflective details', iconUrl: '/wardrobe/shoes/sho_runners_blk.png' },
   ],
+  accessory: [
+    { id: 'acc_reflective_armband', label: 'Braçadeira', prompt: 'single reflective runner armband on one upper arm' },
+    { id: 'acc_hydration_belt', label: 'Cinto Hidratação', prompt: 'compact hydration belt with small soft flasks around the waist' },
+    { id: 'acc_crossbody_pack', label: 'Pochete Sling', prompt: 'small low-profile crossbody runner pouch with thin strap' },
+    { id: 'acc_blank_bib', label: 'Bib Sem Texto', prompt: 'blank race bib pinned to the shirt with no numbers and no readable text' },
+  ],
 };
 
 export const SLOT_LABELS: Record<SlotKey, string> = {
-  hair: 'Hairstyle',
   top: 'Tops',
   bottom: 'Legs',
   shoes: 'Shoes',
+  accessory: 'Accessory',
 };
