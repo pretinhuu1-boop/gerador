@@ -156,3 +156,60 @@ describe('evaluateBadgeUnlocks — urban-marathon', () => {
     expect(unlocks).not.toContain('urban-marathon');
   });
 });
+
+describe('evaluateBadgeUnlocks — invader', () => {
+  it('unlocks when invasionsSucceeded + this-run-invasion reaches 5', () => {
+    const unlocks = evaluateBadgeUnlocks({
+      progress: baseProgress(),
+      history: { ...emptyRunHistoryStats(), totalRuns: 8, invasionsSucceeded: 4 },
+      snapshot: baseSnapshot(),
+      breakdown: breakdownRunXp({
+        distanceKm: 5,
+        kmInTerritory: 5,
+        spotsTouched: 0,
+        closedLoop: false,
+        isInvasion: true,
+      }),
+      now: new Date('2026-05-28T10:00:00Z'),
+    });
+    expect(unlocks).toContain('invader');
+  });
+});
+
+describe('evaluateBadgeUnlocks — streak-12', () => {
+  it('unlocks when streakWeeks reaches 12', () => {
+    const unlocks = evaluateBadgeUnlocks({
+      progress: { ...baseProgress(), streakWeeks: 12 },
+      history: { ...emptyRunHistoryStats(), totalRuns: 50 },
+      snapshot: baseSnapshot(),
+      breakdown: breakdownRunXp({
+        distanceKm: 1,
+        kmInTerritory: 0,
+        spotsTouched: 0,
+        closedLoop: false,
+        isInvasion: false,
+      }),
+      now: new Date('2026-05-28T10:00:00Z'),
+    });
+    expect(unlocks).toContain('streak-12');
+  });
+});
+
+describe('evaluateBadgeUnlocks — solo-wolf', () => {
+  it('unlocks when soloTerritoryKm + this-run own-territory km hits 50', () => {
+    const unlocks = evaluateBadgeUnlocks({
+      progress: baseProgress(),
+      history: { ...emptyRunHistoryStats(), totalRuns: 10, soloTerritoryKm: 48 },
+      snapshot: { ...baseSnapshot(), totalMeters: 3000, metersInTerritory: 3000 },
+      breakdown: breakdownRunXp({
+        distanceKm: 3,
+        kmInTerritory: 3,
+        spotsTouched: 0,
+        closedLoop: false,
+        isInvasion: false,
+      }),
+      now: new Date('2026-05-28T10:00:00Z'),
+    });
+    expect(unlocks).toContain('solo-wolf');
+  });
+});

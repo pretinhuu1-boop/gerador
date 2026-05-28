@@ -27,12 +27,18 @@ const CONDITIONS: Record<BadgeId, Condition> = {
     const counting = isNightWindow(snapshot.startedAt) ? 1 : 0;
     return history.nightRuns + counting >= 10;
   },
-  invader: () => false,
+  invader: ({ history, breakdown }) => {
+    const counting = breakdown.invasionMult > 1 ? 1 : 0;
+    return history.invasionsSucceeded + counting >= 5;
+  },
   cartographer: ({ history }) => history.uniqueSpotsTouched.length >= 11,
   'urban-marathon': ({ history }) => history.kmThisWeek >= 42,
   'local-legend': () => false,
-  'streak-12': () => false,
-  'solo-wolf': () => false,
+  'streak-12': ({ progress }) => progress.streakWeeks >= 12,
+  'solo-wolf': ({ history, snapshot }) => {
+    const thisRunKm = snapshot.metersInTerritory / 1000;
+    return history.soloTerritoryKm + thisRunKm >= 50;
+  },
   'pace-setter': () => false,
   'season-captain': () => false,
 };
