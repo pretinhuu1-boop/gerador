@@ -1,6 +1,7 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
   SP_SIGNAL_ROUTE,
+  SP_SPOT_MAP_FEATURES,
   SP_ZONE_MAP_FEATURES,
   getZoneById,
   polylineToPath,
@@ -11,16 +12,26 @@ import {
 import { getCrewBySlug } from '../../data/crews';
 import {
   INK_PER_FULL_OWNERSHIP,
+  INK_PER_KM,
   SAMPLE_MISSIONS,
+  breakdownRunXp,
+  bumpStreak,
+  type RunXpBreakdown,
   type RunnerProgress,
+  type StreakBumpResult,
 } from '../../data/gamification';
 import { ZoneLayer } from './ZoneLayer';
 import { SpotLayer } from './SpotLayer';
 import { MissionLayer } from './MissionLayer';
 import { HudOverlay } from './HudOverlay';
 import { LayerRail } from './LayerRail';
+import { TrailLayer } from './TrailLayer';
+import { RunHud } from './RunHud';
+import { RunSummary } from './RunSummary';
 import { type MapLayerState, type MapView } from './mapTypes';
 import { getMapLayerPrefs, saveMapLayerPrefs } from '../../services/launchStorage';
+import { runTracker } from '../../services/runTracker';
+import { useRunTracker } from '../../hooks/useRunTracker';
 
 const VIEWBOX_W = 800;
 const VIEWBOX_H = 700;
@@ -35,8 +46,8 @@ const PROJECTION: ProjectionOpts = {
 interface Props {
   runnerProgress: RunnerProgress;
   selectedCrewSlug?: string;
-  onStartRun?: () => void;
   onBackToMenu?: () => void;
+  onRunCompleted?: (next: RunnerProgress, breakdown: RunXpBreakdown) => void;
 }
 
 const getInitialZoneForCrew = (slug?: string): SpZoneId | undefined => {
@@ -45,10 +56,20 @@ const getInitialZoneForCrew = (slug?: string): SpZoneId | undefined => {
   return zone?.id;
 };
 
-export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, onStartRun, onBackToMenu }) => {
+interface PendingSummary {
+  breakdown: RunXpBreakdown;
+  streak: StreakBumpResult;
+  nextProgress: RunnerProgress;
+}
+
+export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, onBackToMenu, onRunCompleted }) => {
   const [view, setView] = useState<MapView>(() => ({ zoom: 'city' }));
   const [layers, setLayers] = useState<MapLayerState>(() => getMapLayerPrefs());
+  const [permissionDeniedToast, setPermissionDeniedToast] = useState(false);
+  const [pendingSummary, setPendingSummary] = useState<PendingSummary | null>(null);
+  const svgId = useId();
 
+  const trackerSnapshot = useRunTracker();
   const userCrew = getCrewBySlug(selectedCrewSlug);
   const userZoneId = getInitialZoneForCrew(selectedCrewSlug);
 
@@ -85,6 +106,61 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
     });
   }, []);
 
+  const handleStartRun = useCallback(() => {
+    const ok = runTracker.start(selectedCrewSlug);
+    if (!ok && runTracker.getSnapshot().permissionDenied) {
+      setPermissionDeniedToast(true);
+    }
+  }, [selectedCrewSlug]);
+
+  const handlePauseRun = useCallback(() => runTracker.pause(), []);
+  const handleResumeRun = useCallback(() => runTracker.resume(), []);
+
+  const handleStopRun = useCallback(() => {
+    const snap = runTracker.stop();
+    const distanceKm = snap.totalMeters / 1000;
+    const kmInTerritory = snap.metersInTerritory / 1000;
+    const breakdown = breakdownRunXp({
+      distanceKm,
+      kmInTerritory,
+      spotsTouched: snap.touchedSpotIds.length,
+      closedLoop: snap.closedLoop,
+      isInvasion: false,
+    });
+    const ink = kmInTerritory * INK_PER_KM;
+    const zoneKey = snap.homeZoneId;
+    const inkPerZone = zoneKey
+      ? { ...runnerProgress.inkPerZone, [zoneKey]: (runnerProgress.inkPerZone[zoneKey] ?? 0) + ink }
+      : runnerProgress.inkPerZone;
+    const streak = bumpStreak(
+      {
+        ...runnerProgress,
+        xp: runnerProgress.xp + breakdown.total,
+        lastRunAt: Date.now(),
+        inkPerZone,
+        inkUpdatedAt: Date.now(),
+      },
+      new Date(),
+    );
+    setPendingSummary({ breakdown, streak, nextProgress: streak.next });
+  }, [runnerProgress]);
+
+  const handleSaveSummary = useCallback(() => {
+    if (!pendingSummary) return;
+    onRunCompleted?.(pendingSummary.nextProgress, pendingSummary.breakdown);
+    setPendingSummary(null);
+    runTracker.reset();
+  }, [pendingSummary, onRunCompleted]);
+
+  const handleDiscardSummary = useCallback(() => {
+    setPendingSummary(null);
+    runTracker.reset();
+  }, []);
+
+  useEffect(() => {
+    if (trackerSnapshot.permissionDenied) setPermissionDeniedToast(true);
+  }, [trackerSnapshot.permissionDenied]);
+
   const userZone = userZoneId ? getZoneById(userZoneId) : undefined;
   const userPos = userZone ? projectLngLat(userZone.center, PROJECTION) : null;
   const signalPath = polylineToPath(SP_SIGNAL_ROUTE, PROJECTION);
@@ -99,9 +175,16 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
       }))
     : [];
 
+  const layerAvailability: Partial<Record<keyof MapLayerState, boolean>> = {
+    missions: visibleMissions.length > 0 || layers.missions,
+    history: false, // not yet wired
+  };
+
+  const trackerActive = trackerSnapshot.state === 'tracking' || trackerSnapshot.state === 'paused';
+
   return (
     <section
-      className={`map-stage map-stage--${view.zoom}`}
+      className={`map-stage map-stage--${view.zoom}${trackerActive ? ' is-tracking' : ''}`}
       aria-label={`Mapa Crew Running - ${activeZone ? activeZone.label : 'cidade'}`}
     >
       <h2 className="sr-only">Mapa vivo da cidade</h2>
@@ -109,6 +192,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
 
       <div className="map-stage-canvas">
         <svg
+          id={`map-stage-svg-${svgId}`}
           viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
           preserveAspectRatio="xMidYMid meet"
           className="map-stage-svg"
@@ -138,6 +222,10 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
 
           {layers.missions && <MissionLayer projection={PROJECTION} zoom={view.zoom} missions={visibleMissions} />}
 
+          {trackerActive && (
+            <TrailLayer points={trackerSnapshot.points} projection={PROJECTION} color={userCrew.accent} />
+          )}
+
           {liveBadges.map(({ zone, center }) => (
             <g key={`live-${zone.id}`} className="map-live-pulse" transform={`translate(${center.x} ${center.y})`}>
               <circle r={10} className="map-live-halo" stroke={zone.color} />
@@ -145,7 +233,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
             </g>
           ))}
 
-          {userPos && (
+          {userPos && !trackerActive && (
             <g className="map-user-pin" transform={`translate(${userPos.x} ${userPos.y})`}>
               <circle r={14} fill="white" stroke={userCrew.accent} strokeWidth={3} />
               <image href={userCrew.assets.badge} x={-10} y={-10} width={20} height={20} />
@@ -154,7 +242,7 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
         </svg>
       </div>
 
-      {view.zoom !== 'city' && activeZone && (
+      {view.zoom !== 'city' && activeZone && !trackerActive && (
         <header className="map-stage-zone-banner">
           <button type="button" className="map-back" onClick={handleBackZoom} aria-label="Voltar zoom">←</button>
           <div className="map-stage-zone-title">
@@ -164,28 +252,65 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
         </header>
       )}
 
-      <LayerRail layers={layers} onToggle={handleToggleLayer} />
+      {!trackerActive && (
+        <LayerRail
+          layers={layers}
+          onToggle={handleToggleLayer}
+          availability={layerAvailability}
+          controlsId={`map-stage-svg-${svgId}`}
+        />
+      )}
 
-      <footer className="map-stage-actions">
-        <button
-          type="button"
-          className="map-action-primary"
-          onClick={onStartRun}
-          disabled={!onStartRun}
-          aria-disabled={!onStartRun}
-        >
-          INICIAR CORRIDA
-        </button>
-        <button
-          type="button"
-          className="map-action-secondary"
-          onClick={onBackToMenu}
-          disabled={!onBackToMenu}
-          aria-disabled={!onBackToMenu}
-        >
-          QG
-        </button>
-      </footer>
+      {!trackerActive && (
+        <footer className="map-stage-actions">
+          <button
+            type="button"
+            className="map-action-primary"
+            onClick={handleStartRun}
+          >
+            INICIAR CORRIDA
+          </button>
+          <button
+            type="button"
+            className="map-action-secondary"
+            onClick={onBackToMenu}
+            disabled={!onBackToMenu}
+            aria-disabled={!onBackToMenu}
+          >
+            QG
+          </button>
+        </footer>
+      )}
+
+      {trackerActive && (
+        <RunHud
+          snapshot={trackerSnapshot}
+          totalSpots={SP_SPOT_MAP_FEATURES.length}
+          onPause={handlePauseRun}
+          onResume={handleResumeRun}
+          onStop={handleStopRun}
+          accentColor={userCrew.accent}
+        />
+      )}
+
+      {pendingSummary && (
+        <RunSummary
+          snapshot={trackerSnapshot}
+          breakdown={pendingSummary.breakdown}
+          streakBumped={pendingSummary.streak.streakBumped}
+          streakBroken={pendingSummary.streak.streakBroken}
+          freezeUsed={pendingSummary.streak.freezeUsed}
+          onSave={handleSaveSummary}
+          onDiscard={handleDiscardSummary}
+        />
+      )}
+
+      {permissionDeniedToast && (
+        <div className="run-permission-toast" role="alert">
+          <p>Sem permissão de GPS. Permita localização no navegador e tente de novo.</p>
+          <button type="button" onClick={() => setPermissionDeniedToast(false)}>OK</button>
+        </div>
+      )}
     </section>
   );
 };

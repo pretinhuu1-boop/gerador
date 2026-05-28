@@ -23,7 +23,12 @@ export const MissionLayer: React.FC<Props> = ({ projection, zoom, missions }) =>
         const anchorSpot = mission.spotIds?.[0] ? getSpotById(mission.spotIds[0]) : undefined;
         const zone = mission.zoneId ? getZoneById(mission.zoneId) : undefined;
         const coord = anchorSpot?.coordinate ?? zone?.center;
-        if (!coord) return null;
+        if (!coord) {
+          if (typeof console !== 'undefined') {
+            console.warn(`[MissionLayer] mission ${mission.id} skipped: no anchor coord (zoneId=${mission.zoneId ?? 'none'}, spotIds=${mission.spotIds?.join(',') ?? 'none'})`);
+          }
+          return null;
+        }
         const { x, y } = projectLngLat(coord, projection);
         const accent = zone ? getCrewBySlug(zone.crewSlug).accent : '#F4A52C';
         return (

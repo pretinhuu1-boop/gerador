@@ -41,13 +41,118 @@ export interface RunnerProgress {
   inkUpdatedAt: number;
   badgeUnlocks: BadgeId[];
   patchesOwned: string[];
+  weekKey: string;
+  runsThisWeek: number;
 }
+
+// Returns ISO week key like "2026-W22" computed in the local timezone. The
+// label survives DST since we read calendar fields, not raw ms offsets.
+export const isoWeekKey = (date: Date): string => {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+};
+
+const weeksBetween = (a: string, b: string): number => {
+  // crude diff using year part; sufficient for adjacent-week detection
+  if (a === b) return 0;
+  const [ay, aw] = a.split('-W').map(Number);
+  const [by, bw] = b.split('-W').map(Number);
+  return (by - ay) * 52 + (bw - aw);
+};
+
+export interface StreakBumpResult {
+  next: RunnerProgress;
+  streakBumped: boolean;
+  streakBroken: boolean;
+  freezeUsed: boolean;
+}
+
+// Pure helper. Decides what the run completion does to the streak counters.
+// Rules: 3 runs within the same ISO week maintain streak. If the new run falls
+// in a different week from the stored weekKey and the previous week did NOT
+// hit 3 runs, consume a freeze; if no freeze, reset streak.
+export const bumpStreak = (progress: RunnerProgress, now: Date): StreakBumpResult => {
+  const week = isoWeekKey(now);
+  if (!progress.weekKey) {
+    return {
+      next: { ...progress, weekKey: week, runsThisWeek: 1, lastRunAt: now.getTime() },
+      streakBumped: false,
+      streakBroken: false,
+      freezeUsed: false,
+    };
+  }
+  if (week === progress.weekKey) {
+    const runs = progress.runsThisWeek + 1;
+    const reachedQuota = runs === STREAK_RUNS_REQUIRED && progress.runsThisWeek < STREAK_RUNS_REQUIRED;
+    return {
+      next: {
+        ...progress,
+        runsThisWeek: runs,
+        lastRunAt: now.getTime(),
+        streakWeeks: reachedQuota ? progress.streakWeeks + 1 : progress.streakWeeks,
+      },
+      streakBumped: reachedQuota,
+      streakBroken: false,
+      freezeUsed: false,
+    };
+  }
+  // Different week. Evaluate gap.
+  const gap = weeksBetween(progress.weekKey, week);
+  const previousWeekHitQuota = progress.runsThisWeek >= STREAK_RUNS_REQUIRED;
+  if (gap === 1 && previousWeekHitQuota) {
+    return {
+      next: {
+        ...progress,
+        weekKey: week,
+        runsThisWeek: 1,
+        lastRunAt: now.getTime(),
+      },
+      streakBumped: false,
+      streakBroken: false,
+      freezeUsed: false,
+    };
+  }
+  if (progress.freezesAvailable > 0) {
+    return {
+      next: {
+        ...progress,
+        weekKey: week,
+        runsThisWeek: 1,
+        lastRunAt: now.getTime(),
+        freezesAvailable: progress.freezesAvailable - 1,
+      },
+      streakBumped: false,
+      streakBroken: false,
+      freezeUsed: true,
+    };
+  }
+  return {
+    next: {
+      ...progress,
+      weekKey: week,
+      runsThisWeek: 1,
+      streakWeeks: 0,
+      lastRunAt: now.getTime(),
+    },
+    streakBumped: false,
+    streakBroken: true,
+    freezeUsed: false,
+  };
+};
 
 export const XP_BASE_PER_KM = 10;
 export const XP_TERRITORY_MULT = 2;
 export const XP_SPOT_BONUS = 15;
 export const XP_LOOP_MULT = 1.5;
 export const XP_INVASION_MULT = 1.5;
+// Ink scale: 1 km of XP_BASE_PER_KM worth of in-territory running = 10 ink.
+// Combined with INK_PER_FULL_OWNERSHIP (1000), this means ~100km of dedicated
+// in-territory running takes a single runner to full ownership.
+export const INK_PER_KM = 10;
 
 export const STREAK_RUNS_REQUIRED = 3;
 export const STREAK_BREAK_PENALTY = 0.8;
@@ -137,18 +242,56 @@ export const SAMPLE_MISSIONS: MissionDef[] = [
   },
 ];
 
-export const computeRunXp = (params: {
+export interface RunXpInput {
   distanceKm: number;
   kmInTerritory: number;
   spotsTouched: number;
   closedLoop: boolean;
   isInvasion: boolean;
-}): number => {
-  const base = params.distanceKm * XP_BASE_PER_KM;
-  const territoryBonus = params.kmInTerritory * XP_BASE_PER_KM * (XP_TERRITORY_MULT - 1);
-  const spotBonus = params.spotsTouched * XP_SPOT_BONUS;
-  const subtotal = base + territoryBonus + spotBonus;
+}
+
+export interface RunXpBreakdown {
+  baseXp: number;
+  territoryXp: number;
+  spotXp: number;
+  loopMult: number;
+  invasionMult: number;
+  total: number;
+}
+
+// Clamps each field to a sane range. Negative distance is impossible; territory
+// km cannot exceed total km; spot count cannot be negative. Silent clamp (vs
+// throwing) keeps GPS noise from breaking a run summary.
+export const sanitizeRunXpInput = (raw: RunXpInput): RunXpInput => {
+  const distanceKm = Math.max(0, raw.distanceKm);
+  const kmInTerritory = Math.min(Math.max(0, raw.kmInTerritory), distanceKm);
+  const spotsTouched = Math.max(0, Math.floor(raw.spotsTouched));
+  return {
+    distanceKm,
+    kmInTerritory,
+    spotsTouched,
+    closedLoop: Boolean(raw.closedLoop),
+    isInvasion: Boolean(raw.isInvasion),
+  };
+};
+
+export const breakdownRunXp = (raw: RunXpInput): RunXpBreakdown => {
+  const params = sanitizeRunXpInput(raw);
+  const baseKm = params.distanceKm - params.kmInTerritory;
+  const baseXp = Math.round(baseKm * XP_BASE_PER_KM);
+  const territoryXp = Math.round(params.kmInTerritory * XP_BASE_PER_KM * XP_TERRITORY_MULT);
+  const spotXp = params.spotsTouched * XP_SPOT_BONUS;
   const loopMult = params.closedLoop ? XP_LOOP_MULT : 1;
   const invasionMult = params.isInvasion ? XP_INVASION_MULT : 1;
-  return Math.round(subtotal * loopMult * invasionMult);
+  const subtotal = baseXp + territoryXp + spotXp;
+  return {
+    baseXp,
+    territoryXp,
+    spotXp,
+    loopMult,
+    invasionMult,
+    total: Math.round(subtotal * loopMult * invasionMult),
+  };
 };
+
+export const computeRunXp = (raw: RunXpInput): number => breakdownRunXp(raw).total;

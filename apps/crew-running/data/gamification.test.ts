@@ -5,18 +5,39 @@ import {
   INK_OWNERSHIP_CONTESTED,
   INK_OWNERSHIP_OWNED,
   SAMPLE_MISSIONS,
+  STREAK_RUNS_REQUIRED,
   XP_BASE_PER_KM,
   XP_INVASION_MULT,
   XP_LOOP_MULT,
   XP_SPOT_BONUS,
   XP_TERRITORY_MULT,
+  breakdownRunXp,
+  bumpStreak,
   computeRunXp,
   decayInk,
+  isoWeekKey,
+  sanitizeRunXpInput,
   territoryStatus,
   xpProgressInLevel,
   xpRequiredForLevel,
   xpToLevel,
+  type RunnerProgress,
 } from './gamification';
+
+const baseProgress = (overrides: Partial<RunnerProgress> = {}): RunnerProgress => ({
+  xp: 0,
+  level: 1,
+  streakWeeks: 0,
+  lastRunAt: 0,
+  freezesAvailable: 1,
+  inkPerZone: {},
+  inkUpdatedAt: 0,
+  badgeUnlocks: [],
+  patchesOwned: [],
+  weekKey: '',
+  runsThisWeek: 0,
+  ...overrides,
+});
 
 describe('xpRequiredForLevel', () => {
   it('returns 0 for level 1', () => {
@@ -212,5 +233,156 @@ describe('catalog defs', () => {
       expect(mission.rewardXp).toBeGreaterThan(0);
       expect(mission.windowHours).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('sanitizeRunXpInput', () => {
+  it('clamps negatives to zero', () => {
+    const out = sanitizeRunXpInput({
+      distanceKm: -5,
+      kmInTerritory: -2,
+      spotsTouched: -3,
+      closedLoop: false,
+      isInvasion: false,
+    });
+    expect(out.distanceKm).toBe(0);
+    expect(out.kmInTerritory).toBe(0);
+    expect(out.spotsTouched).toBe(0);
+  });
+
+  it('caps kmInTerritory at distanceKm', () => {
+    const out = sanitizeRunXpInput({
+      distanceKm: 3,
+      kmInTerritory: 10,
+      spotsTouched: 0,
+      closedLoop: false,
+      isInvasion: false,
+    });
+    expect(out.kmInTerritory).toBe(3);
+  });
+
+  it('floors fractional spot count', () => {
+    const out = sanitizeRunXpInput({
+      distanceKm: 1,
+      kmInTerritory: 0,
+      spotsTouched: 2.7,
+      closedLoop: false,
+      isInvasion: false,
+    });
+    expect(out.spotsTouched).toBe(2);
+  });
+});
+
+describe('breakdownRunXp', () => {
+  it('splits base vs territory km cleanly (spec: 20 XP/km in territory)', () => {
+    const out = breakdownRunXp({
+      distanceKm: 5,
+      kmInTerritory: 2,
+      spotsTouched: 0,
+      closedLoop: false,
+      isInvasion: false,
+    });
+    expect(out.baseXp).toBe(3 * XP_BASE_PER_KM);
+    expect(out.territoryXp).toBe(2 * XP_BASE_PER_KM * XP_TERRITORY_MULT);
+  });
+
+  it('matches computeRunXp totals (refactor invariant)', () => {
+    const cases = [
+      { distanceKm: 5, kmInTerritory: 0, spotsTouched: 0, closedLoop: false, isInvasion: false },
+      { distanceKm: 3, kmInTerritory: 3, spotsTouched: 0, closedLoop: false, isInvasion: false },
+      { distanceKm: 4, kmInTerritory: 1, spotsTouched: 2, closedLoop: true, isInvasion: false },
+      { distanceKm: 6, kmInTerritory: 0, spotsTouched: 0, closedLoop: true, isInvasion: true },
+    ];
+    for (const params of cases) {
+      expect(breakdownRunXp(params).total).toBe(computeRunXp(params));
+    }
+  });
+});
+
+describe('isoWeekKey', () => {
+  it('formats as YYYY-Www', () => {
+    expect(isoWeekKey(new Date('2026-01-05T12:00:00Z'))).toMatch(/^2026-W\d{2}$/);
+  });
+
+  it('groups Monday-Sunday into the same week', () => {
+    const mon = isoWeekKey(new Date(Date.UTC(2026, 0, 5, 12)));
+    const sun = isoWeekKey(new Date(Date.UTC(2026, 0, 11, 12)));
+    expect(mon).toBe(sun);
+  });
+});
+
+describe('bumpStreak', () => {
+  it('seeds weekKey on the very first run', () => {
+    const now = new Date('2026-05-28T12:00:00Z');
+    const result = bumpStreak(baseProgress(), now);
+    expect(result.next.weekKey).toBe(isoWeekKey(now));
+    expect(result.next.runsThisWeek).toBe(1);
+    expect(result.next.streakWeeks).toBe(0);
+    expect(result.streakBumped).toBe(false);
+  });
+
+  it('bumps streak after STREAK_RUNS_REQUIRED runs in the same week', () => {
+    const now = new Date('2026-05-28T12:00:00Z');
+    const week = isoWeekKey(now);
+    let progress = baseProgress({ weekKey: week, runsThisWeek: 1 });
+    progress = bumpStreak(progress, now).next; // 2
+    expect(progress.streakWeeks).toBe(0);
+    const third = bumpStreak(progress, now);
+    expect(third.next.runsThisWeek).toBe(STREAK_RUNS_REQUIRED);
+    expect(third.next.streakWeeks).toBe(1);
+    expect(third.streakBumped).toBe(true);
+  });
+
+  it('does not double-bump streak on the 4th run in the same week', () => {
+    const now = new Date('2026-05-28T12:00:00Z');
+    const week = isoWeekKey(now);
+    const progress = baseProgress({ weekKey: week, runsThisWeek: STREAK_RUNS_REQUIRED, streakWeeks: 1 });
+    const result = bumpStreak(progress, now);
+    expect(result.next.streakWeeks).toBe(1);
+    expect(result.streakBumped).toBe(false);
+  });
+
+  it('preserves streak across adjacent weeks when previous week hit quota', () => {
+    const lastWeek = new Date('2026-05-20T12:00:00Z');
+    const thisWeek = new Date('2026-05-28T12:00:00Z');
+    const progress = baseProgress({
+      weekKey: isoWeekKey(lastWeek),
+      runsThisWeek: STREAK_RUNS_REQUIRED,
+      streakWeeks: 4,
+    });
+    const result = bumpStreak(progress, thisWeek);
+    expect(result.next.streakWeeks).toBe(4);
+    expect(result.next.weekKey).toBe(isoWeekKey(thisWeek));
+    expect(result.next.runsThisWeek).toBe(1);
+    expect(result.streakBroken).toBe(false);
+  });
+
+  it('consumes a freeze when previous week missed quota', () => {
+    const lastWeek = new Date('2026-05-20T12:00:00Z');
+    const thisWeek = new Date('2026-05-28T12:00:00Z');
+    const progress = baseProgress({
+      weekKey: isoWeekKey(lastWeek),
+      runsThisWeek: 1,
+      streakWeeks: 3,
+      freezesAvailable: 1,
+    });
+    const result = bumpStreak(progress, thisWeek);
+    expect(result.freezeUsed).toBe(true);
+    expect(result.next.freezesAvailable).toBe(0);
+    expect(result.next.streakWeeks).toBe(3);
+  });
+
+  it('resets streak when no freeze available', () => {
+    const lastWeek = new Date('2026-05-20T12:00:00Z');
+    const thisWeek = new Date('2026-05-28T12:00:00Z');
+    const progress = baseProgress({
+      weekKey: isoWeekKey(lastWeek),
+      runsThisWeek: 1,
+      streakWeeks: 5,
+      freezesAvailable: 0,
+    });
+    const result = bumpStreak(progress, thisWeek);
+    expect(result.streakBroken).toBe(true);
+    expect(result.next.streakWeeks).toBe(0);
   });
 });

@@ -32,6 +32,7 @@ const STORAGE_KEYS = {
   runnerCustomized: 'crewRunnerCustomized',
   runnerProgress: 'crewRunnerProgress',
   mapLayers: 'crewMapLayers',
+  activeRun: 'crewActiveRun',
 } as const;
 
 const LEGACY_BOOT_KEY = 'crewBootSeen';
@@ -173,6 +174,28 @@ const DEFAULT_RUNNER_PROGRESS: RunnerProgress = {
   inkUpdatedAt: Date.now(),
   badgeUnlocks: [],
   patchesOwned: [],
+  weekKey: '',
+  runsThisWeek: 0,
+};
+
+const isRunnerProgressShape = (value: unknown): value is Partial<RunnerProgress> => {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  const numberOrMissing = (key: string) =>
+    obj[key] === undefined || typeof obj[key] === 'number';
+  return (
+    numberOrMissing('xp') &&
+    numberOrMissing('level') &&
+    numberOrMissing('streakWeeks') &&
+    numberOrMissing('lastRunAt') &&
+    numberOrMissing('freezesAvailable') &&
+    numberOrMissing('inkUpdatedAt') &&
+    numberOrMissing('runsThisWeek') &&
+    (obj.inkPerZone === undefined || typeof obj.inkPerZone === 'object') &&
+    (obj.badgeUnlocks === undefined || Array.isArray(obj.badgeUnlocks)) &&
+    (obj.patchesOwned === undefined || Array.isArray(obj.patchesOwned)) &&
+    (obj.weekKey === undefined || typeof obj.weekKey === 'string')
+  );
 };
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -182,7 +205,8 @@ export const getRunnerProgress = (): RunnerProgress => {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEYS.runnerProgress);
     if (!raw) return DEFAULT_RUNNER_PROGRESS;
-    const parsed = JSON.parse(raw) as Partial<RunnerProgress>;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isRunnerProgressShape(parsed)) return DEFAULT_RUNNER_PROGRESS;
     const merged: RunnerProgress = { ...DEFAULT_RUNNER_PROGRESS, ...parsed };
     const now = Date.now();
     const daysSince = (now - merged.inkUpdatedAt) / MS_PER_DAY;
@@ -218,12 +242,21 @@ const DEFAULT_MAP_LAYERS: MapLayerPrefs = {
   history: false,
 };
 
+const isMapLayerPrefsShape = (value: unknown): value is Partial<MapLayerPrefs> => {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  return (['territory', 'live', 'missions', 'history'] as const).every(
+    (key) => obj[key] === undefined || typeof obj[key] === 'boolean',
+  );
+};
+
 export const getMapLayerPrefs = (): MapLayerPrefs => {
   if (!canUseStorage()) return DEFAULT_MAP_LAYERS;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEYS.mapLayers);
     if (!raw) return DEFAULT_MAP_LAYERS;
-    const parsed = JSON.parse(raw) as Partial<MapLayerPrefs>;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isMapLayerPrefsShape(parsed)) return DEFAULT_MAP_LAYERS;
     return { ...DEFAULT_MAP_LAYERS, ...parsed };
   } catch {
     return DEFAULT_MAP_LAYERS;
@@ -234,6 +267,63 @@ export const saveMapLayerPrefs = (prefs: MapLayerPrefs): void => {
   if (!canUseStorage()) return;
   try {
     window.localStorage.setItem(STORAGE_KEYS.mapLayers, JSON.stringify(prefs));
+  } catch {
+    // ignored
+  }
+};
+
+export interface PersistedActiveRun {
+  startedAt: number;
+  elapsedMs: number;
+  state: 'tracking' | 'paused';
+  points: Array<{ lng: number; lat: number; t: number; accuracy: number; isResumeAnchor?: boolean }>;
+  touchedSpotIds: string[];
+  totalMeters: number;
+  metersInTerritory: number;
+  crewSlug?: string;
+  homeZoneId?: string;
+}
+
+const isActiveRunShape = (value: unknown): value is PersistedActiveRun => {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    typeof obj.startedAt === 'number' &&
+    typeof obj.elapsedMs === 'number' &&
+    (obj.state === 'tracking' || obj.state === 'paused') &&
+    Array.isArray(obj.points) &&
+    Array.isArray(obj.touchedSpotIds) &&
+    typeof obj.totalMeters === 'number' &&
+    typeof obj.metersInTerritory === 'number'
+  );
+};
+
+export const getActiveRun = (): PersistedActiveRun | null => {
+  if (!canUseStorage()) return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEYS.activeRun);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isActiveRunShape(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+export const saveActiveRun = (run: PersistedActiveRun): void => {
+  if (!canUseStorage()) return;
+  try {
+    window.localStorage.setItem(STORAGE_KEYS.activeRun, JSON.stringify(run));
+  } catch {
+    // ignored
+  }
+};
+
+export const clearActiveRun = (): void => {
+  if (!canUseStorage()) return;
+  try {
+    window.localStorage.removeItem(STORAGE_KEYS.activeRun);
   } catch {
     // ignored
   }

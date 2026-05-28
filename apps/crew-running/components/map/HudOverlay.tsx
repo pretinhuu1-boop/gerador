@@ -11,6 +11,8 @@ interface Props {
 export const HudOverlay: React.FC<Props> = ({ progress, crewSlug, onOpenProfile }) => {
   const level = xpToLevel(progress.xp);
   const { current, needed, pct } = xpProgressInLevel(progress.xp);
+  // getCrewBySlug falls back to CREWS[0] (downtown-rush) when crewSlug is
+  // missing or unknown, so this is always defined.
   const crew = getCrewBySlug(crewSlug);
   return (
     <div className="map-hud-overlay" role="region" aria-label="Runner status">

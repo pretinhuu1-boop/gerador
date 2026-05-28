@@ -15,6 +15,8 @@ type Props = {
 const PROJECTION: ProjectionOpts = { width: 100, height: 100, padding: 8 };
 
 export const LaunchCityMap: React.FC<Props> = ({ activeSlug, mode = 'intro' }) => {
+  // SP_ZONE_MAP_FEATURES is a module-level frozen constant; the route paths
+  // only need to compute once for the lifetime of this component instance.
   const routes = useMemo(() => {
     const centro = SP_ZONE_MAP_FEATURES.find((z) => z.id === 'centro');
     if (!centro) return [] as string[];

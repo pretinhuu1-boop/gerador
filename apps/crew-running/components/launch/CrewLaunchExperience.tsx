@@ -12,11 +12,7 @@ import {
   saveRunnerProgress,
   setSelectedCrewSlug,
 } from '../../services/launchStorage';
-import {
-  type RunnerProgress,
-  computeRunXp,
-} from '../../data/gamification';
-import { getZoneByCrewSlug } from '../../data/spLiveMap';
+import { type RunnerProgress } from '../../data/gamification';
 import { CitySignalEntry } from './CitySignalEntry';
 import { ConsoleBoot } from './ConsoleBoot';
 import { GuidedOnboarding } from './GuidedOnboarding';
@@ -197,38 +193,15 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
   }
 
   if (screen === 'mapHome') {
-    // Demo run stub — exercises the storage round-trip and gives the player a
-    // visible XP nudge until real GPS tracking lands. Does NOT increment streak
-    // (intentional: streaks come from weekly aggregates, not one-off taps).
-    const handleStartDemoRun = () => {
-      const zone = getZoneByCrewSlug(progress.selectedCrewSlug);
-      const earned = computeRunXp({
-        distanceKm: 1,
-        kmInTerritory: zone ? 1 : 0,
-        spotsTouched: 0,
-        closedLoop: false,
-        isInvasion: false,
-      });
-      const now = Date.now();
-      setRunnerProgress((prev) => {
-        const next: RunnerProgress = {
-          ...prev,
-          xp: prev.xp + earned,
-          lastRunAt: now,
-          inkPerZone: zone
-            ? { ...prev.inkPerZone, [zone.id]: (prev.inkPerZone[zone.id] ?? 0) + earned }
-            : prev.inkPerZone,
-          inkUpdatedAt: now,
-        };
-        saveRunnerProgress(next);
-        return next;
-      });
+    const handleRunCompleted = (next: RunnerProgress) => {
+      saveRunnerProgress(next);
+      setRunnerProgress(next);
     };
     return (
       <MapStage
         runnerProgress={runnerProgress}
         selectedCrewSlug={progress.selectedCrewSlug}
-        onStartRun={handleStartDemoRun}
+        onRunCompleted={handleRunCompleted}
         onBackToMenu={goToMainMenu}
       />
     );

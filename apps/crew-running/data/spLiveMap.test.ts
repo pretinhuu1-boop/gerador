@@ -111,4 +111,13 @@ describe('zone + spot getters', () => {
     const zonesCovered = new Set(SP_SPOT_MAP_FEATURES.map((s) => s.zoneId));
     expect(zonesCovered.size).toBe(5);
   });
+
+  it('keeps every spot inside the SP map bounds (invariant)', () => {
+    for (const spot of SP_SPOT_MAP_FEATURES) {
+      expect(spot.coordinate.lng).toBeGreaterThanOrEqual(SP_MAP_BOUNDS.minLng);
+      expect(spot.coordinate.lng).toBeLessThanOrEqual(SP_MAP_BOUNDS.maxLng);
+      expect(spot.coordinate.lat).toBeGreaterThanOrEqual(SP_MAP_BOUNDS.minLat);
+      expect(spot.coordinate.lat).toBeLessThanOrEqual(SP_MAP_BOUNDS.maxLat);
+    }
+  });
 });
