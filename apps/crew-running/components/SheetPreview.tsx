@@ -111,7 +111,7 @@ export const SheetPreview: React.FC<Props> = ({
                   key={v.index}
                   onClick={() => {
                     audio.playSfx('equip-snap');
-                    onSave(v);
+                    void onSave(v);
                   }}
                   className={`runner-creator__variant-zone group ${
                     savingVariantIndex === v.index ? 'is-saving' : ''

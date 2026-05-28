@@ -34,7 +34,12 @@ const findPort = async (startPort) => {
   throw new Error(`No local port available from ${startPort}.`);
 };
 
-const SERVER_WAIT_TIMEOUT_MS = Number(process.env.SMOKE_SERVER_WAIT_MS) || 60000;
+const RAW_SMOKE_TIMEOUT = process.env.SMOKE_SERVER_WAIT_MS
+  ? Number(process.env.SMOKE_SERVER_WAIT_MS)
+  : Number.NaN;
+const SERVER_WAIT_TIMEOUT_MS = Number.isFinite(RAW_SMOKE_TIMEOUT)
+  ? RAW_SMOKE_TIMEOUT
+  : 60000;
 
 const waitForServer = async (url, serverProcess) => {
   const startedAt = Date.now();

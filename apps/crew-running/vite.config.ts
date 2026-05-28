@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
-  const devPort = Number(env.VITE_DEV_PORT) || 3100;
+  const rawPort = env.VITE_DEV_PORT ? Number(env.VITE_DEV_PORT) : Number.NaN;
+  const devPort = Number.isFinite(rawPort) ? rawPort : 3100;
   const exposeLan = env.VITE_DEV_HOST === 'lan';
 
   return {

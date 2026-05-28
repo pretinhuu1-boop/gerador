@@ -105,8 +105,6 @@ const FADE_MS = {
 const MUTE_STORAGE_KEY = 'crewAudioMuted';
 const HOVER_TICK_RATE_LIMIT_MS = 200;
 
-type FadeHandle = number;
-
 const canUseAudio = () => typeof window !== 'undefined' && typeof Audio !== 'undefined';
 
 function readMuted(): boolean | null {
@@ -138,26 +136,6 @@ function prefersReducedMotion(): boolean {
   }
 }
 
-function rampVolume(
-  el: HTMLAudioElement,
-  toValue: number,
-  durationMs: number,
-): FadeHandle {
-  const startValue = el.volume;
-  const startTime = performance.now();
-  const handle = window.setInterval(() => {
-    const t = Math.min(1, (performance.now() - startTime) / Math.max(1, durationMs));
-    el.volume = clamp(startValue + (toValue - startValue) * t, 0, 1);
-    if (t >= 1) {
-      window.clearInterval(handle);
-      if (toValue === 0) {
-        el.pause();
-      }
-    }
-  }, 30);
-  return handle;
-}
-
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -174,6 +152,31 @@ class AudioEngine {
   private unlocked = false;
   private lastHoverTickAt = 0;
   private listeners = new Map<ListenerKind, Set<Listener>>();
+  private rampHandles = new WeakMap<HTMLAudioElement, number>();
+
+  private cancelRamp(el: HTMLAudioElement): void {
+    const prior = this.rampHandles.get(el);
+    if (prior != null) {
+      window.clearInterval(prior);
+      this.rampHandles.delete(el);
+    }
+  }
+
+  private ramp(el: HTMLAudioElement, toValue: number, durationMs: number): void {
+    this.cancelRamp(el);
+    const startValue = el.volume;
+    const startTime = performance.now();
+    const handle = window.setInterval(() => {
+      const t = Math.min(1, (performance.now() - startTime) / Math.max(1, durationMs));
+      el.volume = clamp(startValue + (toValue - startValue) * t, 0, 1);
+      if (t >= 1) {
+        window.clearInterval(handle);
+        this.rampHandles.delete(el);
+        if (toValue === 0) el.pause();
+      }
+    }, 30);
+    this.rampHandles.set(el, handle);
+  }
 
   constructor() {
     const stored = readMuted();
@@ -288,13 +291,13 @@ class AudioEngine {
     if (!this.muted) {
       try {
         await next.play();
-        rampVolume(next, VOL.ambient, durationMs);
+        this.ramp(next, VOL.ambient, durationMs);
       } catch {
         // Autoplay blocked — will start when unlock() runs
       }
     }
 
-    if (prev) rampVolume(prev.el, 0, durationMs);
+    if (prev) this.ramp(prev.el, 0, durationMs);
 
     if (AMBIENT_NOLOOP.has(id)) {
       next.addEventListener(
@@ -324,15 +327,15 @@ class AudioEngine {
 
     if (!this.muted) {
       void next.play().catch(() => {});
-      rampVolume(next, VOL.motif, FADE_MS.motifCrossfade);
+      this.ramp(next, VOL.motif, FADE_MS.motifCrossfade);
     }
 
-    if (prev) rampVolume(prev.el, 0, FADE_MS.motifCrossfade);
+    if (prev) this.ramp(prev.el, 0, FADE_MS.motifCrossfade);
   }
 
   stopCrewMotif(): void {
     if (!this.currentMotif) return;
-    rampVolume(this.currentMotif.el, 0, FADE_MS.motifCrossfade);
+    this.ramp(this.currentMotif.el, 0, FADE_MS.motifCrossfade);
     this.currentMotif = null;
   }
 
@@ -361,15 +364,15 @@ class AudioEngine {
     this.activeVoice = el;
 
     // Duck ambient + motif
-    if (this.currentAmbient) rampVolume(this.currentAmbient.el, VOL.ambientDucked, FADE_MS.duckIn);
-    if (this.currentMotif) rampVolume(this.currentMotif.el, VOL.motifDucked, FADE_MS.duckIn);
+    if (this.currentAmbient) this.ramp(this.currentAmbient.el, VOL.ambientDucked, FADE_MS.duckIn);
+    if (this.currentMotif) this.ramp(this.currentMotif.el, VOL.motifDucked, FADE_MS.duckIn);
 
     const restore = () => {
       if (this.currentAmbient && !this.muted) {
-        rampVolume(this.currentAmbient.el, VOL.ambient, FADE_MS.duckOut);
+        this.ramp(this.currentAmbient.el, VOL.ambient, FADE_MS.duckOut);
       }
       if (this.currentMotif && !this.muted) {
-        rampVolume(this.currentMotif.el, VOL.motif, FADE_MS.duckOut);
+        this.ramp(this.currentMotif.el, VOL.motif, FADE_MS.duckOut);
       }
       if (this.activeVoice === el) this.activeVoice = null;
     };
@@ -391,8 +394,14 @@ class AudioEngine {
   }
 
   private pauseAll(): void {
-    if (this.currentAmbient) this.currentAmbient.el.pause();
-    if (this.currentMotif) this.currentMotif.el.pause();
+    if (this.currentAmbient) {
+      this.cancelRamp(this.currentAmbient.el);
+      this.currentAmbient.el.pause();
+    }
+    if (this.currentMotif) {
+      this.cancelRamp(this.currentMotif.el);
+      this.currentMotif.el.pause();
+    }
     if (this.activeVoice) {
       this.activeVoice.pause();
       this.activeVoice = null;
