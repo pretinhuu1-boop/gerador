@@ -4,7 +4,7 @@ import { getCrewBySlug } from '../../data/crews';
 import { CartridgeButton } from '../CartridgeButton';
 import { CrewBadge } from '../CrewBadge';
 import { CrewPilotPreview } from './CrewPilotPreview';
-import { StreetBackdrop } from './StreetBackdrop';
+import { Sp3DMapBackground } from './Sp3DMapBackground';
 import { audio, type CrewSlug } from '../../services/audio';
 
 type Props = {
@@ -74,7 +74,7 @@ export const CitySignalEntry: React.FC<Props> = ({
 
   return (
     <motion.section className="launch-screen game-screen city-signal-entry city-signal-entry--map-bg" {...screenMotion}>
-      <StreetBackdrop variant="city" crewSlug={activeCrew.slug} />
+      <Sp3DMapBackground tone="focused" activeSlug={activeCrew.slug} />
 
       <CartridgeButton
         variant="link"

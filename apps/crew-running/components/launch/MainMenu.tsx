@@ -4,7 +4,7 @@ import { getCrewBySlug } from '../../data/crews';
 import { getRunnerTypeById } from '../../data/runnerTypes';
 import { LaunchProgress, setCreatorTab } from '../../services/launchStorage';
 import { getSavedCharacter } from '../../services/storage';
-import { StreetBackdrop } from './StreetBackdrop';
+import { Sp3DMapBackground } from './Sp3DMapBackground';
 import { RunnerPanel } from '../voce/RunnerPanel';
 import { HomePanel } from './menu/HomePanel';
 import { CrewsPanel } from './menu/CrewsPanel';
@@ -189,7 +189,7 @@ export const MainMenu: React.FC<Props> = ({
   return (
     <motion.section className="launch-screen game-screen main-menu" style={crewThemeStyle} {...enterMotion}>
       <div className="main-menu__map" aria-hidden>
-        <StreetBackdrop variant="hq" crewSlug={activeCrew.slug} />
+        <Sp3DMapBackground tone="ambient" activeSlug={activeCrew.slug} />
       </div>
 
       <motion.div
@@ -225,7 +225,7 @@ export const MainMenu: React.FC<Props> = ({
             whileTap={reducedMotion ? undefined : { scale: 0.98 }}
           >
             {renderNavCursor('home')}
-            <span>INÍCIO</span>
+            <span>GUARDA ROUPA</span>
           </motion.button>
           <motion.button
             className={panelButtonClass('crews')}
@@ -293,7 +293,7 @@ export const MainMenu: React.FC<Props> = ({
                 <div className="main-menu__wardrobe-home">
                   <div className="main-menu__wardrobe-head">
                     <div>
-                      <span className="main-menu__eyebrow">INÍCIO</span>
+                      <span className="main-menu__eyebrow">GUARDA ROUPA</span>
                       <strong>GUARDA ROUPA</strong>
                     </div>
                     <button

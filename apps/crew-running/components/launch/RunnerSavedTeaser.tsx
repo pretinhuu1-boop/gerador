@@ -5,7 +5,7 @@ import { LaunchProgress } from '../../services/launchStorage';
 import { getSavedCharacter } from '../../services/storage';
 import { CartridgeButton } from '../CartridgeButton';
 import { CrewBadge } from '../CrewBadge';
-import { StreetBackdrop } from './StreetBackdrop';
+import { Sp3DMapBackground } from './Sp3DMapBackground';
 import { audio } from '../../services/audio';
 
 type Props = {
@@ -57,7 +57,7 @@ export const RunnerSavedTeaser: React.FC<Props> = ({
   return (
     <motion.section className="launch-screen game-screen runner-saved" {...screenMotion}>
       <div className="runner-saved__map" aria-hidden>
-        <StreetBackdrop variant="saved" crewSlug={crew.slug} />
+        <Sp3DMapBackground tone="focused" activeSlug={crew.slug} />
       </div>
 
       <CartridgeButton
