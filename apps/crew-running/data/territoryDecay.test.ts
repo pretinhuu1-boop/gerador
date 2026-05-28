@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { applyInkDecay } from './territoryDecay';
-import type { SpZoneId } from './spLiveMap';
+import { applyInkDecay, computeOwnershipFromInk } from './territoryDecay';
+import { SP_ZONE_MAP_FEATURES, type SpZoneId } from './spLiveMap';
 
 describe('applyInkDecay', () => {
   const T = (days: number) => new Date('2026-05-28T00:00:00Z').getTime() + days * 86_400_000;
@@ -38,5 +38,31 @@ describe('applyInkDecay', () => {
     const out = applyInkDecay(ink, T(0), T(1));
     expect(out.leste).toBeUndefined();
     expect(out.centro).toBeDefined();
+  });
+});
+
+describe('computeOwnershipFromInk', () => {
+  it('returns 0 for every zone when no ink', () => {
+    const out = computeOwnershipFromInk({}, SP_ZONE_MAP_FEATURES, 1000);
+    for (const zone of SP_ZONE_MAP_FEATURES) {
+      expect(out[zone.id]).toBe(0);
+    }
+  });
+
+  it('returns ink / denominator clamped to 1', () => {
+    const out = computeOwnershipFromInk(
+      { centro: 500, leste: 1500, sul: 0 },
+      SP_ZONE_MAP_FEATURES,
+      1000,
+    );
+    expect(out.centro).toBeCloseTo(0.5);
+    expect(out.leste).toBe(1); // clamped
+    expect(out.sul).toBe(0);
+  });
+
+  it('includes every zone from the input feature list, defaulting absent ones to 0', () => {
+    const out = computeOwnershipFromInk({ centro: 250 }, SP_ZONE_MAP_FEATURES, 1000);
+    expect(Object.keys(out).sort()).toEqual(SP_ZONE_MAP_FEATURES.map((z) => z.id).sort());
+    expect(out.centro).toBeCloseTo(0.25);
   });
 });

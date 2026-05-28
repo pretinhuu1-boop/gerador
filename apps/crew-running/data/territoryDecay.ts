@@ -1,5 +1,5 @@
 import { decayInk } from './gamification';
-import type { SpZoneId } from './spLiveMap';
+import { SP_ZONE_MAP_FEATURES, type SpZoneId } from './spLiveMap';
 
 // Fractional days elapsed between two epoch timestamps. Negative gaps
 // (clock skew or future-stored timestamps) clamp to 0 so we never amplify
@@ -26,6 +26,24 @@ export const applyInkDecay = (
     const value = inkPerZone[key];
     if (value === undefined) continue;
     out[key] = decayInk(value, days);
+  }
+  return out;
+};
+
+// Mirrors the inline math MapStage runs today: ownership per zone is
+// ink / denominator, clamped to 1. Unlike `applyInkDecay` this always
+// returns every zone in the input feature list — absent zones default
+// to 0 ownership instead of being omitted, which matches the map's
+// rendering expectation.
+export const computeOwnershipFromInk = (
+  inkPerZone: Partial<Record<SpZoneId, number>>,
+  zones: typeof SP_ZONE_MAP_FEATURES,
+  denominator: number,
+): Partial<Record<SpZoneId, number>> => {
+  const out: Partial<Record<SpZoneId, number>> = {};
+  for (const zone of zones) {
+    const ink = inkPerZone[zone.id] ?? 0;
+    out[zone.id] = Math.min(1, ink / denominator);
   }
   return out;
 };
