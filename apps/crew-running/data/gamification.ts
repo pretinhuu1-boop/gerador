@@ -320,3 +320,27 @@ export const breakdownRunXp = (raw: RunXpInput): RunXpBreakdown => {
 };
 
 export const computeRunXp = (raw: RunXpInput): number => breakdownRunXp(raw).total;
+
+export interface RunHistoryStats {
+  totalRuns: number;
+  totalKm: number;
+  kmThisWeek: number;
+  nightRuns: number;
+  invasionsSucceeded: number;
+  uniqueSpotsTouched: string[];
+  captainWeeks: number;
+  weeklyTopThreeCount: number;
+  soloTerritoryKm: number;
+}
+
+export const emptyRunHistoryStats = (): RunHistoryStats => ({
+  totalRuns: 0,
+  totalKm: 0,
+  kmThisWeek: 0,
+  nightRuns: 0,
+  invasionsSucceeded: 0,
+  uniqueSpotsTouched: [],
+  captainWeeks: 0,
+  weeklyTopThreeCount: 0,
+  soloTerritoryKm: 0,
+});

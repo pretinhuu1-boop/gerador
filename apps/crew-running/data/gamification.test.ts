@@ -15,12 +15,14 @@ import {
   bumpStreak,
   computeRunXp,
   decayInk,
+  emptyRunHistoryStats,
   isoWeekKey,
   sanitizeRunXpInput,
   territoryStatus,
   xpProgressInLevel,
   xpRequiredForLevel,
   xpToLevel,
+  type RunHistoryStats,
   type RunnerProgress,
 } from './gamification';
 
@@ -399,5 +401,20 @@ describe('bumpStreak', () => {
     const result = bumpStreak(progress, thisWeek);
     expect(result.streakBroken).toBe(true);
     expect(result.next.streakWeeks).toBe(0);
+  });
+});
+
+describe('emptyRunHistoryStats', () => {
+  it('returns a zeroed history baseline', () => {
+    const stats: RunHistoryStats = emptyRunHistoryStats();
+    expect(stats.totalRuns).toBe(0);
+    expect(stats.totalKm).toBe(0);
+    expect(stats.kmThisWeek).toBe(0);
+    expect(stats.nightRuns).toBe(0);
+    expect(stats.invasionsSucceeded).toBe(0);
+    expect(stats.uniqueSpotsTouched).toEqual([]);
+    expect(stats.captainWeeks).toBe(0);
+    expect(stats.weeklyTopThreeCount).toBe(0);
+    expect(stats.soloTerritoryKm).toBe(0);
   });
 });
