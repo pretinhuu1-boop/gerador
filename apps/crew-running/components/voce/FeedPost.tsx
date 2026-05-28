@@ -26,7 +26,12 @@ export const FeedPost: React.FC<Props> = ({ event, savedCharacter }) => {
     ['--swatch-color' as string]: spec.swatchToken,
   } as React.CSSProperties;
   const runnerType = getRunnerTypeById(event.payload.runnerTypeId);
-  const showLook = spec.showLookCard && savedCharacter?.imageDataUrl;
+  // Render the look card whenever the variant wants it AND we have at least
+  // an image OR a crew slug to anchor it. Without either, skip silently so
+  // the headline + body still surface the event.
+  const showLook = spec.showLookCard && Boolean(
+    savedCharacter?.imageDataUrl || event.payload.crewSlug,
+  );
   const ariaLabel = event.timestamp > 0
     ? `${spec.headline} em ${dateFmt.format(event.timestamp)}`
     : spec.headline;
@@ -44,9 +49,9 @@ export const FeedPost: React.FC<Props> = ({ event, savedCharacter }) => {
       <p className="voce-feed-post__body">{spec.bodyTemplate(event.payload)}</p>
       {showLook && (
         <RunnerLookCard
-          imageDataUrl={savedCharacter.imageDataUrl}
-          name={event.payload.runnerName ?? savedCharacter.profile?.name}
-          crewSlug={event.payload.crewSlug ?? savedCharacter.crewSlug}
+          imageDataUrl={savedCharacter?.imageDataUrl ?? undefined}
+          name={event.payload.runnerName ?? savedCharacter?.profile?.name}
+          crewSlug={event.payload.crewSlug ?? savedCharacter?.crewSlug}
           runnerTypeLabel={runnerType.label}
           size="sm"
           className="voce-feed-post__look"

@@ -55,7 +55,7 @@ export const IDENTITY_EVENT_VARIANTS: Record<IdentityEventKind, IdentityEventVar
     showLookCard: false,
   },
   GUIDE_COMPLETED: {
-    railToken: 'var(--ink-bone)',
+    railToken: 'var(--bone)',
     swatchToken: 'var(--spray-cyan)',
     headline: 'GUIA CONCLUÍDO',
     bodyTemplate: () => 'A crew abriu a tua entrada.',
@@ -77,7 +77,7 @@ export const IDENTITY_EVENT_VARIANTS: Record<IdentityEventKind, IdentityEventVar
   },
   BADGE_EARNED: {
     railToken: 'var(--spray-yellow, #f0c33c)',
-    swatchToken: 'var(--ink-bone)',
+    swatchToken: 'var(--bone)',
     headline: 'BADGE DESBLOQUEADO',
     bodyTemplate: (p) => p.badgeId ? p.badgeId.toUpperCase() : 'Conquista registrada.',
     showLookCard: false,
@@ -90,7 +90,7 @@ export const IDENTITY_EVENT_VARIANTS: Record<IdentityEventKind, IdentityEventVar
     showLookCard: false,
   },
   VISUAL_CREATED: {
-    railToken: 'var(--ink-cream)',
+    railToken: 'var(--bone-soft)',
     swatchToken: 'var(--spray-cyan)',
     headline: 'IDENTIDADE VISUAL CRIADA',
     bodyTemplate: () => 'Novo visual no passaporte.',

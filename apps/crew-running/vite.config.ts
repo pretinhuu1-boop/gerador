@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
   const rawPort = env.VITE_DEV_PORT ? Number(env.VITE_DEV_PORT) : Number.NaN;
   const devPort = Number.isFinite(rawPort) ? rawPort : 3100;
-  const exposeLan = env.VITE_DEV_HOST === 'lan';
+  const exposeLan = (env.VITE_DEV_HOST ?? '').toLowerCase() === 'lan';
 
   return {
     server: {
@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'happy-dom',
       setupFiles: ['./test/setup.ts'],
+      // tests/e2e/** are Playwright Test specs, not vitest — they import
+      // @playwright/test which throws if executed in vitest's runner.
+      exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**'],
       environmentMatchGlobs: [
         ['**/data/**', 'node'],
         ['**/services/**', 'node'],

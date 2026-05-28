@@ -74,8 +74,17 @@ describe('FeedPost runner look card', () => {
     expect(container.querySelector('[class*="runner-look"]')).toBeNull();
   });
 
-  it('does NOT render the look card when savedCharacter is missing even on LOOK_SAVED', () => {
+  it('renders a crew-anchored look card when savedCharacter is missing but event has crewSlug', () => {
+    // H1 fix: feed must still surface kind context (badge + runner type)
+    // even when savedCharacter was wiped or never existed.
     const { container } = render(<FeedPost event={buildEvent({ kind: 'LOOK_SAVED' })} />);
+    expect(container.querySelector('.runner-look-card')).not.toBeNull();
+  });
+
+  it('does NOT render the look card on LOOK_SAVED when neither savedCharacter nor crewSlug exist', () => {
+    const { container } = render(
+      <FeedPost event={buildEvent({ kind: 'LOOK_SAVED', payload: {} })} />,
+    );
     expect(container.querySelector('[class*="runner-look"]')).toBeNull();
   });
 });

@@ -23,12 +23,14 @@ export const CrewBadge: React.FC<Props> = ({
 }) => {
   const resolved = typeof crew === 'string' || crew == null ? getCrewBySlug(crew) : crew;
   const px = sizePx[size];
-  const ariaHidden = alt === undefined ? true : undefined;
+  // Treat the image as decorative whenever no meaningful alt text was supplied.
+  // `alt === undefined` and `alt === ''` both indicate "not screen-reader-content".
+  const isDecorative = !alt;
   return (
     <img
       src={resolved.assets.badge}
       alt={alt ?? ''}
-      aria-hidden={ariaHidden || undefined}
+      aria-hidden={isDecorative ? true : undefined}
       width={px}
       height={px}
       className={[pulse ? 'is-pulsing-crew' : '', className].filter(Boolean).join(' ')}

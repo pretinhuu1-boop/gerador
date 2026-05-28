@@ -54,8 +54,17 @@ export const RunnerPanel: React.FC<Props> = ({
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const { friends, add: addFriendToList } = useFriends(version);
   const selfUserId = useMemo(() => getSelfUserId(), []);
-  const lookCount = events.filter((e) => e.kind === 'LOOK_SAVED').length;
-  const stickerCount = events.filter((e) => e.kind === 'STICKER_DROPPED').length;
+  // Single pass over events instead of two filters; memoize because the
+  // filtered counts only change when events array identity changes.
+  const { lookCount, stickerCount } = useMemo(() => {
+    let look = 0;
+    let sticker = 0;
+    for (const ev of events) {
+      if (ev.kind === 'LOOK_SAVED') look++;
+      else if (ev.kind === 'STICKER_DROPPED') sticker++;
+    }
+    return { lookCount: look, stickerCount: sticker };
+  }, [events]);
   const hasEvents = events.length > 0;
   const emptyEvent: IdentityEvent | null = useMemo(() => {
     if (hasEvents || !progress?.selectedCrewSlug) return null;
