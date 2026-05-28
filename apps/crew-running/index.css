@@ -7729,3 +7729,188 @@ button.map-stage-zone-title:hover {
   text-transform: uppercase;
   color: var(--bone-soft);
 }
+
+/* === Sede da Crew (Phase 1 shell) === */
+
+.sede-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  min-height: 100%;
+}
+
+.sede-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid var(--crew-accent, #d97706);
+  background: rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+.sede-header__badge {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.sede-header__badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.sede-header__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sede-header__eyebrow {
+  font-family: 'Anton', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--crew-accent, #d97706);
+}
+
+.sede-header__name {
+  font-family: 'Bowlby One', sans-serif;
+  font-size: 22px;
+  line-height: 1.1;
+  color: #f5f1e6;
+}
+
+.sede-header__mission {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 12px;
+  color: rgba(245, 241, 230, 0.7);
+}
+
+.sede-header__visitor {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  font-family: 'Anton', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  border: 1px solid rgba(245, 241, 230, 0.7);
+  color: #f5f1e6;
+}
+
+.sede-room-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 720px) {
+  .sede-room-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.sede-room-grid__cell {
+  display: flex;
+}
+
+.sede-room-card {
+  flex: 1;
+  min-height: 96px;
+  border: 2px solid rgba(245, 241, 230, 0.4);
+  background: rgba(0, 0, 0, 0.5);
+  color: #f5f1e6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  cursor: pointer;
+  font-family: 'Anton', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.sede-room-card:hover,
+.sede-room-card:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--crew-accent, #d97706);
+}
+
+.sede-room-card[data-blocked='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sede-room-card__icon {
+  width: 32px;
+  height: 32px;
+  border: 1px dashed rgba(245, 241, 230, 0.4);
+}
+
+.sede-room-card__lock {
+  font-size: 9px;
+  color: rgba(245, 241, 230, 0.7);
+}
+
+.sede-room {
+  border: 2px solid rgba(245, 241, 230, 0.3);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sede-room__close {
+  align-self: flex-start;
+  min-height: 44px;
+}
+
+.sede-room-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  color: #f5f1e6;
+}
+
+.sede-room-placeholder__eyebrow {
+  font-family: 'Anton', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(245, 241, 230, 0.6);
+}
+
+.sede-room-placeholder__title {
+  font-family: 'Bowlby One', sans-serif;
+  font-size: 20px;
+  margin: 0;
+}
+
+.sede-room-placeholder__copy {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: rgba(245, 241, 230, 0.8);
+  margin: 0;
+}
+
+.sede-footer {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(245, 241, 230, 0.2);
+}
+
+.sede-footer__switch {
+  margin-left: auto;
+}
+
+.main-menu__nav-item--sede.is-active {
+  border-color: var(--crew-accent, #d97706);
+}
