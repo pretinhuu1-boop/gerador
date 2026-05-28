@@ -13,8 +13,7 @@ export const BadgeUnlockToast: React.FC<Props> = ({ unlocked, onDismiss }) => {
   return (
     <div
       className="badge-unlock-toast-backdrop"
-      role="dialog"
-      aria-modal="true"
+      role="alertdialog"
       aria-label="Conquistas desbloqueadas"
     >
       <div className="badge-unlock-toast-card">
