@@ -192,18 +192,41 @@ export type Database = {
         };
         Relationships: [];
       };
+      organizations: {
+        Row: {
+          id: string;
+          slug: string;
+          display_name: string;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          slug: string;
+          display_name: string;
+        };
+        Update: {
+          slug?: string;
+          display_name?: string;
+        };
+        Relationships: [];
+      };
       user_profiles: {
         Row: {
           id: string;
           organization_id: string;
+          display_name: string | null;
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
           id: string;
-          organization_id: string;
+          organization_id?: string;
+          display_name?: string | null;
         };
         Update: {
-          id?: string;
           organization_id?: string;
+          display_name?: string | null;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -294,24 +317,50 @@ export type Database = {
         };
         Relationships: [];
       };
-    };
-    Views: {
       zone_leaderboard: {
         Row: {
+          id: string;
+          organization_id: string;
+          zone_id: string;
           user_id: string;
           runner_name: string;
           crew_slug: string;
           avatar_url: string | null;
-          zone_id: string;
           week_key: string;
           total_km: number;
           total_ink: number;
           runs_count: number;
-          rank: number;
+          rank: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          zone_id: string;
+          user_id: string;
+          runner_name: string;
+          crew_slug: string;
+          avatar_url?: string | null;
+          week_key: string;
+          total_km?: number;
+          total_ink?: number;
+          runs_count?: number;
+          rank?: number | null;
+        };
+        Update: {
+          runner_name?: string;
+          crew_slug?: string;
+          avatar_url?: string | null;
+          total_km?: number;
+          total_ink?: number;
+          runs_count?: number;
+          rank?: number | null;
+          updated_at?: string;
         };
         Relationships: [];
       };
     };
+    Views: { [_ in never]: never };
     Functions: { [_ in never]: never };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
