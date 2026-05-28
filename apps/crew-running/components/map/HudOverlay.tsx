@@ -28,7 +28,14 @@ export const HudOverlay: React.FC<Props> = ({ progress, crewSlug, onOpenProfile 
         </div>
         <div className="map-hud-xp-num">{progress.xp} XP</div>
       </div>
-      <button type="button" className="map-hud-profile" onClick={onOpenProfile} aria-label="Abrir perfil">
+      <button
+        type="button"
+        className="map-hud-profile"
+        onClick={onOpenProfile}
+        disabled={!onOpenProfile}
+        aria-disabled={!onOpenProfile}
+        aria-label="Abrir perfil"
+      >
         <img src={crew.assets.badge} alt={crew.name} />
       </button>
     </div>

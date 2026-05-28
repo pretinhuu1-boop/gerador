@@ -1,7 +1,6 @@
 import React, { useId } from 'react';
 import {
   SP_ZONE_MAP_FEATURES,
-  getZoneById,
   polygonToPath,
   type ProjectionOpts,
   type SpZoneId,
@@ -54,6 +53,15 @@ export const ZoneLayer: React.FC<Props> = ({ projection, activeZoneId, ownership
         ]
           .filter(Boolean)
           .join(' ');
+        const handleSelect = onSelectZone ? () => onSelectZone(zone.id) : undefined;
+        const handleKeyDown = handleSelect
+          ? (event: React.KeyboardEvent<SVGPathElement>) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleSelect();
+              }
+            }
+          : undefined;
         return (
           <path
             key={zone.id}
@@ -62,9 +70,10 @@ export const ZoneLayer: React.FC<Props> = ({ projection, activeZoneId, ownership
             fill={`url(#zone-pattern-${reactId}-${zone.id})`}
             stroke={zone.color}
             strokeWidth={activeZoneId === zone.id ? 3.5 : 2.2}
-            onClick={onSelectZone ? () => onSelectZone(zone.id) : undefined}
-            role={onSelectZone ? 'button' : undefined}
-            tabIndex={onSelectZone ? 0 : undefined}
+            onClick={handleSelect}
+            onKeyDown={handleKeyDown}
+            role={handleSelect ? 'button' : undefined}
+            tabIndex={handleSelect ? 0 : undefined}
             aria-label={zone.label}
           />
         );
@@ -73,8 +82,3 @@ export const ZoneLayer: React.FC<Props> = ({ projection, activeZoneId, ownership
   );
 };
 
-export const getZoneCenterScreen = (zoneId: SpZoneId, projection: ProjectionOpts) => {
-  const zone = getZoneById(zoneId);
-  if (!zone) return null;
-  return zone.center;
-};

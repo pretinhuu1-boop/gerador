@@ -55,13 +55,17 @@ export const INK_DECAY_PER_DAY = 0.033;
 export const INK_OWNERSHIP_OWNED = 0.6;
 export const INK_OWNERSHIP_CONTESTED = 0.4;
 
-export const xpToLevel = (xp: number): number => {
-  if (xp <= 0) return 1;
-  return Math.max(1, Math.floor(Math.pow(xp / 100, 1 / 1.6)) + 1);
+export const xpRequiredForLevel = (level: number): number => {
+  if (level <= 1) return 0;
+  return Math.round(100 * Math.pow(level - 1, 1.6));
 };
 
-export const xpRequiredForLevel = (level: number): number =>
-  Math.round(100 * Math.pow(Math.max(1, level - 1), 1.6));
+export const xpToLevel = (xp: number): number => {
+  if (xp <= 0) return 1;
+  let level = 1;
+  while (xpRequiredForLevel(level + 1) <= xp) level++;
+  return level;
+};
 
 export const xpProgressInLevel = (xp: number): { current: number; needed: number; pct: number } => {
   const level = xpToLevel(xp);

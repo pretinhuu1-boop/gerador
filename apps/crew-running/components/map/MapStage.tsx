@@ -154,10 +154,22 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
       <LayerRail layers={layers} onToggle={handleToggleLayer} />
 
       <footer className="map-stage-actions">
-        <button type="button" className="map-action-primary" onClick={onStartRun}>
+        <button
+          type="button"
+          className="map-action-primary"
+          onClick={onStartRun}
+          disabled={!onStartRun}
+          aria-disabled={!onStartRun}
+        >
           INICIAR CORRIDA
         </button>
-        <button type="button" className="map-action-secondary" onClick={onBackToMenu}>
+        <button
+          type="button"
+          className="map-action-secondary"
+          onClick={onBackToMenu}
+          disabled={!onBackToMenu}
+          aria-disabled={!onBackToMenu}
+        >
           QG
         </button>
       </footer>

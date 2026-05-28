@@ -4945,6 +4945,13 @@ body::after {
   color: #d9cfb8;
 }
 
+.map-action-primary[disabled],
+.map-action-secondary[disabled],
+.map-hud-profile[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .map-signal-route,
   .map-live-pulse circle.map-live-halo {

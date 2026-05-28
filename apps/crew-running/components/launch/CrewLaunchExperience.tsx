@@ -9,8 +9,14 @@ import {
   markMainMenuSeen,
   markRunnerCustomized,
   markTitleSeen,
+  saveRunnerProgress,
   setSelectedCrewSlug,
 } from '../../services/launchStorage';
+import {
+  type RunnerProgress,
+  computeRunXp,
+} from '../../data/gamification';
+import { getZoneByCrewSlug } from '../../data/spLiveMap';
 import { CitySignalEntry } from './CitySignalEntry';
 import { ConsoleBoot } from './ConsoleBoot';
 import { GuidedOnboarding } from './GuidedOnboarding';
@@ -190,10 +196,34 @@ export const CrewLaunchExperience: React.FC<Props> = ({ renderRunnerCreator }) =
   }
 
   if (screen === 'mapHome') {
+    const handleStartDemoRun = () => {
+      const current = getRunnerProgress();
+      const zone = getZoneByCrewSlug(progress.selectedCrewSlug);
+      const earned = computeRunXp({
+        distanceKm: 1,
+        kmInTerritory: zone ? 1 : 0,
+        spotsTouched: 0,
+        closedLoop: false,
+        isInvasion: false,
+      });
+      const next: RunnerProgress = {
+        ...current,
+        xp: current.xp + earned,
+        lastRunAt: Date.now(),
+        inkPerZone: zone
+          ? { ...current.inkPerZone, [zone.id]: (current.inkPerZone[zone.id] ?? 0) + earned }
+          : current.inkPerZone,
+        inkUpdatedAt: Date.now(),
+      };
+      saveRunnerProgress(next);
+      setProgress(getLaunchProgress());
+      setScreen('mapHome');
+    };
     return (
       <MapStage
         runnerProgress={getRunnerProgress()}
         selectedCrewSlug={progress.selectedCrewSlug}
+        onStartRun={handleStartDemoRun}
         onBackToMenu={goToMainMenu}
       />
     );

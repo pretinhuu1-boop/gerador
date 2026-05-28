@@ -37,15 +37,25 @@ export const SpotLayer: React.FC<Props> = ({ projection, zoom, activeZoneId, act
           .filter(Boolean)
           .join(' ');
         const radius = zoom === 'spot' ? 7 : 5;
+        const handleSelect = onSelectSpot && spot.active ? () => onSelectSpot(spot.id) : undefined;
+        const handleKeyDown = handleSelect
+          ? (event: React.KeyboardEvent<SVGCircleElement>) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleSelect();
+              }
+            }
+          : undefined;
         return (
           <g key={spot.id} className={className} transform={`translate(${x} ${y})`}>
             <circle r={radius + 3} className="map-spot-halo" />
             <circle
               r={radius}
               className="map-spot-dot"
-              onClick={onSelectSpot && spot.active ? () => onSelectSpot(spot.id) : undefined}
-              role={onSelectSpot && spot.active ? 'button' : undefined}
-              tabIndex={onSelectSpot && spot.active ? 0 : undefined}
+              onClick={handleSelect}
+              onKeyDown={handleKeyDown}
+              role={handleSelect ? 'button' : undefined}
+              tabIndex={handleSelect ? 0 : undefined}
               aria-label={spot.name}
             />
             {zoom === 'spot' && (
