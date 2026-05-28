@@ -8396,3 +8396,6 @@ button.map-stage-zone-title:hover {
 .crew-sheet__top-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
 .crew-sheet__top-name { font-size: 0.85rem; }
 .crew-sheet__top-km { font-size: 0.75rem; opacity: 0.6; }
+
+/* --- Theme Toggle --- */
+.map-theme-toggle { position: absolute; top: 56px; right: 12px; z-index: 10; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--ui-border, rgba(255,255,255,0.1)); background: var(--ui-chrome, #0a0a0a); color: var(--ui-text, #e8e8e8); font-size: 1.1rem; display: grid; place-items: center; cursor: pointer; }
