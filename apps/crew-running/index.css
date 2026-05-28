@@ -2895,6 +2895,13 @@ body::after {
   text-transform: uppercase;
 }
 
+/* Tighten partial preview on Galaxy A-series / iPhone SE viewports. */
+@media (max-width: 380px) {
+  .runner-creator__preview-photo { width: 104px; height: 104px; }
+  .runner-creator__preview--partial { padding: 24px 16px; gap: 10px; }
+  .runner-creator__preview-hint { max-width: 220px; }
+}
+
 .runner-creator__sheet-wrap {
   position: relative;
   z-index: 1;
