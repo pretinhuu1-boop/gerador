@@ -200,6 +200,23 @@ const isRunnerProgressShape = (value: unknown): value is Partial<RunnerProgress>
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+// Whitelist-merge: only known fields survive, so an old schema that wrote
+// extra fields can't leak forward into runtime memory.
+const pickRunnerProgress = (parsed: Partial<RunnerProgress>): RunnerProgress => ({
+  ...DEFAULT_RUNNER_PROGRESS,
+  xp: parsed.xp ?? DEFAULT_RUNNER_PROGRESS.xp,
+  level: parsed.level ?? DEFAULT_RUNNER_PROGRESS.level,
+  streakWeeks: parsed.streakWeeks ?? DEFAULT_RUNNER_PROGRESS.streakWeeks,
+  lastRunAt: parsed.lastRunAt ?? DEFAULT_RUNNER_PROGRESS.lastRunAt,
+  freezesAvailable: parsed.freezesAvailable ?? DEFAULT_RUNNER_PROGRESS.freezesAvailable,
+  inkPerZone: parsed.inkPerZone ?? DEFAULT_RUNNER_PROGRESS.inkPerZone,
+  inkUpdatedAt: parsed.inkUpdatedAt ?? DEFAULT_RUNNER_PROGRESS.inkUpdatedAt,
+  badgeUnlocks: parsed.badgeUnlocks ?? DEFAULT_RUNNER_PROGRESS.badgeUnlocks,
+  patchesOwned: parsed.patchesOwned ?? DEFAULT_RUNNER_PROGRESS.patchesOwned,
+  weekKey: parsed.weekKey ?? DEFAULT_RUNNER_PROGRESS.weekKey,
+  runsThisWeek: parsed.runsThisWeek ?? DEFAULT_RUNNER_PROGRESS.runsThisWeek,
+});
+
 export const getRunnerProgress = (): RunnerProgress => {
   if (!canUseStorage()) return DEFAULT_RUNNER_PROGRESS;
   try {
@@ -207,7 +224,7 @@ export const getRunnerProgress = (): RunnerProgress => {
     if (!raw) return DEFAULT_RUNNER_PROGRESS;
     const parsed = JSON.parse(raw) as unknown;
     if (!isRunnerProgressShape(parsed)) return DEFAULT_RUNNER_PROGRESS;
-    const merged: RunnerProgress = { ...DEFAULT_RUNNER_PROGRESS, ...parsed };
+    const merged: RunnerProgress = pickRunnerProgress(parsed);
     const now = Date.now();
     const daysSince = (now - merged.inkUpdatedAt) / MS_PER_DAY;
     if (daysSince > 0.01) {
@@ -250,6 +267,13 @@ const isMapLayerPrefsShape = (value: unknown): value is Partial<MapLayerPrefs> =
   );
 };
 
+const pickMapLayerPrefs = (parsed: Partial<MapLayerPrefs>): MapLayerPrefs => ({
+  territory: parsed.territory ?? DEFAULT_MAP_LAYERS.territory,
+  live: parsed.live ?? DEFAULT_MAP_LAYERS.live,
+  missions: parsed.missions ?? DEFAULT_MAP_LAYERS.missions,
+  history: parsed.history ?? DEFAULT_MAP_LAYERS.history,
+});
+
 export const getMapLayerPrefs = (): MapLayerPrefs => {
   if (!canUseStorage()) return DEFAULT_MAP_LAYERS;
   try {
@@ -257,7 +281,7 @@ export const getMapLayerPrefs = (): MapLayerPrefs => {
     if (!raw) return DEFAULT_MAP_LAYERS;
     const parsed = JSON.parse(raw) as unknown;
     if (!isMapLayerPrefsShape(parsed)) return DEFAULT_MAP_LAYERS;
-    return { ...DEFAULT_MAP_LAYERS, ...parsed };
+    return pickMapLayerPrefs(parsed);
   } catch {
     return DEFAULT_MAP_LAYERS;
   }

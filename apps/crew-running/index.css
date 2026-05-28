@@ -5084,6 +5084,8 @@ body::after {
 .run-summary-card {
   width: 100%;
   max-width: 420px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   background: #2a2826;
   border: 3px solid #f4a52c;
   padding: 20px 18px;
@@ -5207,15 +5209,61 @@ body::after {
   z-index: 50;
 }
 
+.run-permission-toast-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
 .run-permission-toast button {
-  align-self: end;
   background: #c9302c;
   color: #fff;
   border: none;
-  padding: 6px 12px;
+  padding: 8px 12px;
   cursor: pointer;
   font-family: 'Bungee', sans-serif;
   font-size: 12px;
+}
+
+.run-permission-toast button + button {
+  background: transparent;
+  color: #d9cfb8;
+  border: 1.5px solid rgba(217, 207, 184, 0.55);
+}
+
+.run-resume-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 9, 8, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 45;
+}
+
+.run-resume-card {
+  width: 100%;
+  max-width: 360px;
+  background: #2a2826;
+  border: 3px solid #f4a52c;
+  padding: 20px 18px;
+  color: #d9cfb8;
+  display: grid;
+  gap: 12px;
+}
+
+.run-resume-title {
+  margin: 0;
+  font-family: 'Bowlby One', serif;
+  font-size: 20px;
+  color: #f4a52c;
+}
+
+.run-resume-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .map-stage .sr-only {

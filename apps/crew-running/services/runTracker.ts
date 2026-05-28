@@ -1,6 +1,12 @@
 import type { LngLat, SpSpotMapFeature, SpZoneId, SpZoneMapFeature } from '../data/spLiveMap';
-import { SP_SPOT_MAP_FEATURES, SP_ZONE_MAP_FEATURES, getZoneByCrewSlug } from '../data/spLiveMap';
+import { SP_SPOT_MAP_FEATURES, getZoneById, getZoneByCrewSlug } from '../data/spLiveMap';
 import { haversineMeters, pointInPolygon } from '../data/geo';
+import {
+  clearActiveRun,
+  getActiveRun,
+  saveActiveRun,
+  type PersistedActiveRun,
+} from './launchStorage';
 
 export type RunState = 'idle' | 'tracking' | 'paused' | 'ended';
 
@@ -52,6 +58,29 @@ const createInitialSnapshot = (): RunSnapshot => ({
   permissionDenied: false,
 });
 
+const PERSIST_THROTTLE_MS = 4000;
+
+const toPersisted = (snap: RunSnapshot): PersistedActiveRun | null => {
+  if (snap.state !== 'tracking' && snap.state !== 'paused') return null;
+  return {
+    startedAt: snap.startedAt,
+    elapsedMs: snap.elapsedMs,
+    state: snap.state,
+    points: snap.points.map((p) => ({
+      lng: p.lng,
+      lat: p.lat,
+      t: p.t,
+      accuracy: p.accuracy,
+      isResumeAnchor: p.isResumeAnchor,
+    })),
+    touchedSpotIds: snap.touchedSpotIds,
+    totalMeters: snap.totalMeters,
+    metersInTerritory: snap.metersInTerritory,
+    crewSlug: snap.crewSlug,
+    homeZoneId: snap.homeZoneId,
+  };
+};
+
 class RunTracker {
   private snapshot: RunSnapshot = createInitialSnapshot();
   private listeners = new Set<Listener>();
@@ -62,6 +91,7 @@ class RunTracker {
   private homeZone: SpZoneMapFeature | undefined;
   private spotsCache: SpSpotMapFeature[] = SP_SPOT_MAP_FEATURES;
   private visibilityHandler = () => this.onVisibilityChange();
+  private lastPersistAt = 0;
 
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
@@ -80,6 +110,9 @@ class RunTracker {
       this.update({ permissionDenied: true });
       return false;
     }
+    // Clear any stale denied flag so a retry after the user grants permission
+    // actually starts.
+    this.snapshot.permissionDenied = false;
     this.homeZone = getZoneByCrewSlug(crewSlug);
     this.snapshot = {
       ...createInitialSnapshot(),
@@ -102,18 +135,24 @@ class RunTracker {
     if (this.snapshot.state !== 'tracking') return;
     this.stopWatch();
     this.releaseWakeLock();
-    this.update({ state: 'paused' });
+    this.snapshot = { ...this.snapshot, state: 'paused' };
+    this.persistNow();
+    this.emit();
   }
 
   resume(): void {
     if (this.snapshot.state !== 'paused') return;
     this.lastTickAt = Date.now();
-    this.snapshot.points = this.snapshot.points.length
-      ? [...this.snapshot.points.slice(0, -1), { ...this.snapshot.points[this.snapshot.points.length - 1], isResumeAnchor: true }]
-      : this.snapshot.points;
+    const points = this.snapshot.points;
+    const nextPoints =
+      points.length > 0
+        ? [...points.slice(0, -1), { ...points[points.length - 1], isResumeAnchor: true }]
+        : points;
+    this.snapshot = { ...this.snapshot, state: 'tracking', points: nextPoints };
     this.startWatch();
     this.acquireWakeLock();
-    this.update({ state: 'tracking' });
+    this.persistNow();
+    this.emit();
   }
 
   stop(): RunSnapshot {
@@ -127,6 +166,8 @@ class RunTracker {
     const points = this.snapshot.points;
     const closedLoop =
       points.length >= 2 && haversineMeters(points[0], points[points.length - 1]) < CLOSED_LOOP_THRESHOLD_M;
+    clearActiveRun();
+    this.lastPersistAt = 0;
     this.update({ state: 'ended', closedLoop });
     return this.snapshot;
   }
@@ -139,11 +180,55 @@ class RunTracker {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
     }
     this.snapshot = createInitialSnapshot();
+    clearActiveRun();
+    this.lastPersistAt = 0;
     this.emit();
   }
 
-  // Test seam — injects a synthetic position. Real code uses watchPosition.
-  ingestPosition(point: TrackedPoint): void {
+  // Hydrates the tracker from localStorage. Caller (MapStage) invokes once on
+  // mount so a refreshed browser can pick up an in-progress run. Returns the
+  // snapshot for the caller to inspect (resume vs discard prompt).
+  hydrateFromStorage(): RunSnapshot {
+    if (this.snapshot.state !== 'idle') return this.snapshot;
+    const stored = getActiveRun();
+    if (!stored) return this.snapshot;
+    const homeZone = stored.homeZoneId ? getZoneById(stored.homeZoneId as SpZoneId) : undefined;
+    this.homeZone = homeZone;
+    this.snapshot = {
+      state: stored.state,
+      startedAt: stored.startedAt,
+      elapsedMs: stored.elapsedMs,
+      totalMeters: stored.totalMeters,
+      metersInTerritory: stored.metersInTerritory,
+      points: stored.points.map((p) => ({
+        lng: p.lng,
+        lat: p.lat,
+        t: p.t,
+        accuracy: p.accuracy,
+        isResumeAnchor: p.isResumeAnchor,
+      })),
+      touchedSpotIds: [...stored.touchedSpotIds],
+      crewSlug: stored.crewSlug,
+      homeZoneId: stored.homeZoneId as SpZoneId | undefined,
+      closedLoop: false,
+      permissionDenied: false,
+    };
+    // Restored runs come back paused so the user explicitly confirms resume.
+    if (this.snapshot.state === 'tracking') {
+      this.snapshot.state = 'paused';
+    }
+    this.emit();
+    return this.snapshot;
+  }
+
+  // Test seam — injects a synthetic position. Production code MUST go through
+  // watchPosition; this is exposed only for unit tests that exercise the
+  // accumulators without spinning up a real Geolocation API.
+  __ingestPositionForTests(point: TrackedPoint): void {
+    this.ingestPosition(point);
+  }
+
+  private ingestPosition(point: TrackedPoint): void {
     if (this.snapshot.state !== 'tracking') return;
     if (point.accuracy > POSITION_ACCURACY_MAX_M) return;
     const points = this.snapshot.points;
@@ -162,6 +247,22 @@ class RunTracker {
     this.snapshot.points = [...points, point];
     this.checkSpotProximity(point);
     this.emit();
+    this.persistThrottled();
+  }
+
+  private persistThrottled(): void {
+    const now = Date.now();
+    if (now - this.lastPersistAt < PERSIST_THROTTLE_MS) return;
+    this.lastPersistAt = now;
+    const persisted = toPersisted(this.snapshot);
+    if (persisted) saveActiveRun(persisted);
+  }
+
+  private persistNow(): void {
+    const persisted = toPersisted(this.snapshot);
+    if (persisted) saveActiveRun(persisted);
+    else clearActiveRun();
+    this.lastPersistAt = Date.now();
   }
 
   private startWatch(): void {

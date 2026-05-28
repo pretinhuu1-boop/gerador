@@ -45,23 +45,48 @@ export interface RunnerProgress {
   runsThisWeek: number;
 }
 
-// Returns ISO week key like "2026-W22" computed in the local timezone. The
-// label survives DST since we read calendar fields, not raw ms offsets.
+// Returns ISO week key like "2026-W22" anchored to the LOCAL calendar day. We
+// read getFullYear/getMonth/getDate from the local Date and rebuild as UTC at
+// noon so DST shifts can't bump the day boundary in either direction.
 export const isoWeekKey = (date: Date): string => {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  // Anchor both endpoints to UTC noon so DST shifts can't move the calendar
+  // day and the diff stays an integer number of days.
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12));
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1, 12));
+  const days = Math.round((d.getTime() - yearStart.getTime()) / 86400000);
+  const week = Math.floor(days / 7) + 1;
   return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
 };
 
+// Resolves an ISO-week string ("YYYY-Www") to the UTC date of that week's
+// Thursday. Thursday is the ISO week anchor (week 1 = the one containing the
+// first Thursday of the year). Returns null on malformed input.
+const isoWeekKeyToThursday = (key: string): Date | null => {
+  const match = /^(\d{4})-W(\d{2})$/.exec(key);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const week = Number(match[2]);
+  // Jan 4 is always in ISO week 1. Find that week's Monday, add (week-1)*7
+  // days, then shift to Thursday (+3).
+  const jan4 = new Date(Date.UTC(year, 0, 4, 12));
+  const jan4Day = jan4.getUTCDay() || 7;
+  const week1Mon = new Date(jan4);
+  week1Mon.setUTCDate(jan4.getUTCDate() - (jan4Day - 1));
+  const thursday = new Date(week1Mon);
+  thursday.setUTCDate(week1Mon.getUTCDate() + (week - 1) * 7 + 3);
+  return thursday;
+};
+
+// Diff in whole ISO weeks between two week keys. Crosses year boundaries
+// correctly because we anchor each side to its Thursday in real ms.
 const weeksBetween = (a: string, b: string): number => {
-  // crude diff using year part; sufficient for adjacent-week detection
   if (a === b) return 0;
-  const [ay, aw] = a.split('-W').map(Number);
-  const [by, bw] = b.split('-W').map(Number);
-  return (by - ay) * 52 + (bw - aw);
+  const da = isoWeekKeyToThursday(a);
+  const db = isoWeekKeyToThursday(b);
+  if (!da || !db) return Number.NaN;
+  return Math.round((db.getTime() - da.getTime()) / (7 * 86400000));
 };
 
 export interface StreakBumpResult {

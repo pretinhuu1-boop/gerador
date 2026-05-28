@@ -372,6 +372,21 @@ describe('bumpStreak', () => {
     expect(result.next.streakWeeks).toBe(3);
   });
 
+  it('preserves streak across year boundary (W52 -> next year W01)', () => {
+    const dec = new Date('2026-12-28T12:00:00Z'); // ISO 2026-W53 or W52 depending on year
+    const jan = new Date('2027-01-04T12:00:00Z'); // ISO 2027-W01
+    const progress = baseProgress({
+      weekKey: isoWeekKey(dec),
+      runsThisWeek: STREAK_RUNS_REQUIRED,
+      streakWeeks: 7,
+      freezesAvailable: 0,
+    });
+    const result = bumpStreak(progress, jan);
+    expect(result.next.streakWeeks).toBe(7);
+    expect(result.streakBroken).toBe(false);
+    expect(result.freezeUsed).toBe(false);
+  });
+
   it('resets streak when no freeze available', () => {
     const lastWeek = new Date('2026-05-20T12:00:00Z');
     const thisWeek = new Date('2026-05-28T12:00:00Z');

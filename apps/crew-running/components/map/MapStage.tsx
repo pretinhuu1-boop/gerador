@@ -67,7 +67,16 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
   const [layers, setLayers] = useState<MapLayerState>(() => getMapLayerPrefs());
   const [permissionDeniedToast, setPermissionDeniedToast] = useState(false);
   const [pendingSummary, setPendingSummary] = useState<PendingSummary | null>(null);
+  const [resumePromptOpen, setResumePromptOpen] = useState(false);
   const svgId = useId();
+
+  // Resume an in-progress run if the user reloaded mid-corrida.
+  useEffect(() => {
+    const restored = runTracker.hydrateFromStorage();
+    if (restored.state === 'paused' && restored.startedAt > 0) {
+      setResumePromptOpen(true);
+    }
+  }, []);
 
   const trackerSnapshot = useRunTracker();
   const userCrew = getCrewBySlug(selectedCrewSlug);
@@ -112,6 +121,25 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
       setPermissionDeniedToast(true);
     }
   }, [selectedCrewSlug]);
+
+  const handleRetryPermission = useCallback(() => {
+    setPermissionDeniedToast(false);
+    runTracker.reset();
+    runTracker.start(selectedCrewSlug);
+    if (runTracker.getSnapshot().permissionDenied) {
+      setPermissionDeniedToast(true);
+    }
+  }, [selectedCrewSlug]);
+
+  const handleResumeStoredRun = useCallback(() => {
+    setResumePromptOpen(false);
+    runTracker.resume();
+  }, []);
+
+  const handleDiscardStoredRun = useCallback(() => {
+    setResumePromptOpen(false);
+    runTracker.reset();
+  }, []);
 
   const handlePauseRun = useCallback(() => runTracker.pause(), []);
   const handleResumeRun = useCallback(() => runTracker.resume(), []);
@@ -308,7 +336,27 @@ export const MapStage: React.FC<Props> = ({ runnerProgress, selectedCrewSlug, on
       {permissionDeniedToast && (
         <div className="run-permission-toast" role="alert">
           <p>Sem permissão de GPS. Permita localização no navegador e tente de novo.</p>
-          <button type="button" onClick={() => setPermissionDeniedToast(false)}>OK</button>
+          <div className="run-permission-toast-actions">
+            <button type="button" onClick={handleRetryPermission}>TENTAR DE NOVO</button>
+            <button type="button" onClick={() => setPermissionDeniedToast(false)}>FECHAR</button>
+          </div>
+        </div>
+      )}
+
+      {resumePromptOpen && (
+        <div className="run-resume-backdrop" role="dialog" aria-modal="true" aria-label="Retomar corrida">
+          <div className="run-resume-card">
+            <h2 className="run-resume-title">Corrida em andamento</h2>
+            <p>Você saiu da corrida aberta. Retomar ou descartar?</p>
+            <div className="run-resume-actions">
+              <button type="button" className="run-summary-button run-summary-button--save" onClick={handleResumeStoredRun}>
+                RETOMAR
+              </button>
+              <button type="button" className="run-summary-button run-summary-button--discard" onClick={handleDiscardStoredRun}>
+                DESCARTAR
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>

@@ -24,7 +24,7 @@ export const MissionLayer: React.FC<Props> = ({ projection, zoom, missions }) =>
         const zone = mission.zoneId ? getZoneById(mission.zoneId) : undefined;
         const coord = anchorSpot?.coordinate ?? zone?.center;
         if (!coord) {
-          if (typeof console !== 'undefined') {
+          if (import.meta.env.DEV) {
             console.warn(`[MissionLayer] mission ${mission.id} skipped: no anchor coord (zoneId=${mission.zoneId ?? 'none'}, spotIds=${mission.spotIds?.join(',') ?? 'none'})`);
           }
           return null;
