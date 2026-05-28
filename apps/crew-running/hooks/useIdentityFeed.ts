@@ -71,13 +71,21 @@ export const useIdentityFeed = (options: UseIdentityFeedOptions = {}): IdentityE
   const { version = 0, progress, savedCharacter } = options;
   const [events, setEvents] = useState<IdentityEvent[]>([]);
 
+  const crewSlug = progress?.selectedCrewSlug;
+  const citySignalSeen = progress?.citySignalSeen ?? false;
+  const guideDone = progress?.guidedSetupComplete ?? false;
+  const savedAt = savedCharacter?.savedAt;
+
   useEffect(() => {
     const existing = getIdentityEvents();
-    if (existing.length === 0 && (progress || savedCharacter)) {
+    const hasContext = Boolean(crewSlug || savedAt);
+    if (existing.length === 0 && hasContext) {
       synthesizeBackfill(existing, progress, savedCharacter);
     }
     setEvents(getIdentityEvents());
-  }, [version, progress, savedCharacter]);
+    // progress + savedCharacter passed only inside synthesizeBackfill body; deps are scalars
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version, crewSlug, citySignalSeen, guideDone, savedAt]);
 
   return useMemo(() => sortNewestFirst(events), [events]);
 };
