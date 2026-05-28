@@ -7472,3 +7472,137 @@ button.map-stage-zone-title:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.run-summary-xp-multipliers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.run-summary-multiplier-chip {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 165, 44, 0.15);
+  border: 1px solid rgba(255, 165, 44, 0.4);
+}
+
+.run-summary-multiplier-chip--invasion {
+  background: rgba(232, 93, 44, 0.15);
+  border-color: rgba(232, 93, 44, 0.4);
+}
+
+.run-summary-multiplier-chip-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.run-summary-multiplier-chip-explain {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.badge-unlock-toast-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.badge-unlock-toast-card {
+  background: #131418;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 360px;
+  width: calc(100vw - 32px);
+}
+
+.badge-unlock-toast-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin: 0 0 16px;
+}
+
+.badge-unlock-toast-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.badge-unlock-toast-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.badge-unlock-toast-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.badge-unlock-toast-hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.badge-unlock-toast-dismiss {
+  margin-top: 16px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border: none;
+  cursor: pointer;
+}
+
+.badge-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.badge-grid-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.badge-grid-item--locked {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.badge-grid-name {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.badge-grid-hint {
+  font-size: 11px;
+  opacity: 0.75;
+}
