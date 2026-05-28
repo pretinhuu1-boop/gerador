@@ -328,11 +328,15 @@ export const AddFriendModal: React.FC<Props> = (props) => {
           </div>
         )}
 
-        {error && (
-          <p className="add-friend-modal__error" role="status">
-            {error}
-          </p>
-        )}
+        <p
+          className="add-friend-modal__error"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+          hidden={!error}
+        >
+          {error}
+        </p>
       </div>
     </div>
   );

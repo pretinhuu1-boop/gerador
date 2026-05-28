@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { addFriend, getFriends, removeFriend } from '../services/storage';
+import {
+  addFriend,
+  getFriends,
+  removeFriend,
+  type AddFriendResult,
+} from '../services/storage';
 import type { FriendRecord } from '../data/friends';
 
 /**
@@ -13,7 +18,7 @@ import type { FriendRecord } from '../data/friends';
  */
 export const useFriends = (version: number = 0): {
   friends: FriendRecord[];
-  add: (friend: FriendRecord) => void;
+  add: (friend: FriendRecord) => AddFriendResult;
   remove: (userId: string) => void;
   refresh: () => void;
 } => {
@@ -24,9 +29,10 @@ export const useFriends = (version: number = 0): {
     setList(getFriends());
   }, [version, tick]);
 
-  const add = useCallback((friend: FriendRecord) => {
-    addFriend(friend);
-    setTick((t) => t + 1);
+  const add = useCallback((friend: FriendRecord): AddFriendResult => {
+    const result = addFriend(friend);
+    if (result.status === 'added') setTick((t) => t + 1);
+    return result;
   }, []);
 
   const remove = useCallback((userId: string) => {

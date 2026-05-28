@@ -191,17 +191,35 @@ export const getFriends = (): FriendRecord[] => {
   }
 };
 
-export const addFriend = (friend: FriendRecord): FriendRecord => {
+/**
+ * Estimate UTF-8 byte length of a string. base64 dataUrls count ~1 byte per
+ * char (ASCII), but UTF-16 `.length` is unreliable for byte budgets — use
+ * encodeURIComponent for a deterministic upper bound.
+ */
+const utf8ByteLength = (s: string): number => {
+  if (typeof TextEncoder !== 'undefined') {
+    return new TextEncoder().encode(s).length;
+  }
+  return encodeURIComponent(s).replace(/%[0-9A-F]{2}/g, '_').length;
+};
+
+export type AddFriendResult =
+  | { status: 'added'; friend: FriendRecord }
+  | { status: 'self-rejected' };
+
+export const addFriend = (friend: FriendRecord): AddFriendResult => {
+  if (friend.userId === getSelfUserId()) {
+    return { status: 'self-rejected' };
+  }
   const existing = getFriends();
-  if (friend.userId === getSelfUserId()) return friend;
   const sanitized: FriendRecord =
-    friend.avatarDataUrl && friend.avatarDataUrl.length > FRIEND_AVATAR_MAX_BYTES
+    friend.avatarDataUrl && utf8ByteLength(friend.avatarDataUrl) > FRIEND_AVATAR_MAX_BYTES
       ? { ...friend, avatarDataUrl: undefined }
       : friend;
   const filtered = existing.filter((f) => f.userId !== sanitized.userId);
   const merged = [sanitized, ...filtered];
   writeItem(FRIENDS_STORAGE, JSON.stringify(merged));
-  return sanitized;
+  return { status: 'added', friend: sanitized };
 };
 
 export const removeFriend = (userId: string): void => {

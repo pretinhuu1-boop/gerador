@@ -62,10 +62,14 @@ describe('storage — friends', () => {
     expect(s.getFriends()).toEqual([]);
   });
 
-  it('adds a friend and persists it', async () => {
+  it('adds a friend and persists it, returns status added', async () => {
     const s = await loadStorage();
     const friend = sampleFriend();
-    s.addFriend(friend);
+    const result = s.addFriend(friend);
+    expect(result.status).toBe('added');
+    if (result.status === 'added') {
+      expect(result.friend.userId).toBe('friend-1');
+    }
     expect(s.getFriends()).toEqual([friend]);
   });
 
@@ -78,11 +82,34 @@ describe('storage — friends', () => {
     expect(list[0].runnerName).toBe('New');
   });
 
-  it('rejects self-add (matches getSelfUserId)', async () => {
+  it('returns self-rejected status when userId matches self', async () => {
     const s = await loadStorage();
     const selfId = s.getSelfUserId();
-    s.addFriend(sampleFriend({ userId: selfId }));
+    const result = s.addFriend(sampleFriend({ userId: selfId }));
+    expect(result.status).toBe('self-rejected');
     expect(s.getFriends()).toEqual([]);
+  });
+
+  it('strips avatarDataUrl when over FRIEND_AVATAR_MAX_BYTES (UTF-8 bytes)', async () => {
+    const s = await loadStorage();
+    const big = 'A'.repeat(11 * 1024);
+    const result = s.addFriend(sampleFriend({ userId: 'big', avatarDataUrl: big }));
+    expect(result.status).toBe('added');
+    if (result.status === 'added') {
+      expect(result.friend.avatarDataUrl).toBeUndefined();
+    }
+    const stored = s.getFriends().find((f) => f.userId === 'big');
+    expect(stored?.avatarDataUrl).toBeUndefined();
+  });
+
+  it('keeps avatarDataUrl when under FRIEND_AVATAR_MAX_BYTES', async () => {
+    const s = await loadStorage();
+    const small = 'data:image/png;base64,' + 'A'.repeat(500);
+    const result = s.addFriend(sampleFriend({ userId: 'small', avatarDataUrl: small }));
+    expect(result.status).toBe('added');
+    if (result.status === 'added') {
+      expect(result.friend.avatarDataUrl).toBe(small);
+    }
   });
 
   it('removeFriend deletes by userId', async () => {
