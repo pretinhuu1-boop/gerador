@@ -280,7 +280,23 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: { [_ in never]: never };
+    Views: {
+      zone_leaderboard: {
+        Row: {
+          user_id: string;
+          runner_name: string;
+          crew_slug: string;
+          avatar_url: string | null;
+          zone_id: string;
+          week_key: string;
+          total_km: number;
+          total_ink: number;
+          runs_count: number;
+          rank: number;
+        };
+        Relationships: [];
+      };
+    };
     Functions: { [_ in never]: never };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
