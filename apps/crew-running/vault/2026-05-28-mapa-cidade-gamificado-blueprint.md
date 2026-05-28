@@ -1,5 +1,38 @@
 # Blueprint — Mapa Cidade Gamificado Unificado — 2026-05-28
 
+## ⚠️ Amendment 2026-05-28 (post-Phase C, post-Axial-vault check)
+
+**Substituição cancelada. Convivência adotada.**
+
+Após Phase C ter rodado em runtime (commit `09e9e5d`), cross-check com:
+
+- `~/Documents/Vault-Axial/20-Axial-Projects/CrewRunning/map-layout-2d.md` — **status: design-locked**
+- `apps/crew-running/vault/2026-05-28-restore-gamification-map-plan.md`
+
+Ambos confirmam: **MapStage é o core gamificado**, não pode ser deletado. LaunchCityMap = renderer L1 específico. Componentes `components/map/*` já existentes (ZoneLayer, SpotLayer, MissionLayer, HudOverlay, LayerRail, etc.) são canonical.
+
+**Rota revisada:**
+
+| Fase | Original | Revisada |
+|---|---|---|
+| A foundation | ✅ shippeado | mantém |
+| B static layers | ✅ shippeado | mantém |
+| C interatividade (HomePanel) | ✅ shippeado | mantém — MapaCidade vira **mini L1 surface** no HomePanel |
+| D gamification pesada | substitui MapStage | **CANCELADA** — MapStage continua como L1/L2/L3 fullscreen via ABRIR MAPA |
+| E deletar legacy | deletar Sp3D/Street/Launch/MapStage | **CANCELADA** — nada deleta. LaunchCityMap.tsx fica órfão (já estava). MapStage continua canônico. |
+
+**Acceptance gates atualizados:**
+- MapaCidade fica como surface leve no HomePanel (✅)
+- MapStage continua como fullscreen via ABRIR MAPA CTA primário (✅ já está)
+- Sem regressão visual nem comportamental no MapStage (verify on each commit)
+- Próxima superfície a aprimorar = `restore-gamification-map-plan.md` Phase 1-5 (nav produto-first, reconcile menu, creator subordinate, MapStage completo, restore tests)
+
+**O conteúdo abaixo é histórico — refletia rota anterior.**
+
+---
+
+
+
 ## Decisão
 
 Unificar os três componentes de mapa fantasmas em um único componente `MapaCidade` que serve como **home interativo**, com depth via parallax + camadas (não 3D literal — respeita a decisão de [2026-05-27-street-backdrops-2d.md](2026-05-27-street-backdrops-2d.md)) e gamification real conectada.
