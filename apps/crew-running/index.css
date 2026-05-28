@@ -7516,7 +7516,8 @@ button.map-stage-zone-title:hover {
 }
 
 .badge-unlock-toast-card {
-  background: #131418;
+  background: var(--char);
+  color: var(--bone);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   padding: 24px;
@@ -7562,10 +7563,11 @@ button.map-stage-zone-title:hover {
 .badge-unlock-toast-dismiss {
   margin-top: 16px;
   width: 100%;
+  min-height: 44px;
   padding: 12px;
   border-radius: 12px;
-  background: #ffffff;
-  color: #000000;
+  background: var(--white);
+  color: var(--black);
   font-weight: 700;
   letter-spacing: 0.05em;
   border: none;
@@ -7586,6 +7588,7 @@ button.map-stage-zone-title:hover {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--bone);
   display: flex;
   flex-direction: column;
   gap: 4px;
