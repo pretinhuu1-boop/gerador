@@ -23,6 +23,12 @@ npm run check:creator-contract
 - A influencia de estilo e contexto vem somente da crew selecionada.
 - A identidade do runner vem de foto do rosto ou brief fisico escrito, campos de perfil e wardrobe.
 - O modo com foto usa a foto apenas como referencia ampla de caracteristicas fisicas.
+- O modo com foto deve anexar uma referencia canonica de personagem da crew
+  selecionada, escolhida por `profile.sex`: homem usa a referencia masculina,
+  mulher usa a referencia feminina, nao-binario usa a referencia neutra da
+  propria crew.
+- A referencia canonica de personagem e trava de estilo/proporcao/desenho, nao
+  identidade a copiar.
 - O modo sem foto deve pedir uma descricao de rosto, cabelo, pele, postura e energia antes de gerar.
 - A geracao nunca deve copiar rosto exato, cabelo exato, marcas faciais, roupa, identidade ou detalhes reconheciveis de uma pessoa real.
 - A sheet 2x2 deve manter o mesmo personagem, cabeca, cabelo e corpo nas quatro celulas.

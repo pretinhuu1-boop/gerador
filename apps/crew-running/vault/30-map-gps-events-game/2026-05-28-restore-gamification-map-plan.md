@@ -2,7 +2,7 @@
 
 ## Conclusao da investigacao
 
-O mapa de gamificacao nao foi perdido em um commit publicado. Ele ainda existe em `HEAD` (`c997fe6`) e tambem em `main` / `origin/main` (`8fbe848`). A perda aconteceu no WIP local nao commitado, onde o fluxo do launch foi refeito para embutir o creator dentro do `MainMenu` e o painel `INICIO` virou `GUARDA ROUPA`.
+O mapa de gamificacao nao foi perdido em um commit publicado. Ele ainda existe em `HEAD` (`c997fe6`) e tambem em `main` / `origin/main` (`8fbe848`). O WIP local embutiu o creator dentro do `MainMenu`, transformou o antigo `INICIO` em `GUARDA ROUPA` e destacou `ABRIR MAPA` como CTA principal. A correcao de nomenclatura e manter esse painel como `GUARDA ROUPA`, nao tentar voltar o label antigo.
 
 Versoes relevantes:
 
@@ -15,7 +15,7 @@ Versoes relevantes:
 | `498c7cb` | Adicionou mapa social: `FriendPings` e `CrewRadioOverlay`. |
 | `bf800f4` | Adicionou plano e cobertura de testes para gamificacao 2D. |
 | `8fbe848` | Ultimo estado consolidado em `main`, com QA gaps resolvidos. |
-| WIP atual | Removeu fluxo separado `runnerCreator` / `runnerSaved`, injeta `runnerCreatorPanel` dentro do menu, muda `INICIO` para guarda-roupa e passa `onOpenMap` sempre. E aqui que a experiencia "mapa como produto principal" ficou descaracterizada. |
+| WIP atual | Removeu fluxo separado `runnerCreator` / `runnerSaved`, injeta `runnerCreatorPanel` dentro do menu, muda o antigo `INICIO` para guarda-roupa e destaca `ABRIR MAPA` como acao primaria. O ponto pendente e alinhar nome/semantica e preservar o mapa como CTA principal. |
 
 ## O que tinhamos que deve voltar
 
@@ -65,13 +65,13 @@ Versoes relevantes:
 ### Fase 2 - Reconciliar MainMenu atual com mapa
 
 1. Separar semanticamente:
-   - `home` / `crewHome` = QG da crew;
-   - `wardrobe` ou `creator` = guarda-roupa/creator;
+   - `home` = guarda-roupa/creator, com label visivel `GUARDA ROUPA`;
+   - `crewHome` = QG da crew;
    - `runner` = aba VOCE;
    - `map` = acao primaria.
 2. O botao primario do menu deve ser `ABRIR MAPA` quando o mapa esta liberado; quando nao esta, `COMECAR` / `ABRIR GUIA`.
-3. `INICIO` nao deve abrir automaticamente guarda-roupa. O guarda-roupa deve ficar em botao proprio.
-4. `Passport` pode continuar mostrando status do runner, mas deve apontar para `ABRIR MAPA` quando `guideDone` estiver true.
+3. O antigo label `INICIO` deve virar `GUARDA ROUPA` em nav, testes e docs vivas.
+4. `Passport` pode continuar mostrando status do runner, enquanto o CTA destacado `ABRIR MAPA` abre `MapStage` quando `guideDone` estiver true.
 
 ### Fase 3 - Preservar o creator novo sem violar contrato
 

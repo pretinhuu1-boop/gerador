@@ -1570,7 +1570,7 @@ For each item in `vault/CREATOR_DESIGN_SYSTEM.md` §10, verify in browser:
 cd apps/crew-running && npm run dev
 ```
 
-Then visit http://localhost:3100, navigate INICIO → CREWS → RUNNER → CONFIG to confirm all menu tabs stay reachable while inside RUNNER. Inside RUNNER, switch FOTO / PERFIL / LOOK / FICHA and confirm:
+Then visit http://localhost:3100, navigate GUARDA ROUPA -> CREWS -> RUNNER -> CONFIG to confirm all menu tabs stay reachable while inside RUNNER. Inside RUNNER, switch FOTO / PERFIL / LOOK / FICHA and confirm:
 - Crew chip shows once (right side of tab strip), nowhere else
 - Height/peso inputs not duplicated
 - No "CRIE SEU RUNNER" masthead, no RUNNER ID status strip, no CrewLockPanel block

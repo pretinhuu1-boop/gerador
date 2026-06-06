@@ -1,20 +1,41 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Running Crew Workspace
 
-# Run and deploy your AI Studio app
+Primary product lane: `apps/crew-running`.
 
-This contains everything you need to run your app locally.
+This repository still contains legacy root-level Vite files, but the current
+The Crew Running app lives under `apps/crew-running`. Do not use the root README
+as product truth for mobile, game, site, desktop or admin planning.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1nbH7r8bqaj5U5SDsNs3j8aJWxZHeZiz_
+## Agent orientation
 
-## Run Locally
+Read these before product work:
 
-**Prerequisites:**  Node.js
+- `AGENTS.md`
+- `CLAUDE.md` when working in Claude-led sessions
+- `apps/crew-running/vault/CURRENT_PRODUCT_CONTEXT.md`
+- `apps/crew-running/vault/README.md`
+- `apps/crew-running/vault/CREATOR_CONTRACT.md` before creator/generation work
 
+Current split:
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- `apps/crew-running`: player-facing mobile/game app and future
+  PWA/Capacitor Android+iOS source.
+- Public site: separate marketing/community surface.
+- Desktop user/network: separate runner/community surface for non-running use.
+- Operational admin: separate internal surface, recommended as `apps/crew-admin`
+  when implemented.
+
+## Run the active app
+
+```bash
+cd apps/crew-running
+npm install
+npm run dev
+```
+
+Validation for code or creator-sensitive changes:
+
+```bash
+cd apps/crew-running
+npm run validate
+```

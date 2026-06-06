@@ -211,7 +211,7 @@ IMPORTANTE:
 
 Tarefa:
 - Fazer RUNNER panel hospedar sub-tabs FOTO / PERFIL / LOOK / FICHA.
-- Manter INICIO / CREWS PILOTO / RUNNER / CONFIG / REVER INTRO / ABRIR MAPA acessiveis enquanto o usuario monta o runner.
+- Manter GUARDA ROUPA / CREWS PILOTO / RUNNER / CONFIG / REVER INTRO / ABRIR MAPA acessiveis enquanto o usuario monta o runner.
 - Remover do fluxo publico: masthead duplicado, status-strip, CrewLockPanel, back button, numeros 01/03/04/05.
 - Manter geracao travada por selectedCrewSlug via CrewRenderContext.
 - Manter TESTAR LOCAL no modal.
@@ -353,4 +353,3 @@ Ao finalizar, reporte:
 - [ ] `RUNNER SALVO` continua no QG.
 - [ ] `Crew Pace` / `crew-pace` continua canonico.
 ```
-

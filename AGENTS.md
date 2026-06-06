@@ -1,5 +1,32 @@
 # Repo Agent Instructions
 
+## apps/crew-running product context
+
+Before planning or changing mobile, game, site, desktop, admin or product docs
+for `apps/crew-running`, read:
+
+- `apps/crew-running/vault/CURRENT_PRODUCT_CONTEXT.md`
+- `apps/crew-running/vault/README.md`
+- `apps/crew-running/vault/specs/000-index.md`
+- `apps/crew-running/vault/70-research-integrations/2026-06-06-open-source-mobile-architecture-study.md`
+- `apps/crew-running/vault/70-research-integrations/2026-06-06-spec-driven-development-continuous-harness-study.md`
+
+Current product split:
+
+- `apps/crew-running` is the player-facing mobile/game app and the source for
+  future PWA/Capacitor Android and iOS exports.
+- The public site, desktop user/network area and operational admin panel are
+  separate product surfaces.
+- The recommended operational admin surface is a separate app such as
+  `apps/crew-admin`, not a privileged panel inside the player bundle.
+- Do not treat older vault docs as current if
+  `apps/crew-running/vault/CURRENT_PRODUCT_CONTEXT.md` marks them as historical
+  or stale.
+- For new feature, architecture or harness work, create or locate the active
+  vault spec in `apps/crew-running/vault/specs/000-index.md` before
+  implementation. A valid spec lane should include spec, plan, tasks, harness,
+  validation log, review and retrospective artifacts.
+
 ## apps/crew-running creator contract
 
 Before changing the runner creator, read:

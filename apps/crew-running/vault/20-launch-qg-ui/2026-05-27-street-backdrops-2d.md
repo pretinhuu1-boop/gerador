@@ -26,24 +26,24 @@ Regras:
 
 ## Concepts Gerados
 
-1. Mapa stencil serigrafado  
-   Asset: `public/backgrounds/city-signal-map-2d.jpg`  
-   Uso: `CitySignalEntry`, `RunnerSavedTeaser`.  
+1. Mapa stencil serigrafado
+   Asset: `public/backgrounds/city-signal-map-2d.jpg`
+   Uso: `CitySignalEntry`, `RunnerSavedTeaser`.
    Papel: mapa de SP simbolico, rota em tinta, energia de crews no lado esquerdo, area direita mais escura para ticket.
 
-2. Mural underpass noturno  
-   Asset: `public/backgrounds/boot-underpass-2d.jpg`  
-   Uso: `ConsoleBoot`.  
+2. Mural underpass noturno
+   Asset: `public/backgrounds/boot-underpass-2d.jpg`
+   Uso: `ConsoleBoot`.
    Papel: atmosfera de ligamento da cidade, concreto/asfalto, graffiti e rota sem parecer painel tecnico.
 
-3. HQ collage / mission material  
-   Asset: `public/backgrounds/hq-collage-2d.jpg`  
-   Uso: `MainMenu`.  
+3. HQ collage / mission material
+   Asset: `public/backgrounds/hq-collage-2d.jpg`
+   Uso: `MainMenu`.
    Papel: lambe-lambe, ticket, asfalto, tape e scuffs como base do HQ.
 
-4. Street grit texture  
-   Asset: `public/backgrounds/street-grit-texture-2d.jpg`  
-   Uso: overlay de material em `StreetBackdrop`.  
+4. Street grit texture
+   Asset: `public/backgrounds/street-grit-texture-2d.jpg`
+   Uso: overlay de material em `StreetBackdrop`.
    Papel: grunge baixo contraste para unificar os backdrops.
 
 Originais gerados continuam em:

@@ -78,7 +78,7 @@ Evidencia:
 - `App.tsx` ainda lazy-loads `CustomizeScreen`.
 - `CrewLaunchExperience.tsx` ainda roteia para `screen === 'runnerCreator'`.
 - `MainMenu.tsx` renderiza `RunnerPanel` no painel RUNNER, nao o creator em sub-tabs.
-- `CREATOR_DESIGN_SYSTEM.md` pede sub-tabs `FOTO / PERFIL / LOOK / FICHA` dentro do painel RUNNER, mantendo INICIO / CREWS / RUNNER / CONFIG acessiveis.
+- `CREATOR_DESIGN_SYSTEM.md` pede sub-tabs `FOTO / PERFIL / LOOK / FICHA` dentro do painel RUNNER, mantendo GUARDA ROUPA / CREWS / RUNNER / CONFIG acessiveis.
 
 Impacto:
 

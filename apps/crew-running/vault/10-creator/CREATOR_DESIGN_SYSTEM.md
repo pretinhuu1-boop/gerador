@@ -1,6 +1,6 @@
 # Creator Design System — RUNNER Sub-Tabs Redesign
 
-> Spec drafted 2026-05-28. Replaces fullscreen CustomizeScreen with sub-panels inside the existing MainMenu RUNNER panel. Reuses MainMenu nav shell so other tabs (INICIO / CREWS PILOTO / CONFIG) stay reachable at all times.
+> Spec drafted 2026-05-28. Replaces fullscreen CustomizeScreen with sub-panels inside the existing MainMenu RUNNER panel. Reuses MainMenu nav shell so other tabs (GUARDA ROUPA / CREWS PILOTO / CONFIG) stay reachable at all times.
 
 ---
 
@@ -12,7 +12,7 @@ CustomizeScreen.tsx today is a 700-line dead-end fullscreen with 5 numbered bloc
 2. **Height/peso rendered 2x** — inputs + BODY_REFERENCE comparison row.
 3. **Brand masthead competes** — logo + "THE CREW RUNNING" + "CRIE SEU RUNNER" + status-strip all in top 200px.
 4. **Linear checklist feel** — numbered blocks read as a form, not game.
-5. **Menu lock-out** — once inside, user cannot reach INICIO / CREWS / CONFIG without back-button.
+5. **Menu lock-out** — once inside, user cannot reach GUARDA ROUPA / CREWS / CONFIG without back-button.
 6. **P0 bug** — `handleSaveVariant` left `savingVariantIndex` non-null on success, disabling all 4 variant buttons permanently after first save. Patched 2026-05-28 with `finally` block.
 
 User direction (brainstorm, 2026-05-28):
@@ -23,13 +23,13 @@ User direction (brainstorm, 2026-05-28):
 
 ## 2 — Target structure
 
-**Top-level:** existing MainMenu nav untouched (INICIO / CREWS PILOTO / RUNNER / CONFIG). RUNNER panel hosts a 4-tab sub-nav:
+**Top-level:** existing MainMenu nav untouched (GUARDA ROUPA / CREWS PILOTO / RUNNER / CONFIG). RUNNER panel hosts a 4-tab sub-nav:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  THE CREW · RUNNING                          [crew-chip] │ ← brand row (single line)
 ├──────────────┬──────────────────────────────────────────┤
-│  INICIO      │                                          │
+│  GUARDA ROUPA│                                          │
 │  CREWS       │   ┌─ FOTO ─ PERFIL ─ LOOK ─ FICHA ──┐   │
 │  RUNNER ▶    │   │                                  │   │
 │  CONFIG      │   │   (sub-tab content)              │   │
@@ -58,7 +58,7 @@ User direction (brainstorm, 2026-05-28):
 | `CrewLockPanel` block 03 | Crew is conveyed by accent color theme + small badge chip in tab strip |
 | `BODY_REFERENCE` row at bottom of PERFIL | Inputs are sufficient; reference value is non-editable noise |
 | Numeric prefixes `01/`, `02/`, ..., `05/` | Tabs replace the ordering metaphor |
-| `runner-creator__back` "VOLTAR AO SINAL" button | Other MainMenu tabs (INICIO etc) reachable directly via existing nav |
+| `runner-creator__back` "VOLTAR AO SINAL" button | Other MainMenu tabs (GUARDA ROUPA etc) reachable directly via existing nav |
 | Stage subtitle "RUNNER ID" inside SheetPreview | Lives only in FICHA tab; tab name suffices |
 
 ---
@@ -189,7 +189,7 @@ Sub-tab nav switch fires `audio.playSfx('nav-slab')` (same SFX as MainMenu nav).
 - [ ] Crew shown exactly ONCE (the chip in the tab strip right side).
 - [ ] Height/peso shown exactly ONCE (inputs only).
 - [ ] No `runner-creator__masthead`, `__status-strip`, `__body-reference`, `__crew-lock`, `__back` in DOM.
-- [ ] All MainMenu nav items (INICIO / CREWS / RUNNER / CONFIG / REVER INTRO / ABRIR MAPA) reachable from RUNNER tab without leaving.
+- [ ] All MainMenu nav items (GUARDA ROUPA / CREWS / RUNNER / CONFIG / REVER INTRO / ABRIR MAPA) reachable from RUNNER tab without leaving.
 - [ ] Variant button lock bug remains fixed (regression: equipar 2 looks in sequence, both succeed).
 - [ ] Tab strip keyboard a11y (arrow keys + aria-selected) works.
 - [ ] Reduced-motion respected (no slide animation, only opacity).

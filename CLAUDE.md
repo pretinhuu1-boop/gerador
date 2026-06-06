@@ -1,5 +1,30 @@
 # The Crew Running — Repo Guide
 
+## Canonical product context
+
+Before planning mobile, game, site, desktop, admin or product-doc work for the
+active app, read:
+
+- `apps/crew-running/vault/CURRENT_PRODUCT_CONTEXT.md`
+- `apps/crew-running/vault/README.md`
+- `apps/crew-running/vault/specs/000-index.md`
+- `apps/crew-running/vault/70-research-integrations/2026-06-06-open-source-mobile-architecture-study.md`
+- `apps/crew-running/vault/70-research-integrations/2026-06-06-spec-driven-development-continuous-harness-study.md`
+
+`apps/crew-running` is the player-facing mobile/game app and future
+PWA/Capacitor Android+iOS source. The public site, desktop user/network area and
+operational admin panel are separate product surfaces. Do not put privileged
+admin behavior inside the player bundle unless a later vault decision explicitly
+changes that.
+
+For runner creator work, `apps/crew-running/vault/CREATOR_CONTRACT.md` remains
+the source of truth.
+
+For new feature, architecture or harness work, enter through an active vault
+spec listed in `apps/crew-running/vault/specs/000-index.md` before
+implementation. The expected lane is spec, plan, tasks, harness, validation log,
+review and retrospective.
+
 ## Concurrent-edit workflow
 
 Multiple agents (parallel cavecrew, gemini, codex sessions) regularly work on this repo simultaneously. Treat the filesystem and git as **shared mutable state**, not your private workspace.

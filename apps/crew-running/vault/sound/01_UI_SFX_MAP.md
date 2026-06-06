@@ -15,7 +15,7 @@ All UI SFX = mono, 44.1k, 128kbps mp3, peak -1 dBTP, short -16 LUFS.
 |---|---|---|---|---|---|
 | `tap` | `ui-tap.mp3` | SNAP | 90ms | -16 | Primary action button: `PULAR` ConsoleBoot.tsx:72, `ENTRAR` TitleScreen, `COMEÇAR` CitySignalEntry+MainMenu, `PRÓXIMO` GuidedOnboarding.tsx:52-57 |
 | `tap-alt` | `ui-tap-alt.mp3` | SNAP | 80ms | -17 | Secondary tap variant (random alternation pra evitar fatigue) |
-| `nav-slab` | `ui-nav-slab.mp3` | SNAP | 130ms | -16 | MainMenu.tsx:69-80 panel switch INÍCIO/CREWS/RUNNER/CONFIG |
+| `nav-slab` | `ui-nav-slab.mp3` | SNAP | 130ms | -16 | MainMenu.tsx:69-80 panel switch GUARDA ROUPA/CREWS/RUNNER/CONFIG |
 | `lock-on` | `ui-lock-on.mp3` | SNAP | 180ms | -15 | WardrobePicker `onToggle` slot lock (graffiti lock-on grammar DESIGN.md §10) |
 | `randomize-roll` | `ui-randomize-roll.mp3` | SNAP+wash tail | 350ms | -15 | CustomizeScreen `MISTURAR LOOK` button |
 | `photo-shutter` | `ui-photo-shutter.mp3` | SNAP | 200ms | -14 | PhotoUpload.tsx file input change |
